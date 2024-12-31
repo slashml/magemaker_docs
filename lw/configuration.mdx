@@ -80,7 +80,27 @@ Follow our [GCP Setup Guide](https://docs.google.com/document/d/1NvA6uZmppsYzaOd
    curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
    ```
 
-2. Set up required resources:
+2. Register Required Resource Providers:
+   ```bash
+   # Register all required providers
+   az provider register --namespace Microsoft.MachineLearningServices
+   az provider register --namespace Microsoft.ContainerRegistry
+   az provider register --namespace Microsoft.KeyVault
+   az provider register --namespace Microsoft.Storage
+   az provider register --namespace Microsoft.Insights
+   az provider register --namespace Microsoft.ContainerService
+   az provider register --namespace Microsoft.PolicyInsights
+   az provider register --namespace Microsoft.Cdn
+   ```
+
+   <Note>
+   Registration can take up to 10 minutes. Check status with:
+   ```bash
+   az provider show -n Microsoft.MachineLearningServices
+   ```
+   </Note>
+
+3. Set up required resources:
    - Resource Group
    - Azure ML Workspace
    - Subscription
@@ -154,6 +174,17 @@ Common configuration issues:
    - Confirm project ID
 
 3. **Azure Issues**
-   - Check resource provider registration
+   - Check resource provider registration status:
+     ```bash
+     az provider show -n Microsoft.MachineLearningServices
+     az provider show -n Microsoft.ContainerRegistry
+     az provider show -n Microsoft.KeyVault
+     az provider show -n Microsoft.Storage
+     az provider show -n Microsoft.Insights
+     az provider show -n Microsoft.ContainerService
+     az provider show -n Microsoft.PolicyInsights
+     az provider show -n Microsoft.Cdn
+     ```
    - Verify workspace access
    - Confirm subscription status
+   - Ensure all required providers are registered
