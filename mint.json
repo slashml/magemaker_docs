@@ -40,15 +40,15 @@
   "navigation": [
     { 
       "group": "Getting Started",
-      "pages": ["home", "contributing"]
+      "pages": ["quick-start", "configuration"]
     },
     {
       "group": "Core Concepts",
       "pages": [
-        "lw/deployment",
-        "lw/models",
-        "lw/configuration",
-        "lw/fine-tuning"
+        "concepts/deployment",
+        "concepts/models",
+        "concepts/fine-tuning",
+        "concepts/contributing"
       ]
     }
   ],
