@@ -1,0 +1,40 @@
+---
+title: Configuration
+description: Configure Magemaker for your environment
+---
+
+## Initial Setup
+
+Magemaker supports deployment to multiple cloud providers. Here's how to configure each one:
+
+### AWS Configuration
+
+1. Create an AWS account at [aws.amazon.com](https://aws.amazon.com/)
+2. Set up IAM credentials for SageMaker access
+
+<Note>
+We've created a detailed step-by-step guide for setting up AWS credentials with the right permissions. Check out our [AWS Setup Guide](https://docs.google.com/document/d/1NvA6uZmppsYzaOdkcgNTRl7Nb4LbpP9Koc4H_t5xNSg/edit?tab=t.0#heading=h.farbxuv3zrzm) for detailed instructions.
+</Note>
+
+The guide covers:
+- Creating an IAM user
+- Configuring appropriate permissions
+- Generating access keys
+- Setting up SageMaker access
+
+### GCP (Vertex AI) Configuration
+
+1. Create a GCP account at [cloud.google.com](https://cloud.google.com)
+2. Create a service account:
+   - Go to IAM & Admin > Service Accounts
+   - Create new service account
+   - Grant Vertex AI Admin role
+   - Download JSON key file
+
+### Azure Configuration
+
+1. Create an Azure account at [azure.microsoft.com](https://azure.microsoft.com)
+2. Set up Azure credentials:
+   - Register an application in Azure Active Directory
+   - Create a client secret
+   - Note down tenant ID, client ID, and client secret

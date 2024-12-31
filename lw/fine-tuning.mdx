@@ -1,0 +1,130 @@
+---
+title: Fine-tuning
+description: Guide to fine-tuning models with Magemaker
+---
+
+## Fine-tuning Overview
+
+Fine-tuning allows you to adapt pre-trained models to your specific use case. Magemaker simplifies this process through YAML configuration.
+
+### Basic Command
+
+```sh
+magemaker --train .magemaker_config/train-config.yaml
+```
+
+## Configuration
+
+### Basic Training Configuration
+
+```yaml
+training: !Training
+  destination: aws
+  instance_type: ml.p3.2xlarge
+  instance_count: 1
+  training_input_path: s3://your-bucket/training-data.csv
+
+models:
+- !Model
+  id: your-model-id
+  source: huggingface
+```
+
+### Advanced Configuration
+
+```yaml
+training: !Training
+  destination: aws
+  instance_type: ml.p3.2xlarge
+  instance_count: 1
+  training_input_path: s3://your-bucket/data.csv
+  hyperparameters: !Hyperparameters
+    epochs: 3
+    per_device_train_batch_size: 32
+    learning_rate: 2e-5
+    weight_decay: 0.01
+    warmup_steps: 500
+    evaluation_strategy: "steps"
+    eval_steps: 500
+    save_steps: 1000
+```
+
+## Data Preparation
+
+### Supported Formats
+
+<CardGroup>
+  <Card title="CSV Format" icon="file-csv">
+    - Simple tabular data
+    - Easy to prepare
+    - Good for classification tasks
+  </Card>
+  
+  <Card title="JSON Lines" icon="file-code">
+    - Flexible data format
+    - Good for complex inputs
+    - Supports nested structures
+  </Card>
+</CardGroup>
+
+### Data Upload
+
+<Steps>
+  <Step title="Prepare Data">
+    Format your data according to model requirements
+  </Step>
+  <Step title="Upload to S3">
+    Use AWS CLI or console to upload data
+  </Step>
+  <Step title="Configure Path">
+    Specify S3 path in training configuration
+  </Step>
+</Steps>
+
+## Instance Selection
+
+### Training Instance Types
+
+Choose based on:
+- Dataset size
+- Model size
+- Training time requirements
+- Cost constraints
+
+Popular choices:
+- ml.p3.2xlarge (1 GPU)
+- ml.p3.8xlarge (4 GPUs)
+- ml.p3.16xlarge (8 GPUs)
+
+## Hyperparameter Tuning
+
+### Basic Parameters
+
+```yaml
+hyperparameters: !Hyperparameters
+  epochs: 3
+  learning_rate: 2e-5
+  batch_size: 32
+```
+
+### Advanced Tuning
+
+```yaml
+hyperparameters: !Hyperparameters
+  epochs: 3
+  learning_rate: 
+    min: 1e-5
+    max: 1e-4
+    scaling: log
+  batch_size:
+    values: [16, 32, 64]
+```
+
+## Monitoring Training
+
+### CloudWatch Metrics
+
+Available metrics:
+- Loss
+- Learning rate
+- GPU utilization

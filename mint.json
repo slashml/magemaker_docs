@@ -1,0 +1,77 @@
+{
+  "$schema": "https://mintlify.com/schema.json",
+  "name": "Magemaker",
+  "logo": {
+    "light": "/img/lw-icon-light.svg",
+    "dark": "/img/lw-icon-dark.svg"
+  },
+  "favicon": "/img/lw-icon-dark.svg",
+  "colors": {
+    "primary": "#8957E5",
+    "light": "#8957E5",
+    "dark": "#8957E5",
+    "background": {
+      "light": "#FFFFFF",
+      "dark": "#0D1117"
+    }
+  },
+  "modeToggle": {
+    "default": "dark"
+  },
+  "font": {
+    "headings": {
+      "family": "JetBrains Mono",
+      "weight": 400
+    },
+    "body": {
+      "family": "Inter"
+    }
+  },
+  "topbarCtaButton": {
+    "type": "github",
+    "url": "https://github.com/slashml/magemaker"
+  },
+  "sidebar": {
+    "items": "undecorated"
+  },
+  "codeBlock": {
+    "mode": "auto"
+  },
+  "navigation": [
+    { 
+      "group": "Getting Started",
+      "pages": ["home", "contributing"]
+    },
+    {
+      "group": "Core Concepts",
+      "pages": [
+        "lw/deployment",
+        "lw/models",
+        "lw/configuration",
+        "lw/fine-tuning"
+      ]
+    }
+  ],
+  "footerSocials": {
+    "github": "https://github.com/slashml/magemaker",
+    "twitter": "https://twitter.com/slash_ml"
+  },
+  "footer": {
+    "links": [
+      {
+        "title": "Documentation",
+        "links": [
+          { "label": "Getting Started", "url": "/" },
+          { "label": "Contributing", "url": "/contributing" }
+        ]
+      },
+      {
+        "title": "Resources",
+        "links": [
+          { "label": "GitHub", "url": "https://github.com/slashml/magemaker" },
+          { "label": "Support", "url": "mailto:support@slashml.com" }
+        ]
+      }
+    ]
+  }
+}

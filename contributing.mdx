@@ -1,0 +1,168 @@
+---
+title: Contributing
+description: Guide to contributing to Magemaker
+---
+
+## Welcome to Magemaker Contributing Guide
+
+We're excited that you're interested in contributing to Magemaker! This document will guide you through the process of contributing to the project.
+
+## Ways to Contribute
+
+<CardGroup cols={2}>
+  <Card title="Report Bugs" icon="bug">
+    Create issues for bugs you encounter while using Magemaker
+  </Card>
+  <Card title="Feature Requests" icon="lightbulb">
+    Suggest new features or improvements
+  </Card>
+  <Card title="Documentation" icon="book">
+    Help improve our documentation
+  </Card>
+  <Card title="Code" icon="code">
+    Submit pull requests with bug fixes or new features
+  </Card>
+</CardGroup>
+
+## Development Setup
+
+<Steps>
+  <Step title="Fork and Clone">
+    ```bash
+    git clone https://github.com/YOUR_USERNAME/magemaker.git
+    cd magemaker
+    ```
+  </Step>
+  <Step title="Install Dependencies">
+    ```bash
+    pip install -e ".[dev]"
+    ```
+  </Step>
+  <Step title="Create Branch">
+    ```bash
+    git checkout -b feature/your-feature-name
+    ```
+  </Step>
+</Steps>
+
+## Development Guidelines
+
+### Code Style
+
+We use the following tools to maintain code quality:
+- Black for Python code formatting
+- isort for import sorting
+- flake8 for style guide enforcement
+
+Run the following before committing:
+```bash
+black .
+isort .
+flake8
+```
+
+### Testing
+
+<Note>
+All new features should include tests. We use pytest for our test suite.
+</Note>
+
+Run tests locally:
+```bash
+pytest tests/
+```
+
+### Documentation
+
+When adding new features, please update the relevant documentation:
+
+1. Update the README.md if needed
+2. Add/update docstrings for new functions/classes
+3. Create/update relevant .mdx files in the docs directory
+
+## Pull Request Process
+
+<Steps>
+  <Step title="Create Branch">
+    Create a new branch for your changes:
+    ```bash
+    git checkout -b feature/your-feature
+    ```
+  </Step>
+  <Step title="Make Changes">
+    Make your changes and commit them with clear commit messages:
+    ```bash
+    git add .
+    git commit -m "feat: add new deployment option"
+    ```
+  </Step>
+  <Step title="Push Changes">
+    Push your changes to your fork:
+    ```bash
+    git push origin feature/your-feature
+    ```
+  </Step>
+  <Step title="Create PR">
+    Open a Pull Request against the main repository
+  </Step>
+</Steps>
+
+### Pull Request Guidelines
+
+<CardGroup cols={2}>
+  <Card title="Clear Description" icon="pen">
+    Provide a clear description of your changes
+  </Card>
+  <Card title="Tests" icon="vial">
+    Include relevant tests for new features
+  </Card>
+  <Card title="Documentation" icon="book">
+    Update documentation as needed
+  </Card>
+  <Card title="Clean History" icon="clock-rotate-left">
+    Keep commits focused and clean
+  </Card>
+</CardGroup>
+
+## Commit Message Convention
+
+We follow the [Conventional Commits](https://www.conventionalcommits.org/) specification:
+
+- `feat:` New feature
+- `fix:` Bug fix
+- `docs:` Documentation changes
+- `style:` Code style changes
+- `refactor:` Code refactoring
+- `test:` Adding missing tests
+- `chore:` Maintenance tasks
+
+Example:
+```bash
+feat(deployment): add support for custom docker images
+```
+
+## Getting Help
+
+If you need help with your contribution:
+
+<CardGroup>
+  <Card title="Discord Community" icon="discord">
+    Join our Discord server for real-time discussions
+  </Card>
+  
+  <Card title="GitHub Discussions" icon="github">
+    Start a discussion in our GitHub repository
+  </Card>
+  
+  <Card title="Email Support" icon="envelope">
+    Contact us at support@slashml.com
+  </Card>
+</CardGroup>
+
+## Code of Conduct
+
+We are committed to providing a welcoming and inclusive experience for everyone. Please read our [Code of Conduct](https://github.com/slashml/magemaker/CODE_OF_CONDUCT.md) before participating.
+
+## License
+
+By contributing to Magemaker, you agree that your contributions will be licensed under the Apache 2.0 License.
