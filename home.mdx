@@ -68,14 +68,19 @@ Example YAML for AWS deployment:
 ```yaml
 deployment: !Deployment
   destination: aws
-  endpoint_name: test-bert-uncased
+  endpoint_name: facebook--opt-125m-202410251736
   instance_count: 1
   instance_type: ml.m5.xlarge
-
+  num_gpus: null
+  quantization: null
 models:
 - !Model
-  id: google-bert/bert-base-uncased
+  id: facebook/opt-125m
+  location: null
+  predict: null
   source: huggingface
+  task: text-generation
+  version: null
 ```
 
 For GCP Vertex AI:
@@ -83,14 +88,21 @@ For GCP Vertex AI:
 ```yaml
 deployment: !Deployment
   destination: gcp
-  endpoint_name: test-bert-gcp
-  instance_count: 1
-  machine_type: n1-standard-4
+  endpoint_name: test-endpoint-12
+  accelerator_count: 1
+  instance_type: g2-standard-12
+  accelerator_type: NVIDIA_L4
+  num_gpus: null
+  quantization: null
 
 models:
 - !Model
-  id: google-bert/bert-base-uncased
+  id: facebook/opt-125m
+  location: null
+  predict: null
   source: huggingface
+  task: null
+  version: null
 ```
 
 For Azure ML:
@@ -98,14 +110,18 @@ For Azure ML:
 ```yaml
 deployment: !Deployment
   destination: azure
-  endpoint_name: test-bert-azure
+  endpoint_name: facebook--opt-125m-202410251736
   instance_count: 1
   instance_type: Standard_DS3_v2
-
 models:
 - !Model
-  id: google-bert/bert-base-uncased
+  id: facebook-opt-125m
+  location: null
+  predict: null
   source: huggingface
+  task: text-generation
+  version: null
+
 ```
 
 ### Model Fine-tuning
