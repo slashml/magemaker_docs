@@ -1,40 +1,159 @@
 ---
 title: Configuration
-description: Configure Magemaker for your environment
+description: Configure Magemaker for your cloud providers
 ---
 
 ## Initial Setup
 
-Magemaker supports deployment to multiple cloud providers. Here's how to configure each one:
+Before using Magemaker, you need to set up credentials for your chosen cloud provider(s). Run the following command to start the interactive setup process:
+
+```bash
+magemaker
+```
+
+This will guide you through setting up the required credentials and configurations.
+
+### Required Environment Variables
+
+Create a `.env` file in your project root with the following variables based on which cloud provider(s) you plan to use:
+
+```bash
+# AWS Configuration
+AWS_ACCESS_KEY_ID="your-access-key"      # Required for AWS
+AWS_SECRET_ACCESS_KEY="your-secret-key"   # Required for AWS
+SAGEMAKER_ROLE="arn:aws:iam::..."        # Required for AWS
+
+# GCP Configuration
+PROJECT_ID="your-project-id"             # Required for GCP
+GCLOUD_REGION="us-central1"              # Required for GCP
+
+# Azure Configuration
+AZURE_SUBSCRIPTION_ID="your-sub-id"      # Required for Azure
+AZURE_RESOURCE_GROUP="ml-resources"      # Required for Azure
+AZURE_WORKSPACE_NAME="ml-workspace"      # Required for Azure
+AZURE_REGION="eastus"                    # Required for Azure
+
+# Optional configurations
+HUGGING_FACE_HUB_KEY="your-hf-token"    # Required for private HF models
+```
+
+<Warning>
+Never commit your .env file to version control!
+</Warning>
 
 ### AWS Configuration
 
-1. Create an AWS account at [aws.amazon.com](https://aws.amazon.com/)
-2. Set up IAM credentials for SageMaker access
-
 <Note>
-We've created a detailed step-by-step guide for setting up AWS credentials with the right permissions. Check out our [AWS Setup Guide](https://docs.google.com/document/d/1NvA6uZmppsYzaOdkcgNTRl7Nb4LbpP9Koc4H_t5xNSg/edit?tab=t.0#heading=h.farbxuv3zrzm) for detailed instructions.
+We've created a detailed step-by-step guide for setting up AWS credentials with the right permissions. Check out our [AWS Setup Guide](https://docs.google.com/document/d/1NvA6uZmppsYzaOdkcgNTRl7Nb4LbpP9Koc4H_t5xNSg/edit?usp=sharing) for detailed instructions.
 </Note>
 
 The guide covers:
 - Creating an IAM user
 - Configuring appropriate permissions
 - Generating access keys
-- Setting up SageMaker access
+- Setting up SageMaker role and access
 
 ### GCP (Vertex AI) Configuration
 
-1. Create a GCP account at [cloud.google.com](https://cloud.google.com)
-2. Create a service account:
-   - Go to IAM & Admin > Service Accounts
-   - Create new service account
-   - Grant Vertex AI Admin role
-   - Download JSON key file
+1. Install the Google Cloud SDK
+   ```bash
+   # Follow installation instructions at:
+   https://cloud.google.com/sdk/docs/install
+   ```
+
+2. Create a service account with access to:
+   - Google Cloud Storage
+   - Vertex AI
+
+<Note>
+Follow our [GCP Setup Guide](https://docs.google.com/document/d/1NvA6uZmppsYzaOdkcgNTRl7Nb4LbpP9Koc4H_t5xNSg/edit?usp=sharing) for detailed instructions.
+</Note>
 
 ### Azure Configuration
 
-1. Create an Azure account at [azure.microsoft.com](https://azure.microsoft.com)
-2. Set up Azure credentials:
-   - Register an application in Azure Active Directory
-   - Create a client secret
-   - Note down tenant ID, client ID, and client secret
+1. Install the Azure CLI:
+   ```bash
+   # On macOS
+   brew update && brew install azure-cli
+   
+   # On Linux
+   curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+   ```
+
+2. Set up required resources:
+   - Resource Group
+   - Azure ML Workspace
+   - Subscription
+
+<Steps>
+  <Step title="Login to Azure">
+    ```bash
+    az login
+    ```
+  </Step>
+  <Step title="Select Subscription">
+    ```bash
+    az account set --subscription <subscription-id>
+    ```
+  </Step>
+  <Step title="Create Resource Group">
+    ```bash
+    az group create --name <resource-group> --location <region>
+    ```
+  </Step>
+  <Step title="Create ML Workspace">
+    ```bash
+    az ml workspace create -n <workspace-name> -g <resource-group>
+    ```
+  </Step>
+</Steps>
+
+## Verification
+
+To verify your configuration:
+
+```bash
+magemaker verify
+```
+
+This will check:
+- Environment variables
+- Cloud provider credentials
+- Required permissions
+- Resource availability
+
+## Best Practices
+
+1. **Environment Management**
+   - Use separate configurations for dev/prod
+   - Regularly rotate access keys
+   - Use environment-specific roles
+
+2. **Security**
+   - Follow principle of least privilege
+   - Use service accounts where possible
+   - Enable audit logging
+
+3. **Resource Management**
+   - Monitor quota limits
+   - Clean up unused resources
+   - Set up cost alerts
+
+## Troubleshooting
+
+Common configuration issues:
+
+1. **AWS Issues**
+   - Check IAM role permissions
+   - Verify SageMaker quota
+   - Confirm region settings
+
+2. **GCP Issues**
+   - Verify service account permissions
+   - Check Vertex AI API enablement
+   - Confirm project ID
+
+3. **Azure Issues**
+   - Check resource provider registration
+   - Verify workspace access
+   - Confirm subscription status
