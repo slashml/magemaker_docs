@@ -4,7 +4,7 @@ description: Deploy open source AI models to AWS, GCP, and Azure in minutes
 "og:title": "Magemaker"
 ---
 
-## About Magemaker
+## About Magemaker v0.1.5
 
 Magemaker is a Python tool that simplifies the process of deploying open source AI models to your preferred cloud provider. Instead of spending hours digging through documentation, Magemaker lets you deploy Hugging Face models directly to AWS SageMaker, Google Cloud Vertex AI, or Azure Machine Learning.
 
@@ -31,6 +31,10 @@ pip install magemaker
 
 ## First-time Setup
 
+<Note>
+The first time you run Magemaker, it will need to perform initial configuration which may take 1-2 minutes. This includes setting up cloud provider credentials and creating necessary configuration files. You'll be prompted to enter the necessary credentials.
+</Note>
+
 1. Run Magemaker:
 ```sh
 magemaker
@@ -40,10 +44,6 @@ magemaker
    - Cloud provider selection
    - Credential configuration
    - Environment setup
-
-<Note>
-On first run, Magemaker will guide you through configuring your chosen cloud provider. You'll be prompted to enter the necessary credentials.
-</Note>
 
 ## Using Magemaker
 
