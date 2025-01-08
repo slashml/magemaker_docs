@@ -5,8 +5,9 @@ Magemaker is a Python tool that simplifies the process of deploying an open sour
 ## Prerequisites
 
 - Python
-- An AWS account
-- Quota for AWS SageMaker instances (by default, you get 2 instances of ml.m5.xlarge for free)
+- Cloud provider accounts (AWS, GCP, or Azure)
+- Cloud provider CLI tools
+- Quota for cloud AI/ML instances
 - Certain Hugging Face models (e.g. Llama2) require an access token ([hf docs](https://huggingface.co/docs/hub/en/models-gated#access-gated-models-as-a-user))
 
 ## Installation
@@ -20,10 +21,14 @@ Magemaker is a Python tool that simplifies the process of deploying an open sour
 2. Run Magemaker:
 
    ```sh
-   magemaker
+   magemaker --cloud [aws|gcp|azure|all]
    ```
 
-   If this is your first time running this command, it will configure the AWS client so you’re ready to start deploying models. You’ll be prompted to enter your Access Key and Secret here. You can also specify your AWS region. The default is us-east-1. You only need to change this if your SageMaker instance quota is in a different region.
+   When you first run the command, Magemaker will help you configure cloud provider credentials. You'll be guided through:
+   Entering access credentials
+   Specifying cloud region
+   For AWS, the default region is us-east-1. You can change this if your SageMaker instance quota is in a different region. Similar configuration steps apply for GCP and Azure cloud providers.
+   The configuration process creates a .env file to securely store your cloud credentials for future use.
 
 3. Once configured, it will create a `.env` file and save the credentials there. You can also add your Hugging Face Hub Token to this file if you have one.
 
@@ -33,7 +38,11 @@ Magemaker is a Python tool that simplifies the process of deploying an open sour
 
 ## Deploying Models
 
-Magemaker provides an interactive menu to deploy models. You can choose from a dropdown of models to deploy.
+Magemaker supports multi-cloud model deployment across AWS, GCP, and Azure. The tool provides an interactive menu and flexible deployment options.
+
+```sh
+magemaker --cloud [aws|gcp|azure]
+```
 
 ### Deploying Hugging Face Models
 

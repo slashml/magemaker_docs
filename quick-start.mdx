@@ -10,16 +10,16 @@ Magemaker is a Python tool that simplifies the process of deploying open source 
 
 ## Prerequisites
 
-* Python 3.11+
-* Cloud provider account(s):
-  * AWS for SageMaker
-  * GCP for Vertex AI
-  * Azure for Azure ML
-* Cloud CLI tools:
-  * AWS CLI (optional)
-  * Google Cloud SDK for GCP
-  * Azure CLI for Azure
-* Hugging Face account (for access to models)
+- Python 3.11+
+- Cloud provider account(s):
+  - AWS for SageMaker
+  - GCP for Vertex AI
+  - Azure for Azure ML
+- Cloud CLI tools:
+  - AWS CLI (optional)
+  - Google Cloud SDK for GCP
+  - Azure CLI for Azure
+- Hugging Face account (for access to models)
 
 ## Installation
 
@@ -32,28 +32,52 @@ pip install magemaker
 ## First-time Setup
 
 <Note>
-The first time you run Magemaker, it will need to perform initial configuration which may take 1-2 minutes. This includes setting up cloud provider credentials and creating necessary configuration files. You'll be prompted to enter the necessary credentials.
+  The first time you run Magemaker, it will need to perform initial
+  configuration which may take 1-2 minutes. This includes setting up cloud
+  provider credentials and creating necessary configuration files. You'll be
+  prompted to enter the necessary credentials.
 </Note>
 
-1. Run Magemaker:
+1. Run Magemaker with your desired cloud provider:
+
 ```sh
-magemaker
+magemaker --cloud [aws|gcp|azure|all]
 ```
 
-2. The tool will guide you through:
-   - Cloud provider selection
-   - Credential configuration
-   - Environment setup
+2. Magemaker will:
+   - Configure the specified cloud provider
+   - Set up necessary credentials
+   - Prepare environment for deployment
+
+The `--cloud` flag allows direct configuration of your preferred cloud provider, streamlining the setup process.
 
 ## Using Magemaker
 
 ### Interactive Deployment
 
-Run `magemaker` to access an interactive menu where you can:
-- Choose your cloud provider
-- Select from available models
-- Configure deployment settings
+Run Magemaker with a cloud provider flag `--cloud` to access the deployment menu:
+
+```sh
+magemaker --cloud gcp
+```
+
+This approach allows you to:
+
+- Directly target a specific cloud provider
+- Quickly configure and deploy models for GCP, AWS, or Azure
+
+When you run with `--cloud`, Magemaker will:
+
+- Configure the specified cloud provider
+- Present deployment options for that specific cloud
+- Guide you through model selection and deployment
 - Monitor deployment progress
+
+Supported providers:
+
+- `--cloud aws` AWS SageMaker deployment
+- `--cloud gcp` Google Cloud Vertex AI deployment
+- `--cloud azure` Azure Machine Learning deployment
 
 ### YAML-based Deployment
 
@@ -74,13 +98,13 @@ deployment: !Deployment
   num_gpus: null
   quantization: null
 models:
-- !Model
-  id: facebook/opt-125m
-  location: null
-  predict: null
-  source: huggingface
-  task: text-generation
-  version: null
+  - !Model
+    id: facebook/opt-125m
+    location: null
+    predict: null
+    source: huggingface
+    task: text-generation
+    version: null
 ```
 
 For GCP Vertex AI:
@@ -96,13 +120,13 @@ deployment: !Deployment
   quantization: null
 
 models:
-- !Model
-  id: facebook/opt-125m
-  location: null
-  predict: null
-  source: huggingface
-  task: null
-  version: null
+  - !Model
+    id: facebook/opt-125m
+    location: null
+    predict: null
+    source: huggingface
+    task: null
+    version: null
 ```
 
 For Azure ML:
@@ -114,14 +138,13 @@ deployment: !Deployment
   instance_count: 1
   instance_type: Standard_DS3_v2
 models:
-- !Model
-  id: facebook-opt-125m
-  location: null
-  predict: null
-  source: huggingface
-  task: text-generation
-  version: null
-
+  - !Model
+    id: facebook-opt-125m
+    location: null
+    predict: null
+    source: huggingface
+    task: text-generation
+    version: null
 ```
 
 ### Model Fine-tuning
@@ -136,8 +159,8 @@ Example training configuration:
 
 ```yaml
 training: !Training
-  destination: aws  # or gcp, azure
-  instance_type: ml.p3.2xlarge  # varies by cloud provider
+  destination: aws # or gcp, azure
+  instance_type: ml.p3.2xlarge # varies by cloud provider
   instance_count: 1
   training_input_path: s3://your-bucket/data.csv
   hyperparameters: !Hyperparameters
@@ -149,17 +172,25 @@ training: !Training
 ### Recommended Models
 
 <CardGroup>
-  <Card title="google-bert/bert-base-uncased" href="https://huggingface.co/google-bert/bert-base-uncased">
-    Fill Mask: tries to complete your sentence like Madlibs. Query format: text string with [MASK] somewhere in it.
+  <Card
+    title="google-bert/bert-base-uncased"
+    href="https://huggingface.co/google-bert/bert-base-uncased"
+  >
+    Fill Mask: tries to complete your sentence like Madlibs. Query format: text
+    string with [MASK] somewhere in it.
   </Card>
-  
-  <Card title="sentence-transformers/all-MiniLM-L6-v2" href="https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2">
-    Feature extraction: turns text into a 384d vector embedding for semantic search / clustering. Query format: "type out a sentence like this one."
+
+  <Card
+    title="sentence-transformers/all-MiniLM-L6-v2"
+    href="https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2"
+  >
+    Feature extraction: turns text into a 384d vector embedding for semantic
+    search / clustering. Query format: "type out a sentence like this one."
   </Card>
 </CardGroup>
 
 <Warning>
-Remember to deactivate unused endpoints to avoid unnecessary charges!
+  Remember to deactivate unused endpoints to avoid unnecessary charges!
 </Warning>
 
 ## What we're working on next

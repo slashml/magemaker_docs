@@ -8,7 +8,7 @@ description: Configure Magemaker for your cloud providers
 Before using Magemaker, you need to set up credentials for your chosen cloud provider(s). Run the following command to start the interactive setup process:
 
 ```bash
-magemaker
+magemaker --cloud [aws|gcp|azure]
 ```
 
 This will guide you through setting up the required credentials and configurations.
@@ -37,17 +37,22 @@ AZURE_REGION="eastus"                    # Required for Azure
 HUGGING_FACE_HUB_KEY="your-hf-token"    # Required for private HF models
 ```
 
-<Warning>
-Never commit your .env file to version control!
-</Warning>
+<Warning>Never commit your .env file to version control!</Warning>
 
 ### AWS Configuration
 
+- Run `magemaker --cloud aws`
+- Follow interactive credential configuration
+
 <Note>
-We've created a detailed step-by-step guide for setting up AWS credentials with the right permissions. Check out our [AWS Setup Guide](https://docs.google.com/document/d/1NvA6uZmppsYzaOdkcgNTRl7Nb4LbpP9Koc4H_t5xNSg/edit?usp=sharing) for detailed instructions.
+  We've created a detailed step-by-step guide for setting up AWS credentials
+  with the right permissions. Check out our [AWS Setup
+  Guide](https://docs.google.com/document/d/1NvA6uZmppsYzaOdkcgNTRl7Nb4LbpP9Koc4H_t5xNSg/edit?usp=sharing)
+  for detailed instructions.
 </Note>
 
 The guide covers:
+
 - Creating an IAM user
 - Configuring appropriate permissions
 - Generating access keys
@@ -55,32 +60,41 @@ The guide covers:
 
 ### GCP (Vertex AI) Configuration
 
-1. Install the Google Cloud SDK
+1. Run `magemaker --cloud gcp`
+
+2. Install the Google Cloud SDK
+
    ```bash
    # Follow installation instructions at:
    https://cloud.google.com/sdk/docs/install
    ```
 
-2. Create a service account with access to:
+3. Create a service account with access to:
    - Google Cloud Storage
    - Vertex AI
 
 <Note>
-Follow our [GCP Setup Guide](https://docs.google.com/document/d/1NvA6uZmppsYzaOdkcgNTRl7Nb4LbpP9Koc4H_t5xNSg/edit?usp=sharing) for detailed instructions.
+  Follow our [GCP Setup
+  Guide](https://docs.google.com/document/d/1NvA6uZmppsYzaOdkcgNTRl7Nb4LbpP9Koc4H_t5xNSg/edit?usp=sharing)
+  for detailed instructions.
 </Note>
 
 ### Azure Configuration
 
-1. Install the Azure CLI:
+1. Run `magemaker --cloud azure`
+
+2. Install the Azure CLI:
+
    ```bash
    # On macOS
    brew update && brew install azure-cli
-   
+
    # On Linux
    curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
    ```
 
-2. Register Required Resource Providers:
+3. Register Required Resource Providers:
+
    ```bash
    # Register all required providers
    az provider register --namespace Microsoft.MachineLearningServices
@@ -94,13 +108,11 @@ Follow our [GCP Setup Guide](https://docs.google.com/document/d/1NvA6uZmppsYzaOd
    ```
 
    <Note>
-   Registration can take up to 10 minutes. Check status with:
-   ```bash
-   az provider show -n Microsoft.MachineLearningServices
-   ```
+     Registration can take up to 10 minutes. Check status with: ```bash az
+     provider show -n Microsoft.MachineLearningServices ```
    </Note>
 
-3. Set up required resources:
+4. Set up required resources:
    - Resource Group
    - Azure ML Workspace
    - Subscription
@@ -137,6 +149,7 @@ magemaker verify
 ```
 
 This will check:
+
 - Environment variables
 - Cloud provider credentials
 - Required permissions
@@ -145,11 +158,13 @@ This will check:
 ## Best Practices
 
 1. **Environment Management**
+
    - Use separate configurations for dev/prod
    - Regularly rotate access keys
    - Use environment-specific roles
 
 2. **Security**
+
    - Follow principle of least privilege
    - Use service accounts where possible
    - Enable audit logging
@@ -164,11 +179,13 @@ This will check:
 Common configuration issues:
 
 1. **AWS Issues**
+
    - Check IAM role permissions
    - Verify SageMaker quota
    - Confirm region settings
 
 2. **GCP Issues**
+
    - Verify service account permissions
    - Check Vertex AI API enablement
    - Confirm project ID
