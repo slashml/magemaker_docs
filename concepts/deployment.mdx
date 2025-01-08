@@ -5,17 +5,18 @@ description: Learn how to deploy models using Magemaker
 
 ## Deployment Methods
 
-Magemaker offers multiple ways to deploy your models to AWS SageMaker. Choose the method that best fits your workflow.
+Magemaker offers multiple ways to deploy your models to AWS, GCP and Azure. Choose the method that best fits your workflow.
 
 ### Interactive Deployment
 
-When you run the `magemaker` command, you'll get an interactive menu that walks you through the deployment process:
+When you run the `magemaker --cloud [aws|gcp|azure|all]` command, you'll get an interactive menu that walks you through the deployment process:
 
 ```sh
-magemaker
+magemaker --cloud [aws|gcp|azure|all]
 ```
 
 This method is great for:
+
 - First-time users
 - Exploring available models
 - Testing different configurations
@@ -29,6 +30,7 @@ magemaker --deploy .magemaker_config/your-model.yaml
 ```
 
 This is recommended for:
+
 - Production deployments
 - CI/CD pipelines
 - Infrastructure as Code (IaC)
@@ -48,9 +50,9 @@ deployment: !Deployment
   instance_type: ml.m5.xlarge
 
 models:
-- !Model
-  id: facebook/opt-125m
-  source: huggingface
+  - !Model
+    id: facebook/opt-125m
+    source: huggingface
 ```
 
 ### GCP (Vertex AI)
@@ -65,9 +67,9 @@ deployment: !Deployment
   accelerator_count: 1
 
 models:
-- !Model
-  id: facebook/opt-125m
-  source: huggingface
+  - !Model
+    id: facebook/opt-125m
+    source: huggingface
 ```
 
 ### Azure ML
@@ -78,11 +80,11 @@ deployment: !Deployment
   endpoint_name: opt-125m-azure
   instance_count: 1
   instance_type: Standard_DS3_v2
-  
+
 models:
-- !Model
-  id: facebook/opt-125m
-  source: huggingface
+  - !Model
+    id: facebook/opt-125m
+    source: huggingface
 ```
 
 ## YAML Configuration Reference
@@ -97,9 +99,9 @@ deployment: !Deployment
   instance_type: ml.m5.xlarge
 
 models:
-- !Model
-  id: google-bert/bert-base-uncased
-  source: huggingface
+  - !Model
+    id: google-bert/bert-base-uncased
+    source: huggingface
 ```
 
 ### Advanced Configuration
@@ -113,14 +115,14 @@ deployment: !Deployment
   num_gpus: 4
 
 models:
-- !Model
-  id: meta-llama/Meta-Llama-3-8B-Instruct
-  source: huggingface
-  predict:
-    temperature: 0.9
-    top_p: 0.9
-    top_k: 20
-    max_new_tokens: 250
+  - !Model
+    id: meta-llama/Meta-Llama-3-8B-Instruct
+    source: huggingface
+    predict:
+      temperature: 0.9
+      top_p: 0.9
+      top_k: 20
+      max_new_tokens: 250
 ```
 
 ## Cloud-Specific Instance Types
@@ -136,7 +138,7 @@ Choose your instance type based on your model's requirements:
     - 16 GB Memory
     - Available in free tier
   </Card>
-  
+
   <Card title="ml.g5.12xlarge" icon="server">
     Required for larger models like LLaMA
     - 48 vCPU
@@ -146,7 +148,7 @@ Choose your instance type based on your model's requirements:
 </CardGroup>
 
 <Warning>
-Remember to deactivate unused endpoints to avoid unnecessary charges!
+  Remember to deactivate unused endpoints to avoid unnecessary charges!
 </Warning>
 
 ### GCP Vertex AI Types
@@ -158,7 +160,7 @@ Remember to deactivate unused endpoints to avoid unnecessary charges!
     - 15 GB Memory
     - Cost-effective option
   </Card>
-  
+
   <Card title="a2-highgpu-1g" icon="server">
     For larger models
     - 12 vCPU
@@ -176,7 +178,7 @@ Remember to deactivate unused endpoints to avoid unnecessary charges!
     - 14 GB Memory
     - Balanced performance
   </Card>
-  
+
   <Card title="Standard_NC6s_v3" icon="server">
     For GPU workloads
     - 6 vCPU
@@ -188,6 +190,7 @@ Remember to deactivate unused endpoints to avoid unnecessary charges!
 ## Deployment Best Practices
 
 1. Use meaningful endpoint names that include:
+
    - Model name/version
    - Environment (dev/staging/prod)
    - Team identifier
@@ -195,6 +198,7 @@ Remember to deactivate unused endpoints to avoid unnecessary charges!
 2. Start with smaller instance types and scale up as needed
 
 3. Use autoscaling for production workloads:
+
    ```yaml
    deployment: !Deployment
      autoscaling_enabled: true
@@ -211,11 +215,13 @@ Remember to deactivate unused endpoints to avoid unnecessary charges!
 Common issues and their solutions:
 
 1. **Deployment Timeout**
+
    - Increase the timeout in your configuration
    - Check instance quota limits
    - Verify network connectivity
 
 2. **Instance Not Available**
+
    - Try a different AWS region
    - Request quota increase
    - Use an alternative instance type
