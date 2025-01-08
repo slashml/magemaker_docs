@@ -6,7 +6,7 @@
   <h3 align="center">Magemaker v0.1, by SlashML</h3>
 
   <p align="center">
-    Deploy open source AI models to AWS in minutes.
+    Deploy open source AI models to AWS, GCP, and Azure in minutes
     <br />
   </p>
 </div>
@@ -38,37 +38,42 @@
 
 <!-- ABOUT THE PROJECT -->
 ## About Magemaker
-Magemaker is a Python tool that simplifies the process of deploying an open source AI model to your own cloud. Instead of spending hours digging through documentation to figure out how to get AWS working, Magemaker lets you deploy open source AI models directly from the command line.
+Magemaker is a Python tool that simplifies the process of deploying an open source AI model to your own cloud. 
 
-Choose a model from Hugging Face or SageMaker, and Magemaker will spin up a SageMaker instance with a ready-to-query endpoint in minutes.
+Deploy from an interactive menu in the terminal or from a simple YAML file.
+
+Instead of spending hours digging through documentation to figure out how to get AWS working, Magemaker lets you deploy Hugging Face models directly to AWS SageMaker, Google Cloud Vertex AI, or Azure Machine Learning, from the command line or a simple YAML file.
+
+Choose a model from Hugging Face, and Magemaker will spin up an instance with a ready-to-query endpoint of the model in minutes.
 
 <!-- GETTING STARTED -->
 <br>
 
 ## Getting Started
 
-Magemaker works with AWS. Azure and GCP support are coming soon!
+Magemaker works with the three major cloud providers AWS, Azure and GCP!
 
 To get a local copy up and running follow these simple steps.
 
 ### Prerequisites
 
-* Python
-* An AWS account
-* Quota for AWS SageMaker instances (by default, you get 2 instances of ml.m5.xlarge for free)
+* Python 3.11+
+* Cloud Configuration
+    * An account to your preferred cloud provider, AWS, GCP and Azure.
+        * Each cloud requires slightly different accesses, Magemaker will guide you through getting the necessary credentials to the selected cloud provider
+        * Here's a guide on how to configure AWS and get the credentials [Google Doc](https://docs.google.com/document/d/1NvA6uZmppsYzaOdkcgNTRl7Nb4LbpP9Koc4H_t5xNSg/edit?tab=t.0#heading=h.farbxuv3zrzm)
+    * Quota approval for instances you require for the AI model 
+        * By default, you get some free instances, example with AWS you are pre-approved for 2 ml.m5.xlarge instances with 16gb of RAM each
+
+    * An installation and configuration of your selected cloud CLI tool(s)
+        * Magemaker will prompt you to install the CLI of the selected cloud provider, if not installed already.
+        * Magemaker will prompt you to add the necesssary credentials.
+
 * Certain Hugging Face models (e.g. Llama2) require an access token ([hf docs](https://huggingface.co/docs/hub/en/models-gated#access-gated-models-as-a-user))
 
-### Configuration
-
-**Step 1: Set up AWS and SageMaker**
-
-To get started, you’ll need an AWS account which you can create at https://aws.amazon.com/. Then you’ll need to create access keys for SageMaker.
-
-We wrote up the steps in [Google Doc](https://docs.google.com/document/d/1NvA6uZmppsYzaOdkcgNTRl7Nb4LbpP9Koc4H_t5xNSg/edit?tab=t.0#heading=h.farbxuv3zrzm) as well. 
 
 
-
-### Installing the package
+### Installation
 
 **Step 1**
 
@@ -84,7 +89,9 @@ Run it by simply doing the following:
 magemaker
 ```
 
-If this is your first time running this command. It will configure the AWS client so you’re ready to start deploying models. You’ll be prompted to enter your Access Key and Secret here. You can also specify your AWS region. The default is us-east-1. You only need to change this if your SageMaker instance quota is in a different region.
+If this is your first time running this command, It will configure the selected cloud so you’re ready to start deploying models. 
+
+In the case of AWS, it’ll prompt you to enter your Access Key and Secret. You can also specify your AWS region. The default is us-east-1. You only need to change this if your SageMaker instance quota is in a different region.
 
 Once configured, it will create a `.env` file and save the credentials there. You can also add your Hugging Face Hub Token to this file if you have one. 
 
@@ -101,24 +108,24 @@ HUGGING_FACE_HUB_KEY="KeyValueHere"
 
 ## Using Magemaker
 
-### Deploying models from dropdown
+### Interactive deployment
 
-When you run `magemaker` comamnd it will give you an interactive menu to deploy models. You can choose from a dropdown of models to deploy.
+Run `magemaker` to access an interactive menu where you can:
 
-#### Deploying Hugging Face models
-If you're deploying with Hugging Face, copy/paste the full model name from Hugging Face. For example, `google-bert/bert-base-uncased`. Note that you’ll need larger, more expensive instance types in order to run bigger models. It takes anywhere from 2 minutes (for smaller models) to 10+ minutes (for large models) to spin up the instance with your model. 
+* Choose your cloud provider
+* Select from available models
+* Configure deployment settings
+* Monitor deployment progress
+ 
 
-#### Deploying Sagemaker models
-If you are deploying a Sagemaker model, select a framework and search from a model. If you a deploying a custom model, provide either a valid S3 path or a local path (and the tool will automatically upload it for you). Once deployed, we will generate a YAML file with the deployment and model in the `CONFIG_DIR=.magemaker_config` folder. You can modify the path to this folder by setting the `CONFIG_DIR` environment variable. 
-
-#### Deploy using a yaml file
-We recommend deploying through a yaml file for reproducability and IAC. From the cli, you can deploy a model without going through all the menus. You can even integrate us with your Github Actions to deploy on PR merge. Deploy via YAML files simply by passing the `--deploy` option with local path like so:
+#### YAML-based Deployment
+For reproducible deployments, use YAML configuration:
 
 ```
 magemaker --deploy .magemaker_config/bert-base-uncased.yaml
 ```
 
-Following is a sample yaml file for deploying a model the same google bert model mentioned above:
+Following is a sample yaml file for deploying a model the same google bert model mentioned above to AWS:
 
 ```yaml
 deployment: !Deployment
@@ -134,27 +141,45 @@ models:
   source: huggingface
 ```
 
-Following is a yaml file for deploying a llama model from HF:
+Following is a yaml file for deploying a facebook model to GCP Vertex AI:
 ```yaml
 deployment: !Deployment
-  destination: aws
-  endpoint_name: test-llama2-7b
-  instance_count: 1
-  instance_type: ml.g5.12xlarge
-  num_gpus: 4
-  # quantization: bitsandbytes
+  destination: gcp
+  endpoint_name: test-endpoint-12
+  accelerator_count: 1
+  instance_type: g2-standard-12
+  accelerator_type: NVIDIA_L4
+  num_gpus: null
+  quantization: null
 
 models:
 - !Model
-  id: meta-llama/Meta-Llama-3-8B-Instruct
+  id: facebook/opt-125m
+  location: null
+  predict: null
   source: huggingface
-  predict:
-    temperature: 0.9
-    top_p: 0.9
-    top_k: 20
-    max_new_tokens: 250
-```
+  task: null
+  version: null
 
+```
+For Azure ML:
+```yaml
+deployment: !Deployment
+  destination: azure
+  endpoint_name: facebook--opt-125m-202410251736
+  instance_count: 1
+  instance_type: Standard_DS3_v2
+models:
+- !Model
+  id: facebook-opt-125m
+  location: null
+  predict: null
+  source: huggingface
+  task: text-generation
+  version: null
+
+
+```
 #### Fine-tuning a model using a yaml file
 
 You can also fine-tune a model using a yaml file, by using the `train` option in the command and passing path to the yaml file
@@ -167,19 +192,15 @@ Here is an example yaml file for fine-tuning a hugging-face model:
 
 ```yaml
 training: !Training
-  destination: aws
-  instance_type: ml.p3.2xlarge
+  destination: aws  # or gcp, azure
+  instance_type: ml.p3.2xlarge  # varies by cloud provider
   instance_count: 1
-  training_input_path: s3://jumpstart-cache-prod-us-east-1/training-datasets/tc/data.csv
+  training_input_path: s3://your-bucket/data.csv
   hyperparameters: !Hyperparameters
-    epochs: 1
+    epochs: 3
     per_device_train_batch_size: 32
-    learning_rate: 0.01
+    learning_rate: 2e-5
 
-models:
-- !Model
-  id: meta-textgeneration-llama-3-8b-instruct
-  source: huggingface
 ```
 
 
@@ -209,7 +230,7 @@ If you’re using the `ml.m5.xlarge` instance type, here are some small Hugging 
 
 ### Deactivating models
 
-Any model endpoints you spin up will run continuously unless you deactivate them! Make sure to delete endpoints you’re no longer using so you don’t keep getting charged for your SageMaker instance.
+Any model endpoints you spin up will run continuously unless you deactivate them! Make sure to delete endpoints you’re no longer using so you don’t keep getting charged for your instance.
 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
