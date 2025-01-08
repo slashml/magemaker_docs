@@ -66,18 +66,12 @@ This approach allows you to:
 - Directly target a specific cloud provider
 - Quickly configure and deploy models for GCP, AWS, or Azure
 
-When you run with `--cloud`, Magemaker will:
-
-- Configure the specified cloud provider
-- Present deployment options for that specific cloud
-- Guide you through model selection and deployment
-- Monitor deployment progress
-
 Supported providers:
 
 - `--cloud aws` AWS SageMaker deployment
 - `--cloud gcp` Google Cloud Vertex AI deployment
 - `--cloud azure` Azure Machine Learning deployment
+- `--cloud all` Configure all three providers at the same time
 
 ### YAML-based Deployment
 
@@ -91,7 +85,7 @@ Example YAML for AWS deployment:
 
 ```yaml
 deployment: !Deployment
-  destination: aws
+  destination: aws 
   endpoint_name: facebook--opt-125m-202410251736
   instance_count: 1
   instance_type: ml.m5.xlarge
