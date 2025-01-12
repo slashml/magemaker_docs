@@ -1,0 +1,75 @@
+---
+title: Deploying Llama 3 to GCP
+---
+
+## Introduction
+This tutorial guides you through deploying Llama 3 to Google Cloud Platform (GCP) Vertex AI using Magemaker and querying it using the interactive dropdown menu. Ensure you have followed the [installation](installation) steps before proceeding. 
+
+<Note> 
+You may need to request a quota increase for specific machine types and GPUs in the region where you plan to deploy the model. Check your GCP quotas before proceeding. 
+</Note>
+
+## Step 1: Setting Up Magemaker for GCP
+
+Run the following command to configure Magemaker for GCP Vertex AI deployment:
+
+```sh
+magemaker --cloud gcp
+```
+
+This initializes Magemaker with the necessary configurations for deploying models to Vertex AI.
+
+## Step 2: YAML-based Deployment
+
+For reproducible deployments, use YAML configuration:
+
+```sh
+magemaker --deploy .magemaker_config/your-model.yaml
+```
+
+Example YAML for GCP deployment:
+
+```yaml
+deployment: !Deployment
+  destination: gcp
+  endpoint_name: llama3-endpoint
+  accelerator_count: 1
+  instance_type: n1-standard-8
+  accelerator_type: NVIDIA_T4
+  num_gpus: 1
+  quantization: null
+
+models:
+  - !Model
+    id: meta-llama/Meta-Llama-3-8B-Instruct
+    location: null
+    predict: null
+    source: huggingface
+    task: text-generation
+    version: null
+```
+<Note>
+   For gated models like llama from Meta, you have to accept terms of use for model on hugging face and adding Hugging face token to the environment are necessary for deployment to go through.
+</Note>
+
+
+### Selecting an Appropriate Instance
+For Llama 3, a machine type such as `n1-standard-8` with an attached NVIDIA T4 GPU (`NVIDIA_T4`) is a suitable configuration for most use cases. Adjust the instance type and GPU based on your workload requirements.
+
+<Warning>
+If you encounter quota issues, submit a quota increase request in the GCP console under "IAM & Admin > Quotas" for the specific GPU type in your deployment region.
+</Warning>
+
+## Step 3: Querying the Deployed Model
+
+Once the deployment is complete, use the interactive dropdown menu to query the model.
+
+### Querying Models
+
+From the dropdown, select `Query a Model Endpoint` to see the list of model endpoints. Press space to select the endpoint you want to query. Enter your query in the text box and press enter to get the response.
+
+![Query Endpoints](../Images/query-1.png)
+
+## Conclusion
+You have successfully deployed and queried Llama 3 on GCP Vertex AI using Magemaker's interactive dropdown menu. For any questions or feedback, feel free to contact us at [support@slashml.com](mailto:support@slashml.com).
+

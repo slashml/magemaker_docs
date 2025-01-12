@@ -3,8 +3,10 @@ title: Quick Start
 "og:title": "Magemaker"
 ---
 
-## About Magemaker
 <Note> Make sure you have followed the [installation](installation) steps before proceeding. </Note>
+
+
+## Interactive View
 
 1. Run Magemaker with your desired cloud provider:
 
@@ -19,7 +21,28 @@ Supported providers:
 - `--cloud azure` Azure Machine Learning deployment
 - `--cloud all` Configure all three providers at the same time
 
-### YAML-based Deployment
+
+### List Models
+
+From the dropdown, select `Show Acitve Models` to see the list of endpoints deployed.
+
+![Acitve Endpoints](../Images/active-1.png)
+
+### Delete Models
+
+From the dropdown, select `Delete a Model Endpoint` to see the list of models endpoints. Press space to select the endpoints you want to delete
+
+![Delete Endpoints](../Images/delete-1.png)
+
+
+### Querying Models
+
+From the dropdown, select `Query a Model Endpoint` to see the list of models endpoints. Press space to select the endpoints you want to query. Enter the query in the text box and press enter to get the response.
+
+![Query Endpoints](../Images/query-1.png)
+
+
+### YAML-based Deployment (Recommended)
 
 For reproducible deployments, use YAML configuration:
 
@@ -103,6 +126,7 @@ models:
 
   </Steps>
 </Note>
+
 
 
 ### Model Fine-tuning
