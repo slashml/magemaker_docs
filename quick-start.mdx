@@ -55,7 +55,7 @@ Example YAML for AWS deployment:
 ```yaml
 deployment: !Deployment
   destination: aws 
-  endpoint_name: facebook--opt-125m-202410251736
+  endpoint_name: facebook-opt-test
   instance_count: 1
   instance_type: ml.m5.xlarge
   num_gpus: null
@@ -75,7 +75,7 @@ For GCP Vertex AI:
 ```yaml
 deployment: !Deployment
   destination: gcp
-  endpoint_name: test-endpoint-12
+  endpoint_name: facebook-opt-test
   accelerator_count: 1
   instance_type: g2-standard-12
   accelerator_type: NVIDIA_L4
@@ -97,12 +97,12 @@ For Azure ML:
 ```yaml
 deployment: !Deployment
   destination: azure
-  endpoint_name: facebook--opt-125m-202410251736
+  endpoint_name: facebook-opt-test
   instance_count: 1
   instance_type: Standard_DS3_v2
 models:
   - !Model
-    id: facebook-opt-125m
+    id: facebook--opt-125m
     location: null
     predict: null
     source: huggingface
@@ -112,9 +112,9 @@ models:
 <Note>
   The model ids for Azure are different from AWS and GCP. Make sure to use the one provided by Azure in the Azure Model Catalog. 
 
-  To find the relevnt model id, follow the following steps
+  To find the relevant model id, follow the following steps
   <Steps>
-    <Step title="Go to your workpsace studio">
+    <Step title="Go to your workspace studio">
       Find the workpsace in the Azure portal and click on the studio url provided. Click on the `Model Catalog` on the left side bar
     	![Azure ML Creation](../Images/workspace-studio.png)
     </Step>

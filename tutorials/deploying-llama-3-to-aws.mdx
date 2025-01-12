@@ -55,7 +55,9 @@ You may need to request a quota increase for specific machine types and GPUs in 
 
 ## Step 3: Querying the Deployed Model
 
-Once the deployment is complete, use the interactive dropdown menu to query the model.
+Once the deployment is complete, note down the endpoint id.
+
+You can use the interactive dropdown menu to quickly query the model.
 
 ### Querying Models
 
@@ -63,6 +65,46 @@ From the dropdown, select `Query a Model Endpoint` to see the list of model endp
 
 ![Query Endpoints](../Images/query-1.png)
 
+Or you can use the following code:
+```python 
+from sagemaker.huggingface.model import HuggingFacePredictor
+import sagemaker
+
+def query_huggingface_model(endpoint_name: str, query: str):
+    # Initialize a SageMaker session
+    sagemaker_session = sagemaker.Session()
+    
+    # Create a HuggingFace predictor
+    predictor = HuggingFacePredictor(
+        endpoint_name=endpoint_name,
+        sagemaker_session=sagemaker_session
+    )
+    
+    # Prepare the input
+    input_data = {
+        "inputs": query
+    }
+    
+    try:
+        # Make prediction
+        result = predictor.predict(input_data)
+        print(result)
+        return result
+    except Exception as e:
+        print(f"Error making prediction: {str(e)}")
+        raise e
+
+# Example usage
+if __name__ == "__main__":
+    # Replace with your actual endpoint name
+    ENDPOINT_NAME = "your-deployed-endpoint"
+    
+    # Your test question
+    question = "what are you?"
+    
+    # Make prediction
+    response = query_huggingface_model(ENDPOINT_NAME, question)
+```
 ## Conclusion
 You have successfully deployed and queried Llama 3 on AWS SageMaker using Magemaker's interactive dropdown menu. For any questions or feedback, feel free to contact us at [support@slashml.com](mailto:support@slashml.com).
 
