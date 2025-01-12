@@ -83,7 +83,7 @@ deployment: !Deployment
 
 models:
   - !Model
-    id: facebook/opt-125m
+    id: facebook-opt-125m
     source: huggingface
 ```
 
@@ -197,18 +197,14 @@ Choose your instance type based on your model's requirements:
 
 2. Start with smaller instance types and scale up as needed
 
-3. Use autoscaling for production workloads:
+3. Always version your YAML configurations
 
-   ```yaml
-   deployment: !Deployment
-     autoscaling_enabled: true
-     min_instance_count: 1
-     max_instance_count: 3
-   ```
+4. Set up monitoring and alerting for your endpoints
 
-4. Always version your YAML configurations
+<Warning>
+Make sure you setup budget monitory and alerts to avoid unexpected charges.
+</Warning>
 
-5. Set up monitoring and alerting for your endpoints
 
 ## Troubleshooting Deployments
 
@@ -216,13 +212,12 @@ Common issues and their solutions:
 
 1. **Deployment Timeout**
 
-   - Increase the timeout in your configuration
    - Check instance quota limits
    - Verify network connectivity
 
 2. **Instance Not Available**
 
-   - Try a different AWS region
+   - Try a different region
    - Request quota increase
    - Use an alternative instance type
 
@@ -230,3 +225,4 @@ Common issues and their solutions:
    - Verify model ID and version
    - Check instance memory requirements
    - Validate Hugging Face token if required
+   - Endpoing deployed but deployment failed. Check the logs, and do report this to us if you see this issue.

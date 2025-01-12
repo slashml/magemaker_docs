@@ -40,14 +40,22 @@
   "navigation": [
     { 
       "group": "Getting Started",
-      "pages": ["quick-start", "configuration"]
+      "pages": ["about", "installation", "quick-start"]
+    },
+    {
+      "group": "Configurations",
+      "pages": [
+        "configuration/AWS",
+        "configuration/Azure",
+        "configuration/GCP",
+        "configuration/Environment"
+      ]
     },
     {
       "group": "Core Concepts",
       "pages": [
         "concepts/deployment",
         "concepts/models",
-        "concepts/fine-tuning",
         "concepts/contributing"
       ]
     }

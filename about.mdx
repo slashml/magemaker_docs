@@ -1,0 +1,35 @@
+---
+title: About
+description: Deploy open source AI models to AWS, GCP, and Azure in minutes
+"og:title": "Magemaker"
+---
+
+## About Magemaker
+
+Magemaker is a Python tool that simplifies the process of deploying open source AI models to your preferred cloud provider. Instead of spending hours digging through documentation, Magemaker lets you deploy Hugging Face models directly to AWS SageMaker, Google Cloud Vertex AI, or Azure Machine Learning.
+
+## What we're working on next
+
+- More robust error handling for various edge cases
+- Verbose logging
+- Enabling / disabling autoscaling
+- Enhanced multi-cloud support features
+
+## Known issues
+
+- Querying within Magemaker currently only works with text-based models
+- Deleting a model is not instant, it may show up briefly after deletion
+- Deploying the same model within the same minute will break
+- Hugging-face models on Azure have different Ids than their Hugging-face counterparts. Follow the steps specified in the quick-start guide to find the relevant models
+- For Azure deploying models other than Hugging-face is not supported yet. 
+
+
+## License
+
+Distributed under the Apache 2.0 License. See `LICENSE` for more information.
+
+## Contact
+
+You can reach us, faizan & jneid, at [faizan|jneid@slashml.com](mailto:support@slashml.com).
+
+We'd love to hear from you! We're excited to learn how we can make this more valuable for the community and welcome any and all feedback and suggestions.
