@@ -1,0 +1,30 @@
+---
+title: Environment Variables
+---
+
+### Required Config File
+A `.env` file is automatically created when you run `magemaker --cloud <cloud-provider>`. This file contains the necessary environment variables for your cloud provider(s).
+
+By default, Magemaker will look for a `.env` file in your project root with the following variables based on which cloud provider(s) you plan to use:
+
+```bash
+# AWS Configuration
+AWS_ACCESS_KEY_ID="your-access-key"      # Required for AWS
+AWS_SECRET_ACCESS_KEY="your-secret-key"   # Required for AWS
+SAGEMAKER_ROLE="arn:aws:iam::..."        # Required for AWS
+
+# GCP Configuration
+PROJECT_ID="your-project-id"             # Required for GCP
+GCLOUD_REGION="us-central1"              # Required for GCP
+
+# Azure Configuration
+AZURE_SUBSCRIPTION_ID="your-sub-id"      # Required for Azure
+AZURE_RESOURCE_GROUP="ml-resources"      # Required for Azure
+AZURE_WORKSPACE_NAME="ml-workspace"      # Required for Azure
+AZURE_REGION="eastus"                    # Required for Azure
+
+# Optional configurations
+HUGGING_FACE_HUB_KEY="your-hf-token"    # Required for gated HF models like llama
+```
+
+<Warning>Never commit your .env file to version control!</Warning>

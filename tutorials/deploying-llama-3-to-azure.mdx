@@ -1,0 +1,77 @@
+---
+title: Deploying Llama 3 to Azure
+---
+
+## Introduction
+This tutorial guides you through deploying Llama 3 to Azure ML platform using Magemaker and querying it using the interactive dropdown menu. Ensure you have followed the [installation](installation) steps before proceeding. 
+
+<Note> 
+You may need to request a quota increase for specific machine types and GPUs in the region where you plan to deploy the model. Check your Azure quotas before proceeding. 
+</Note>
+
+## Step 1: Setting Up Magemaker for Azure
+
+Run the following command to configure Magemaker for Azure deployment:
+
+```sh
+magemaker --cloud azure
+```
+
+This initializes Magemaker with the necessary configurations for deploying models to Azure ML Studio.
+
+## Step 2: YAML-based Deployment
+
+For reproducible deployments, use YAML configuration:
+
+```sh
+magemaker --deploy .magemaker_config/your-model.yaml
+```
+
+Example YAML for Azure deployment:
+
+```yaml
+deployment: !Deployment
+  destination: azure
+  endpoint_name: llama3-endpoint
+  instance_count: 1
+  instance_type: Standard_NC24ads_A100_v4 
+
+models:
+  - !Model
+    id: meta-llama-meta-llama-3-8b-instruct
+    location: null
+    predict: null
+    source: huggingface
+    task: text-generation
+    version: null
+```
+
+<Note>
+   For gated models like llama from Meta, you have to accept terms of use for model on hugging face and adding Hugging face token to the environment are necessary for deployment to go through.
+</Note>
+
+### Selecting an Appropriate Instance
+For 8B parameter models, recommended instance types include:
+
+- Standard_NC24ads_A100_v4 (optimal performance)
+- Standard_NC24s_v3 (cost-effective option with V100)
+
+<Warning>
+If you encounter quota issues, submit a quota increase request in the Azure console. In the search bar search for `Quotas` and select the subscription you are using. In the `provider` select `Machine Learning` and then select the relevant region for the quota increase
+
+![Azure Quota](../Images/quotas.png)
+</Warning>
+
+## Step 3: Querying the Deployed Model
+
+Once the deployment is complete, use the interactive dropdown menu to query the model.
+
+### Querying Models
+
+From the dropdown, select `Query a Model Endpoint` to see the list of model endpoints. Press space to select the endpoint you want to query. Enter your query in the text box and press enter to get the response.
+
+![Query Endpoints](../Images/query-1.png)
+
+## Conclusion
+You have successfully deployed and queried Llama 3 on Azure using Magemaker's interactive dropdown menu. For any questions or feedback, feel free to contact us at [support@slashml.com](mailto:support@slashml.com).
+
