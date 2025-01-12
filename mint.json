@@ -66,8 +66,7 @@
         "concepts/models",
         "concepts/contributing"
       ]
-    },
-
+    }
   ],
   "footerSocials": {
     "github": "https://github.com/slashml/magemaker",
