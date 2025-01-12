@@ -43,6 +43,14 @@
       "pages": ["about", "installation", "quick-start"]
     },
     {
+      "group": "Tutorials",
+      "pages": [
+        "tutorials/deploying-llama-3-to-aws",
+        "tutorials/deploying-llama-3-to-gcp",
+        "tutorials/deploying-llama-3-to-azure"
+      ]
+    },
+    {
       "group": "Configurations",
       "pages": [
         "configuration/AWS",
@@ -59,14 +67,7 @@
         "concepts/contributing"
       ]
     },
-    {
-      "group": "Tutorials",
-      "pages": [
-        "tutorials/deploying-llama-3-to-aws",
-        "tutorials/deploying-llama-3-to-gcp",
-        "tutorials/deploying-llama-3-to-azure"
-      ]
-    }
+
   ],
   "footerSocials": {
     "github": "https://github.com/slashml/magemaker",
