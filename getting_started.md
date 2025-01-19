@@ -16,7 +16,7 @@ To get a local copy up and running follow these simple steps.
 
 ### Prerequisites
 
-* Python 3.11+
+* Python 3.11 (3.13 is not supported because of azure)
 * Cloud Configuration
     * An account to your preferred cloud provider, AWS, GCP and Azure.
         * Each cloud requires slightly different accesses, Magemaker will guide you through getting the necessary credentials to the selected cloud provider
