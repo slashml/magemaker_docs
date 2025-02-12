@@ -5,16 +5,28 @@ on:
   issue_comment:
     types: [created]
 
+# Add explicit permissions
+permissions:
+  issues: write
+  pull-requests: write
+  contents: write
+
 jobs:
   process-bot-command:
     # Only run if it's a PR comment
-    if: github.event.issue.pull_request
+    if: ${{ github.event.issue.pull_request }}
     runs-on: ubuntu-latest
     steps:
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+
       - name: Check for bot mention and extract command
         id: check_command
         run: |
           COMMENT="${{ github.event.comment.body }}"
+          echo "Received comment: $COMMENT"
           if [[ $COMMENT == *"@docsalot"* ]]; then
             echo "Bot was mentioned!"
             # Extract everything after @docsalot
@@ -38,4 +50,4 @@ jobs:
         run: |
           gh pr comment ${{ github.event.issue.number }} --body "I received your command: ${{ steps.check_command.outputs.command }}"
         env:
-          GH_TOKEN: ${{ secrets.DOCS_ACCESS_TOKEN }}
+          GH_TOKEN: ${{ secrets.PAT }}
