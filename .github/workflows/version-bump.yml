@@ -1,0 +1,41 @@
+# File: .github/workflows/version-bump.yml
+name: Docsalot Bot Workflow
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  process-bot-command:
+    # Only run if it's a PR comment
+    if: github.event.issue.pull_request
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for bot mention and extract command
+        id: check_command
+        run: |
+          COMMENT="${{ github.event.comment.body }}"
+          if [[ $COMMENT == *"@docsalot"* ]]; then
+            echo "Bot was mentioned!"
+            # Extract everything after @docsalot
+            COMMAND=$(echo "$COMMENT" | sed 's/.*@docsalot[[:space:]]*//')
+            echo "Command received: $COMMAND"
+            echo "command=$COMMAND" >> $GITHUB_OUTPUT
+            echo "triggered=true" >> $GITHUB_OUTPUT
+          else
+            echo "No bot mention found"
+            echo "triggered=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Echo Command
+        if: steps.check_command.outputs.triggered == 'true'
+        run: |
+          echo "User command was:"
+          echo "${{ steps.check_command.outputs.command }}"
+          
+      - name: Add Response Comment
+        if: steps.check_command.outputs.triggered == 'true'
+        run: |
+          gh pr comment ${{ github.event.issue.number }} --body "I received your command: ${{ steps.check_command.outputs.command }}"
+        env:
+          GH_TOKEN: ${{ secrets.DOCS_ACCESS_TOKEN }}
