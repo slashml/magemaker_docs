@@ -1,0 +1,18 @@
+name: Slash Command Dispatch
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  dispatch:
+    if: github.event.issue.pull_request && startsWith(github.event.comment.body, '/run')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch Slash Command
+        uses: peter-evans/slash-command-dispatch@v3
+        with:
+          token: ${{ secrets.PAT_GITHUB }}
+          repository: ${{ github.repository }}
+          event-type: pr-comment-command
+          issue-type: pull-request
