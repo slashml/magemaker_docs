@@ -1,0 +1,29 @@
+# File: .github/workflows/version-bump.yml
+name: Comment Test
+
+on:
+  issue_comment:
+    types: [created]
+
+# Add more comprehensive permissions
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  metadata: read # For repository metadata access
+  statuses: write # For reporting commit status
+
+jobs:
+  test-trigger:
+    if: ${{ !github.event.issue.pull_request && github.event_name == 'issue_comment' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: |
+          echo "Event name: ${{ github.event_name }}"
+          echo "Event type: ${{ github.event.action }}"
+          echo "Commenter: ${{ github.event.comment.user.login }}"
+          echo "Full context:"
+          echo "$GITHUB_CONTEXT"
