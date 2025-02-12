@@ -47,7 +47,14 @@ jobs:
           
       - name: Add Response Comment
         if: steps.check_command.outputs.triggered == 'true'
-        run: |
-          gh pr comment ${{ github.event.issue.number }} --body "I received your command: ${{ steps.check_command.outputs.command }}"
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `I received your command: ${process.env.COMMAND}`
+            });
         env:
-          GH_TOKEN: ${{ secrets.PAT }}
+          COMMAND: ${{ steps.check_command.outputs.command }}
