@@ -3,15 +3,25 @@ on:
   issue_comment:                                     
     types: [created, edited, deleted]
 jobs:
- job01:
-   if: contains(github.event.comment.html_url, '/pull/')    # check if the comments come from pull request, exclude those from issue.
-   runs-on: [re-centos7]
-   steps:
-    - name: say hello
-      if: contains(github.event.comment.body, '/support')   # check the comment if it contains the keywords
+  docs-job:
+    if: contains(github.event.comment.html_url, '/pull/')  # check if comments come from pull request
+    runs-on: ubuntu-latest  # changed from re-centos7 to ubuntu-latest for wider compatibility
+    steps:
+    - name: Echo docs command
+      if: contains(github.event.comment.body, '@docs')
       run: |
-       echo say hello
-    - name: test
-      if: contains(github.event.comment.body, '/test')  # check the comment if it contains the keywords
-      run: |
-       echo test
+        echo "Comment received:"
+        echo "${{ github.event.comment.body }}"
+        
+    - name: Reply to comment
+      if: contains(github.event.comment.body, '@docs')
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const comment = context.payload.comment.body;
+          await github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: `Echo: ${comment}`
+          });
