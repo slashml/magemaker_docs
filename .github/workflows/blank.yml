@@ -1,0 +1,20 @@
+on: issue_comment
+name: Docs Bot
+jobs:
+  parse-comment:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.issue.pull_request && contains(github.event.comment.body, '@docs') }}
+    steps:
+      - name: Print Comment
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const comment = context.payload.comment.body;
+            const docsContent = comment.substring(comment.indexOf('@docs') + 5).trim();
+            
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `🤖 Docs command received:\n\n${docsContent}`
+            });
