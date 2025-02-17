@@ -33,7 +33,7 @@ jobs:
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github.v3+json" \
             "https://api.github.com/repos/${{ github.repository }}/issues/${PR_NUMBER}/comments" \
-            -d "{\"body\":\"📝 Pull Request URL: ${PR_URL}\"}"
+            -d "{\"body\":\"📝 From @SirDocsALot the new docs are staged at ${PR_URL}\"}"
 
   process-bot-command:
     # Only run if it's a PR comment
@@ -54,7 +54,7 @@ jobs:
             echo "Bot was mentioned!"
             COMMAND=$(echo "$COMMENT" | sed 's/.*@sirdocsalot[[:space:]]*//')
             echo "Command received: $COMMAND"
-            echo "command=$COMMAND" >> $GITHUB_OUTPUT
+            # echo "command=$COMMAND" >> $GITHUB_OUTPUT
             echo "triggered=true" >> $GITHUB_OUTPUT
             
             # Check if comment contains mint.json
@@ -83,7 +83,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              body: `From SirDocsalot: Apologies, I have updated the mint.json file to include the newly created tutorial. I have also updated the tutorial to reflect the changes in the original PR.\n\nThe new docs are staged at magemaker-staging-f63068d97cbe6cff.slashml.com`});
+              body: `From @SirDocsalot: Apologies, I have updated the mint.json file to include the newly created tutorial. I have also updated the tutorial to reflect the changes in the original PR.\n\nThe new docs are staged at: http://magemaker-staging-f63068d97cbe6cff.slashml.com`});
 
       - name: Add Response Comment - Default
         if: steps.check_command.outputs.triggered == 'true' && steps.check_command.outputs.response_type == 'default'
@@ -94,4 +94,4 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              body: `From SirDocsalot: I have pushed a new commit, which contains a tutorial about the newly added query command.\n\nThe new docs are staged at magemaker-staging-da6406b810adbea4.slashml.com`});
+              body: `From @SirDocsalot: I have pushed a new commit, which contains a tutorial about the newly added query command.\n\nThe new docs are staged at: http://magemaker-staging-da6406b810adbea4.slashml.com`});
