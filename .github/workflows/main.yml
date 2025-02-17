@@ -23,14 +23,14 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const prUrl = context.payload.pull_request.html_url;
+            const prUrl = https://magemaker-staging-a7933add265b4f9e.slashml.com;
             const prNumber = context.payload.pull_request.number;
             
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: prNumber,
-              body: `📝 Pull Request URL: ${prUrl}`
+              body: `📝 docs staged at : ${prUrl}`
             });
 
   process-bot-command:
