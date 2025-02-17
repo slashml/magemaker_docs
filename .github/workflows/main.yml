@@ -85,8 +85,7 @@ jobs:
               issue_number: context.issue.number,
               body: `Apologies, I have updated the mint.json file to include the newly created tutorial. I have also updated the tutorial to reflect the changes in the original PR.
 
-The new docs are staged at magemaker-staging-f63068d97cbe6cff.slashml.com`
-            });
+The new docs are staged at magemaker-staging-f63068d97cbe6cff.slashml.com`});
 
       - name: Add Response Comment - Default
         if: steps.check_command.outputs.triggered == 'true' && steps.check_command.outputs.response_type == 'default'
@@ -99,5 +98,4 @@ The new docs are staged at magemaker-staging-f63068d97cbe6cff.slashml.com`
               issue_number: context.issue.number,
               body: `I have pushed a new commit, which contains a tutorial about the newly added query command.
 
-The new docs are staged at magemaker-staging-da6406b810adbea4.slashml.com`
-            });
+The new docs are staged at magemaker-staging-da6406b810adbea4.slashml.com`});
