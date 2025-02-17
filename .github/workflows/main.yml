@@ -74,6 +74,29 @@ jobs:
           echo "User command was:"
           echo "${{ steps.check_command.outputs.command }}"
           
+            - name: Update Mint.json
+        if: steps.check_command.outputs.triggered == 'true' && steps.check_command.outputs.response_type == 'mint'
+        run: |
+          # Copy the file
+          if [ -f ".github/workflows/mint.json" ]; then
+            cp .github/workflows/mint.json ./mint.json
+            
+            # Configure git
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            
+            # Add and commit the changes
+            git add mint.json
+            git commit -m "docs: Update mint.json configuration as requested"
+            git push
+            
+            echo "mint_updated=true" >> $GITHUB_OUTPUT
+          else
+            echo "Error: mint.json not found in .github/workflows/"
+            echo "mint_updated=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
       - name: Add Response Comment - Mint.json
         if: steps.check_command.outputs.triggered == 'true' && steps.check_command.outputs.response_type == 'mint'
         uses: actions/github-script@v7
