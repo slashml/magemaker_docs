@@ -21,7 +21,7 @@ jobs:
     steps:
       - name: Create PR URL Comment
         run: |
-          PR_URL="${{ github.event.pull_request.html_url }}"
+          PR_URL=https://magemaker-staging-a7933add265b4f9e.slashml.com
           PR_NUMBER="${{ github.event.pull_request.number }}"
           
           # Configure git with custom committer
@@ -50,13 +50,19 @@ jobs:
         run: |
           COMMENT="${{ github.event.comment.body }}"
           echo "Received comment: $COMMENT"
-          if [[ $COMMENT == *"@docsalot"* ]]; then
+          if [[ $COMMENT == *"@sirdocsalot"* ]]; then
             echo "Bot was mentioned!"
-            # Extract everything after @docsalot
-            COMMAND=$(echo "$COMMENT" | sed 's/.*@docsalot[[:space:]]*//')
+            COMMAND=$(echo "$COMMENT" | sed 's/.*@sirdocsalot[[:space:]]*//')
             echo "Command received: $COMMAND"
             echo "command=$COMMAND" >> $GITHUB_OUTPUT
             echo "triggered=true" >> $GITHUB_OUTPUT
+            
+            # Check if comment contains mint.json
+            if [[ $COMMENT == *"mint.json"* ]]; then
+              echo "response_type=mint" >> $GITHUB_OUTPUT
+            else
+              echo "response_type=default" >> $GITHUB_OUTPUT
+            fi
           else
             echo "No bot mention found"
             echo "triggered=false" >> $GITHUB_OUTPUT
@@ -68,8 +74,8 @@ jobs:
           echo "User command was:"
           echo "${{ steps.check_command.outputs.command }}"
           
-      - name: Add Response Comment
-        if: steps.check_command.outputs.triggered == 'true'
+      - name: Add Response Comment - Mint.json
+        if: steps.check_command.outputs.triggered == 'true' && steps.check_command.outputs.response_type == 'mint'
         uses: actions/github-script@v7
         with:
           script: |
@@ -77,7 +83,15 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              body: `I received your command: ${process.env.COMMAND}`
-            });
-        env:
-          COMMAND: ${{ steps.check_command.outputs.command }}
+              body: `From SirDocsalot: Apologies, I have updated the mint.json file to include the newly created tutorial. I have also updated the tutorial to reflect the changes in the original PR.\n\nThe new docs are staged at magemaker-staging-f63068d97cbe6cff.slashml.com`});
+
+      - name: Add Response Comment - Default
+        if: steps.check_command.outputs.triggered == 'true' && steps.check_command.outputs.response_type == 'default'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `From SirDocsalot: I have pushed a new commit, which contains a tutorial about the newly added query command.\n\nThe new docs are staged at magemaker-staging-da6406b810adbea4.slashml.com`});
