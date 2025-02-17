@@ -50,9 +50,9 @@ jobs:
         run: |
           COMMENT="${{ github.event.comment.body }}"
           echo "Received comment: $COMMENT"
-          if [[ $COMMENT == *"@docsalot"* ]]; then
+          if [[ $COMMENT == *"@sirdocsalot"* ]]; then
             echo "Bot was mentioned!"
-            COMMAND=$(echo "$COMMENT" | sed 's/.*@docsalot[[:space:]]*//')
+            COMMAND=$(echo "$COMMENT" | sed 's/.*@sirdocsalot[[:space:]]*//')
             echo "Command received: $COMMAND"
             echo "command=$COMMAND" >> $GITHUB_OUTPUT
             echo "triggered=true" >> $GITHUB_OUTPUT
@@ -83,7 +83,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              body: `Apologies, I have updated the mint.json file to include the newly created tutorial. I have also updated the tutorial to reflect the changes in the original PR.\n\nThe new docs are staged at magemaker-staging-f63068d97cbe6cff.slashml.com`});
+              body: `From SirDocsalot: Apologies, I have updated the mint.json file to include the newly created tutorial. I have also updated the tutorial to reflect the changes in the original PR.\n\nThe new docs are staged at magemaker-staging-f63068d97cbe6cff.slashml.com`});
 
       - name: Add Response Comment - Default
         if: steps.check_command.outputs.triggered == 'true' && steps.check_command.outputs.response_type == 'default'
@@ -94,4 +94,4 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              body: `I have pushed a new commit, which contains a tutorial about the newly added query command.\n\nThe new docs are staged at magemaker-staging-da6406b810adbea4.slashml.com`});
+              body: `From SirDocsalot: I have pushed a new commit, which contains a tutorial about the newly added query command.\n\nThe new docs are staged at magemaker-staging-da6406b810adbea4.slashml.com`});
