@@ -89,7 +89,14 @@ jobs:
           PR_BRANCH: ${{ github.head_ref }}
         run: |
           # Debug: Print current branch
-          echo "Current branch: $PR_BRANCH"
+          echo "Event name: ${{ github.event_name }}"
+          echo "PR SHA: ${{ github.event.pull_request.head.sha }}"
+          echo "PR Branch: ${{ github.event.pull_request.head.ref }}"
+          echo "PR Base: ${{ github.event.pull_request.base.ref }}"
+          
+          # Switch to PR branch explicitly
+          git checkout -b "${{ github.event.pull_request.head.ref }}"
+          echo "Current branch after checkout:"
           git branch --show-current
 
           if [ -f ".github/workflows/mint.json" ]; then
@@ -103,7 +110,8 @@ jobs:
             git add mint.json
             git commit -m "docs: Update mint.json configuration as requested"
             git remote set-url origin "https://${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-            git push origin HEAD
+
+            git push origin "${{ github.event.pull_request.head.ref }}"
             echo "mint_updated=true" >> $GITHUB_OUTPUT
           else
             pwd
