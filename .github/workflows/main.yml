@@ -40,16 +40,6 @@ jobs:
     if: ${{ github.event.issue.pull_request }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout docs repository
-        uses: actions/checkout@v4
-        with:
-          repository: slashml/magemaker_docs
-          path: docs_repo
-          token: ${{ secrets.PAT }}
-          ref: main  # Explicitly set the branch
-          persist-credentials: true
-          fetch-depth: 0
-        
       - name: Dump GitHub context
         env:
           GITHUB_CONTEXT: ${{ toJson(github) }}
@@ -83,13 +73,23 @@ jobs:
         run: |
           echo "User command was:"
           echo "${{ steps.check_command.outputs.command }}"
-          
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        token: ${{ secrets.PAT }}
+        with:
+          ref: ${{ github.head_ref }}  # This checks out the PR branch
+          path: docs-repo
+          token: ${{ secrets.PAT }}
+          ref: main  # Explicitly set the branch
+          persist-credentials: true
+          fetch-depth: 0
+      
       - name: Update Mint.json
         if: steps.check_command.outputs.triggered == 'true' && steps.check_command.outputs.response_type == 'mint'
         run: |
           # Copy the file
           pwd
-          cd docs_repo
           ls -l .github/workflows/
           if [ -f ".github/workflows/mint.json" ]; then
             cp .github/workflows/mint.json ./mint.json
