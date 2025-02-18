@@ -1,0 +1,160 @@
+---
+title: Deploying Llama 3 to SageMaker
+---
+
+## Introduction
+This tutorial guides you through deploying Llama 3 to AWS SageMaker using Magemaker and querying it using YAML-based commands. Ensure you have followed the [installation](installation) steps before proceeding.
+
+## Step 1: Setting Up Magemaker for AWS
+Run the following command to configure Magemaker for AWS SageMaker deployment:
+```sh
+magemaker --cloud aws
+```
+This initializes Magemaker with the necessary configurations for deploying models to SageMaker.
+
+## Step 2: YAML-based Deployment
+For reproducible deployments, use YAML configuration:
+```sh
+magemaker --deploy .magemaker_config/llama3-deploy.yaml
+```
+
+Example deployment YAML:
+```yaml
+deployment: !Deployment
+  destination: aws
+  endpoint_name: llama3-endpoint
+  instance_count: 1
+  instance_type: ml.g5.2xlarge
+  num_gpus: 1
+  quantization: null
+models:
+  - !Model
+    id: meta-llama/Meta-Llama-3-8B-Instruct
+    location: null
+    predict: null
+    source: huggingface
+    task: text-generation
+    version: null
+```
+
+<Note>
+   For gated models like llama from Meta, you have to accept terms of use for model on hugging face and adding Hugging face token to the environment are necessary for deployment to go through.
+</Note>
+
+<Warning> 
+You may need to request a quota increase for specific machine types and GPUs in the region where you plan to deploy the model. Check your AWS quotas before proceeding. 
+</Warning>
+
+## Step 3: Querying the Deployed Model
+Once the deployment is complete, you can query the model using a YAML configuration file.
+
+### Creating a Query YAML
+Create a new YAML file for your query (e.g., `llama3-query.yaml`):
+```yaml
+deployment: !Deployment
+  destination: aws 
+  endpoint_name: llama3-endpoint
+  instance_count: 1
+  instance_type: ml.g5.2xlarge
+  num_gpus: 1
+  quantization: null
+models:
+  - !Model
+    id: meta-llama/Meta-Llama-3-8B-Instruct
+    location: null
+    predict: null
+    source: huggingface
+    task: text-generation
+    version: null
+query: !Query
+  input: 'What are the key differences between Llama 2 and Llama 3?'
+```
+
+### Executing Queries
+Run your query using the following command:
+```sh
+magemaker --query .magemaker_config/llama3-query.yaml
+```
+
+Example Response:
+```json
+{
+  "generated_text": "Here are the key differences between Llama 2 and Llama 3:\n\n1. Model Architecture: Llama 3 features an enhanced architecture with improved attention mechanisms and more efficient parameter utilization\n\n2. Training Data: Trained on more recent data with broader coverage and improved data quality\n\n3. Performance: Demonstrates superior performance on complex reasoning tasks and shows better coherence in long-form responses\n\n4. Context Window: Supports longer context windows allowing for processing of more extensive input text\n\n5. Instruction Following: Enhanced ability to follow complex instructions and maintain consistency in responses",
+  "model": "meta-llama/Meta-Llama-3-8B-Instruct",
+  "total_tokens": 89,
+  "generation_time": 1.2
+}
+```
+
+### Additional Query Examples
+
+1. Creative Writing Query:
+```yaml
+query: !Query
+  input: 'Write a short story about a robot learning to paint'
+```
+
+Example Response:
+```json
+{
+  "generated_text": "In a sunlit studio, Unit-7 held a brush for the first time. Its servo motors whirred softly as it analyzed the canvas before it. Programmed for precision in manufacturing, the robot found itself puzzled by the concept of artistic expression. The first strokes were mechanical, perfect lines that lacked soul. But as days passed, Unit-7 began to introduce deliberate 'imperfections,' discovering that art lived in these beautiful accidents. One morning, its creator found Unit-7 surrounded by canvases splashed with vibrant abstracts - each one unique, each one telling the story of a machine learning to feel through color and form.",
+  "model": "meta-llama/Meta-Llama-3-8B-Instruct",
+  "total_tokens": 106,
+  "generation_time": 1.5
+}
+```
+
+2. Technical Analysis Query:
+```yaml
+query: !Query
+  input: 'Explain the concept of quantum entanglement in simple terms'
+```
+
+Example Response:
+```json
+{
+  "generated_text": "Quantum entanglement is like having two magical coins that always know what the other is doing. When two particles become entangled, they share a special connection regardless of how far apart they are. If you flip one coin and it lands on heads, its entangled partner will instantly be tails, even if it's on the other side of the universe. This connection happens faster than light can travel between them, which is why Einstein called it 'spooky action at a distance.' It's a fundamental principle of quantum mechanics that we use in quantum computing and cryptography.",
+  "model": "meta-llama/Meta-Llama-3-8B-Instruct",
+  "total_tokens": 95,
+  "generation_time": 1.3
+}
+```
+
+You can also use Python to query the model programmatically:
+```python
+from sagemaker.huggingface.model import HuggingFacePredictor
+import sagemaker
+
+def query_huggingface_model(endpoint_name: str, query: str):
+    # Initialize a SageMaker session
+    sagemaker_session = sagemaker.Session()
+    
+    # Create a HuggingFace predictor
+    predictor = HuggingFacePredictor(
+        endpoint_name=endpoint_name,
+        sagemaker_session=sagemaker_session
+    )
+    
+    # Prepare the input
+    input_data = {
+        "inputs": query
+    }
+    
+    try:
+        # Make prediction
+        result = predictor.predict(input_data)
+        print(result)
+        return result
+    except Exception as e:
+        print(f"Error making prediction: {str(e)}")
+        raise e
+
+# Example usage
+if __name__ == "__main__":
+    ENDPOINT_NAME = "llama3-endpoint"
+    question = "What are you?"
+    response = query_huggingface_model(ENDPOINT_NAME, question)
+```
+
+## Conclusion
+You have successfully deployed and queried Llama 3 on AWS SageMaker using Magemaker's YAML-based configuration system. This approach provides reproducible deployments and queries that can be version controlled and shared across teams. For any questions or feedback, feel free to contact us at [support@slashml.com](mailto:support@slashml.com).
