@@ -68,6 +68,23 @@ jobs:
             echo "triggered=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: Get PR Details
+        id: pr
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: pull } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number
+            });
+            console.log('PR Head Ref:', pull.head.ref);
+            console.log('PR Head SHA:', pull.head.sha);
+            return {
+              branch: pull.head.ref,
+              sha: pull.head.sha
+            }
+
       - name: Echo Command
         if: steps.check_command.outputs.triggered == 'true'
         run: |
@@ -77,7 +94,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.head_ref }}  # This checks out the PR branch
+          ref: ${{ fromJSON(steps.pr.outputs.result).branch }}
           token: ${{ secrets.PAT }}
           persist-credentials: true
           fetch-depth: 0
@@ -86,17 +103,11 @@ jobs:
         if: steps.check_command.outputs.triggered == 'true' && steps.check_command.outputs.response_type == 'mint'
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}
-          PR_BRANCH: ${{ github.head_ref }}
+          PR_BRANCH: ${{ fromJSON(steps.pr.outputs.result).branch }}
         run: |
           # Debug: Print current branch
           echo "Event name: ${{ github.event_name }}"
-          echo "PR SHA: ${{ github.event.pull_request.head.sha }}"
-          echo "PR Branch: ${{ github.event.pull_request.head.ref }}"
-          echo "PR Base: ${{ github.event.pull_request.base.ref }}"
-          
-          # Switch to PR branch explicitly
-          git checkout -b "${{ github.event.pull_request.head.ref }}"
-          echo "Current branch after checkout:"
+          echo "Current branch:"
           git branch --show-current
 
           if [ -f ".github/workflows/mint.json" ]; then
@@ -109,9 +120,8 @@ jobs:
             # Add and commit the changes
             git add mint.json
             git commit -m "docs: Update mint.json configuration as requested"
-            git remote set-url origin "https://${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
 
-            git push origin "${{ github.event.pull_request.head.ref }}"
+            git push origin HEAD
             echo "mint_updated=true" >> $GITHUB_OUTPUT
           else
             pwd
