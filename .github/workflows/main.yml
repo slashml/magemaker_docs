@@ -92,13 +92,13 @@ jobs:
             cp .github/workflows/mint.json ./mint.json
             
             # Configure git
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git config user.name "SirDocsAlot[bot]"
+            git config user.email "SirDocsAlot[bot]@users.noreply.github.com"
             
             # Add and commit the changes
             git add mint.json
             git commit -m "docs: Update mint.json configuration as requested"
-            git push
+            git push origin {{ github.head_ref }}
             
             echo "mint_updated=true" >> $GITHUB_OUTPUT
           else
