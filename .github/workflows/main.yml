@@ -92,6 +92,8 @@ jobs:
             
             echo "mint_updated=true" >> $GITHUB_OUTPUT
           else
+            pwd
+            ls -l
             echo "Error: mint.json not found in .github/workflows/"
             echo "mint_updated=false" >> $GITHUB_OUTPUT
             exit 1
