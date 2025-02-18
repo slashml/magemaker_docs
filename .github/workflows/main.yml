@@ -74,7 +74,7 @@ jobs:
           echo "User command was:"
           echo "${{ steps.check_command.outputs.command }}"
           
-            - name: Update Mint.json
+      - name: Update Mint.json
         if: steps.check_command.outputs.triggered == 'true' && steps.check_command.outputs.response_type == 'mint'
         run: |
           # Copy the file
@@ -96,7 +96,6 @@ jobs:
             echo "mint_updated=false" >> $GITHUB_OUTPUT
             exit 1
           fi
-
       - name: Add Response Comment - Mint.json
         if: steps.check_command.outputs.triggered == 'true' && steps.check_command.outputs.response_type == 'mint'
         uses: actions/github-script@v7
