@@ -84,10 +84,15 @@ jobs:
       
       - name: Update Mint.json
         if: steps.check_command.outputs.triggered == 'true' && steps.check_command.outputs.response_type == 'mint'
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+          PR_BRANCH: ${{ github.event.pull_request.head.ref }}
         run: |
           # Copy the file
-          pwd
-          ls -al
+         # Debug: Print current branch
+          echo "Current branch: $PR_BRANCH"
+          git branch --show-current
+
           if [ -f ".github/workflows/mint.json" ]; then
             cp .github/workflows/mint.json ./mint.json
             
@@ -98,8 +103,8 @@ jobs:
             # Add and commit the changes
             git add mint.json
             git commit -m "docs: Update mint.json configuration as requested"
-            git push origin {{ github.head_ref }}
-            
+            git remote set-url origin "https://${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+            git push origin HEAD
             echo "mint_updated=true" >> $GITHUB_OUTPUT
           else
             pwd
