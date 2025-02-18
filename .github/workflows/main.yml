@@ -98,7 +98,7 @@ jobs:
             # Add and commit the changes
             git add mint.json
             git commit -m "docs: Update mint.json configuration as requested"
-            git push
+            git push origin {{ github.head_ref }}
             
             echo "mint_updated=true" >> $GITHUB_OUTPUT
           else
