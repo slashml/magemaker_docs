@@ -81,7 +81,7 @@ jobs:
           token: ${{ secrets.PAT }}
           persist-credentials: true
           fetch-depth: 0
-      
+
       - name: Update Mint.json
         if: steps.check_command.outputs.triggered == 'true' && steps.check_command.outputs.response_type == 'mint'
         env:
