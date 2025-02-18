@@ -78,6 +78,7 @@ jobs:
         if: steps.check_command.outputs.triggered == 'true' && steps.check_command.outputs.response_type == 'mint'
         run: |
           # Copy the file
+          ls -l .github/workflows/
           if [ -f ".github/workflows/mint.json" ]; then
             cp .github/workflows/mint.json ./mint.json
             
