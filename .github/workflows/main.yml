@@ -85,11 +85,10 @@ jobs:
       - name: Update Mint.json
         if: steps.check_command.outputs.triggered == 'true' && steps.check_command.outputs.response_type == 'mint'
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
-          PR_BRANCH: ${{ github.event.pull_request.head.ref }}
+          GITHUB_TOKEN: ${{ secrets.PAT }}
+          PR_BRANCH: ${{ github.head_ref }}
         run: |
-          # Copy the file
-         # Debug: Print current branch
+          # Debug: Print current branch
           echo "Current branch: $PR_BRANCH"
           git branch --show-current
 
