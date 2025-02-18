@@ -76,12 +76,10 @@ jobs:
 
       - name: Checkout repository
         uses: actions/checkout@v4
-        token: ${{ secrets.PAT }}
         with:
           ref: ${{ github.head_ref }}  # This checks out the PR branch
           path: docs-repo
           token: ${{ secrets.PAT }}
-          ref: main  # Explicitly set the branch
           persist-credentials: true
           fetch-depth: 0
       
