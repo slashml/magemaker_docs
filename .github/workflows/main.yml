@@ -92,6 +92,7 @@ jobs:
          # Debug: Print current branch
           echo "Current branch: $PR_BRANCH"
           git branch --show-current
+
           if [ -f ".github/workflows/mint.json" ]; then
             cp .github/workflows/mint.json ./mint.json
             
@@ -107,7 +108,7 @@ jobs:
             echo "mint_updated=true" >> $GITHUB_OUTPUT
           else
             pwd
-            ls -l
+            ls -al
             echo "Error: mint.json not found in .github/workflows/"
             echo "mint_updated=false" >> $GITHUB_OUTPUT
             exit 1
