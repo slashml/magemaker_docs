@@ -52,7 +52,7 @@ jobs:
           echo "Received comment: $COMMENT"
           if [[ $COMMENT == *"@sirdocsalot"* ]]; then
             echo "Bot was mentioned!"
-            COMMAND=$(echo "$COMMENT" | sed 's/.*@irdocsalot[[:space:]]*//')
+            COMMAND=$(echo "$COMMENT" | sed 's/.*@sirdocsalot[[:space:]]*//')
             echo "Command received: $COMMAND"
             # echo "command=$COMMAND" >> $GITHUB_OUTPUT
             echo "triggered=true" >> $GITHUB_OUTPUT
