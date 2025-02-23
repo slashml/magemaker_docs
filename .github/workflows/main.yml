@@ -52,7 +52,7 @@ jobs:
           echo "Received comment: $COMMENT"
           if [[ $COMMENT == *"@sirdocsalot"* ]]; then
             echo "Bot was mentioned!"
-            COMMAND=$(echo "$COMMENT" | sed 's/.*@sirdocsalot[[:space:]]*//')
+            COMMAND=$(echo "$COMMENT" | sed 's/.*@irdocsalot[[:space:]]*//')
             echo "Command received: $COMMAND"
             # echo "command=$COMMAND" >> $GITHUB_OUTPUT
             echo "triggered=true" >> $GITHUB_OUTPUT
@@ -112,14 +112,15 @@ jobs:
 
           if [ -f ".github/workflows/mint.json" ]; then
             cp .github/workflows/mint.json ./mint.json
+            cp .github/workflows/deploying-llama-3-to-aws-using-query-flag.md ./tutorials/deploying-llama-3-to-aws-using-query-flag.md
             
             # Configure git
             git config user.name "SirDocsAlot[bot]"
             git config user.email "SirDocsAlot[bot]@users.noreply.github.com"
             
             # Add and commit the changes
-            git add mint.json
-            git commit -m "docs: Update mint.json configuration as requested"
+            git add .
+            git commit -m "docs: Add new tutorial, update mint.json"
 
             git push origin HEAD
             echo "mint_updated=true" >> $GITHUB_OUTPUT
@@ -130,6 +131,7 @@ jobs:
             echo "mint_updated=false" >> $GITHUB_OUTPUT
             exit 1
           fi
+
       - name: Add Response Comment - Mint.json
         if: steps.check_command.outputs.triggered == 'true' && steps.check_command.outputs.response_type == 'mint'
         uses: actions/github-script@v7
@@ -139,7 +141,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
-              body: `From @SirDocsalot: Apologies, I have updated the mint.json file to include the newly created tutorial. I have also updated the tutorial to reflect the changes in the original PR.\n\nThe new docs are staged at: http://magemaker-staging-f63068d97cbe6cff.slashml.com`});
+              body: `From @SirDocsalot: I have pushed a new commit, which contains a tutorial about the newly added query command. I have  also updated the mint.json file to include the newly created tutorial. \n\nThe new docs are staged at: http://magemaker-staging-f63068d97cbe6cff.slashml.com`});
 
       - name: Add Response Comment - Default
         if: steps.check_command.outputs.triggered == 'true' && steps.check_command.outputs.response_type == 'default'
