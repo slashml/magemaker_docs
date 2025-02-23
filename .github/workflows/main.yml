@@ -112,7 +112,7 @@ jobs:
 
           if [ -f ".github/workflows/mint.json" ]; then
             cp .github/workflows/mint.json ./mint.json
-            cp .github/workflows/deploying-llama-3-to-aws-using-query-flag.md ./tutorials/deploying-llama-3-to-aws-using-query-flag.md
+            cp .github/workflows/deploying-llama-3-to-aws-using-query-flag.mdx ./tutorials/deploying-llama-3-to-aws-using-query-flag.mdx
             
             # Configure git
             git config user.name "SirDocsAlot[bot]"
