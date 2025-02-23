@@ -128,6 +128,71 @@ models:
 </Note>
 
 
+### YAML-Based Querying (Recommended)
+
+MageMaker supports querying deployed models using YAML configuration files. This provides a convenient way to send inference requests to your endpoints.
+
+#### Command Structure
+```bash
+magemaker --query .magemaker_config/your-model.yaml
+```
+
+#### Example Configuration
+```yaml
+deployment: !Deployment
+  destination: aws 
+  endpoint_name: facebook-opt-test
+  instance_count: 1
+  instance_type: ml.m5.xlarge
+  num_gpus: null
+  quantization: null
+models:
+  - !Model
+    id: facebook/opt-125m
+    location: null
+    predict: null
+    source: huggingface
+    task: text-generation
+    version: null
+query: !Query
+  input: 'whats the meaning of life'
+```
+
+#### Example Response
+```json
+{
+  "generated_text": "The meaning of life is a philosophical and subjective question that has been pondered throughout human history. While there is no single universal answer, many find meaning through personal growth, relationships, contributing to society, and pursuing their passions.",
+  "model": "facebook/opt-125m",
+  "total_tokens": 42,
+  "generation_time": 0.8
+}
+```
+
+The response includes:
+- The generated text from the model
+- The model ID used for inference
+- Total tokens processed
+- Generation time in seconds
+
+#### Key Components
+
+1. **Deployment Configuration**: Specifies AWS deployment details including:
+   - Destination (aws)
+   - Endpoint name
+   - Instance type and count
+   - GPU configuration
+   - Optional quantization settings
+
+2. **Model Configuration**: Defines the model to be used:
+   - Model ID from Hugging Face
+   - Task type (text-generation)
+   - Source (huggingface)
+   - Optional version and location settings
+
+3. **Query Configuration**: Contains the input text for inference
+
+You can save commonly used configurations in YAML files and reference them using the `--query` flag for streamlined inference requests.
+
 
 ### Model Fine-tuning
 
