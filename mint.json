@@ -46,6 +46,7 @@
       "group": "Tutorials",
       "pages": [
         "tutorials/deploying-llama-3-to-aws",
+        "tutorials/deploying-llama-3-to-aws-using-query-flag",
         "tutorials/deploying-llama-3-to-gcp",
         "tutorials/deploying-llama-3-to-azure"
       ]
