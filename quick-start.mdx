@@ -1,3 +1,4 @@
+```markdown
 ---
 title: Quick Start
 "og:title": "Magemaker"
@@ -41,6 +42,82 @@ From the dropdown, select `Query a Model Endpoint` to see the list of models end
 
 ![Query Endpoints](../Images/query-1.png)
 
+---
+
+# MageMaker Command-Line Interface Extension: YAML-Based Querying
+
+## Overview
+
+This update introduces a new command-line argument, `--query`, to the MageMaker command-line interface. The `--query` argument allows users to specify a path to a YAML query configuration file. This enhancement provides a streamlined, user-friendly method to send inference requests to deployed models using configurable YAML files.
+
+---
+
+## Detailed Description of Changes
+
+### Addition of the `--query` Argument
+
+- **New Argument:** `--query`
+- **Purpose:** Provides a way to query deployed models using configuration stored in a YAML file.
+- **Type:** String (expects a file path)
+- **Help Message:** `"path to YAML query configuration file"`
+- **Action:** Uses a custom action handler called `'query'` (implementation not shown in this diff).
+
+#### Argument Details
+
+| Argument      | Type   | Required | Description                                       |
+|---------------|--------|----------|---------------------------------------------------|
+| `--query`     | str    | No       | Path to the YAML file with query configuration.    |
+
+With this addition, users can perform batch or complex queries to their deployed models in a standardized, maintainable way.
+
+---
+
+## Usage Examples
+
+### YAML-Based Querying (Recommended)
+
+MageMaker supports querying deployed models using YAML configuration files. This provides a convenient and reproducible way to send inference requests to your endpoints, especially for batch or structured inputs.
+
+#### Command Structure
+
+```bash
+magemaker --query .magemaker_config/your-model.yaml
+```
+
+- Replace `.magemaker_config/your-model.yaml` with the path to your actual YAML query configuration file.
+
+#### Example
+
+Suppose you have a YAML file, `.magemaker_config/gpt-inference.yaml`, defining the input payload for a query:
+
+```yaml
+endpoint: gpt-endpoint
+inputs:
+  - prompt: "Explain the theory of relativity."
+    max_tokens: 150
+```
+
+Execute the following command in your terminal:
+
+```bash
+magemaker --query .magemaker_config/gpt-inference.yaml
+```
+
+MageMaker will read the configuration and send the query to the specified deployed model endpoint.
+
+---
+
+## Summary
+
+The addition of the `--query` argument makes it easier to interact with and test deployed MageMaker endpoints. This YAML-based approach:
+- Standardizes query configuration,
+- Improves reproducibility,
+- Is suitable for scripting batch requests,
+- Integrates well with infrastructure-as-code and CI/CD practices.
+
+If you have existing YAML query files, you can use this feature immediately by providing the file path; otherwise, see MageMaker's documentation for guidance on creating compatible YAML query files. 
+
+---
 
 ### YAML-based Deployment (Recommended)
 
@@ -184,3 +261,5 @@ You can reach us, faizan & jneid, at [support@slashml.com](mailto:support@slashm
 If anything doesn't make sense or you have suggestions, do point them out at [magemaker.featurebase.app](https://magemaker.featurebase.app/).
 
 We'd love to hear from you! We're excited to learn how we can make this more valuable for the community and welcome any and all feedback and suggestions.
+ 
+```
