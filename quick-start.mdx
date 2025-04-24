@@ -1,3 +1,4 @@
+```markdown
 ---
 title: Quick Start
 "og:title": "Magemaker"
@@ -40,6 +41,94 @@ From the dropdown, select `Delete a Model Endpoint` to see the list of models en
 From the dropdown, select `Query a Model Endpoint` to see the list of models endpoints. Press space to select the endpoints you want to query. Enter the query in the text box and press enter to get the response.
 
 ![Query Endpoints](../Images/query-1.png)
+
+
+## MageMaker Query Feature via YAML Configuration
+
+MageMaker has introduced support for querying deployed models using a YAML-based configuration file. This feature streamlines interaction with endpoints and enhances flexibility by allowing users to specify query parameters in a structured, human-readable format.
+
+---
+
+### High-Level Overview
+
+The latest update adds a new command-line argument, `--query`, to the MageMaker CLI. This argument allows users to provide the path to a YAML configuration file containing query specifications. The primary goal is to enable users to send inference requests and interact with deployed models using straightforward YAML configuration files.
+
+---
+
+### Detailed Change Description
+
+#### 1. New Command-Line Argument: `--query`
+
+- **Option Name**: `--query`
+- **Purpose**: Allows users to specify a YAML configuration file that defines a query for a deployed model.
+- **Argument Type**: `str` (expects a string path to the YAML file)
+- **Help Text**: Describes that the argument points to a YAML query configuration file.
+- **Integration**: Added to the argument parser, alongside other deployment and management flags.
+
+##### Example Addition in Code
+```python
+parser.add_argument(
+    '--query',
+    action='query',
+    help="path to YAML query configuration file",
+    type=str
+)
+```
+> **Note**: The `action='query'` indicates a custom action, which should be implemented elsewhere in the codebase.
+
+
+---
+
+### YAML Query Configuration
+
+Your YAML file should specify parameters relevant to the model you want to query, such as endpoint name, input data, and other optional settings. This promotes clear, version-controlled, and reusable query specifications.
+
+#### Example YAML (your-model.yaml)
+```yaml
+endpoint: my-sentiment-endpoint
+inputs:
+  text: "I love using MageMaker!"
+options:
+  content_type: application/json
+```
+
+---
+
+### Usage Examples
+
+You can use the `--query` argument from the command line as follows:
+
+```bash
+magemaker --query path/to/your-model.yaml
+```
+or, for typical project setups:
+```bash
+magemaker --query .magemaker_config/your-model.yaml
+```
+
+When this command is run, MageMaker reads the YAML configuration file and conducts the inference or query as described within the file.
+
+---
+
+### Summary Table
+
+| Argument   | Value           | Description                                   |
+|------------|-----------------|-----------------------------------------------|
+| `--query`  | `<YAML_PATH>`   | Path to YAML query configuration file         |
+
+---
+
+### Best Practices
+
+- **Keep configuration files versioned** within your repository to promote reproducibility.
+- **Validate** YAML files with your team or CI pipelines to avoid formatting or logical errors.
+- **Document expected structure** of the YAML file for your models, so team members can craft queries easily.
+
+---
+
+With this new YAML-based querying capability, MageMaker empowers you to script or automate inference and other model interactions in a robust, portable, and user-friendly manner. 
+
+
 
 
 ### YAML-based Deployment (Recommended)
@@ -184,3 +273,5 @@ You can reach us, faizan & jneid, at [support@slashml.com](mailto:support@slashm
 If anything doesn't make sense or you have suggestions, do point them out at [magemaker.featurebase.app](https://magemaker.featurebase.app/).
 
 We'd love to hear from you! We're excited to learn how we can make this more valuable for the community and welcome any and all feedback and suggestions.
+ 
+```
