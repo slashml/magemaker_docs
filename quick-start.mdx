@@ -42,6 +42,74 @@ From the dropdown, select `Query a Model Endpoint` to see the list of models end
 ![Query Endpoints](../Images/query-1.png)
 
 
+---
+
+## YAML-based Querying via Command-Line
+
+MageMaker has introduced a new command-line argument, `--query`, to support querying deployed models using YAML configuration files. This enhancement allows users to perform inference requests via a simple and structured approach, improving usability and integration with YAML-driven workflows.
+
+### 1. Addition of the `--query` Command-Line Argument
+
+- **Argument:** `--query`
+- **Type:** String (expects a path to a YAML file)
+- **Action:** `query`
+- **Description:** Specifies the path to a YAML configuration file that defines the inference query to be sent to the target model or endpoint.
+
+**Implementation Detail:**
+```python
+parser.add_argument(
+    '--query',
+    action='query',
+    help="path to YAML query configuration file",
+    type=str
+)
+```
+This change adds a new optional argument to the command-line interface. When `--query` is used, MageMaker will look for the YAML file at the specified location and use its contents to perform the model query.
+
+### Querying Deployed Models with a YAML Configuration
+
+You can now use YAML files to define your inference queries, which MageMaker will process for you.
+
+#### Command Structure
+
+```bash
+magemaker --query path/to/your-query.yaml
+```
+
+- **Replace** `path/to/your-query.yaml` with the actual path to your YAML configuration file.
+
+#### Example
+
+Suppose you have a YAML file at `.magemaker_config/sentiment-query.yaml`:
+
+**`.magemaker_config/sentiment-query.yaml`**
+```yaml
+endpoint: sentiment-classifier
+inputs:
+  - "I love this product!"
+  - "This is the worst experience ever."
+```
+
+You would run:
+
+```bash
+magemaker --query .magemaker_config/sentiment-query.yaml
+```
+
+MageMaker will parse the configuration and send the inference requests defined in the YAML file to the specified endpoint.
+
+---
+
+**Summary:**
+
+- **New Feature:** The `--query` argument allows users to submit inference requests via YAML files.
+- **Improvement:** Simplifies batch and structured querying without manual command-line construction.
+- **How to Use:** Provide the path to your YAML configuration with the `--query` argument.
+
+*This feature enhances MageMaker's usability for both interactive and automated inference workflows by leveraging the flexibility of YAML-based configuration.*
+
+---
+
 ### YAML-based Deployment (Recommended)
 
 For reproducible deployments, use YAML configuration:
@@ -184,3 +252,4 @@ You can reach us, faizan & jneid, at [support@slashml.com](mailto:support@slashm
 If anything doesn't make sense or you have suggestions, do point them out at [magemaker.featurebase.app](https://magemaker.featurebase.app/).
 
 We'd love to hear from you! We're excited to learn how we can make this more valuable for the community and welcome any and all feedback and suggestions.
+ 
