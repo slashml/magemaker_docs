@@ -1,3 +1,4 @@
+```markdown
 ---
 title: Quick Start
 "og:title": "Magemaker"
@@ -41,6 +42,97 @@ From the dropdown, select `Query a Model Endpoint` to see the list of models end
 
 ![Query Endpoints](../Images/query-1.png)
 
+---
+
+## MageMaker CLI: Querying with YAML Configurations
+
+MageMaker now supports querying deployed models using user-defined YAML configuration files via a new command-line interface option. This enhancement introduces a dedicated argument to streamline and standardize how users interact with model endpoints for inference. Below, we outline the newly added functionality and provide practical usage guidance.
+
+---
+
+### High-Level Overview
+
+**What's New?**
+
+A new command-line argument, `--query`, has been integrated into the MageMaker CLI. This argument allows users to specify a path to a YAML configuration file that defines a query against a deployed model. This approach facilitates reproducible, readable, and version-controllable inference requests, aligning with modern MLOps practices.
+
+---
+
+### Detailed Change Descriptions
+
+#### 1. New `--query` Command-Line Argument
+
+- **Flag:** `--query`
+- **Purpose:** Accepts the path to a YAML query configuration file.
+- **Type:** `str` (string path to the YAML file)
+- **Usage Context:** Used to run inference queries against deployed models.
+- **Implementation Details:**
+  - Introduced as an argument to the CLI parser.
+  - Utilizes a custom action (`action='query'`) to trigger appropriate handler logic.
+  - Accepts API key information via `api_key="j2i3udh38hd983d38d3dh383"` (may be used internally for authentication).
+- **Help Text:**  
+  ```
+  path to YAML query configuration file
+  ```
+
+#### 2. Placement and Compatibility
+
+- The `--query` argument is now available alongside other CLI options (e.g., `--hf` for Hugging Face model deployments).
+- The command can be combined with other flags but is primarily intended for querying inference endpoints.
+
+---
+
+### Usage Examples
+
+#### Querying with a YAML Configuration File
+
+Suppose you have exported or written a query configuration at `.magemaker_config/your-model-query.yaml`, containing input data and invocation parameters for your model.
+
+##### Command Structure
+
+```bash
+magemaker --query .magemaker_config/your-model-query.yaml
+```
+
+**Explanation:**
+- `magemaker`: Invokes the MageMaker CLI.
+- `--query`: Specifies that you wish to send an inference request.
+- `.magemaker_config/your-model-query.yaml`: Path to your YAML configuration file defining the query details.
+
+##### Sample YAML Query Configuration
+
+A sample YAML file for a text classification model might look like:
+
+```yaml
+endpoint: my-classification-endpoint
+input:
+  text: "Classify this sample sentence."
+parameters:
+  top_k: 3
+```
+
+**Note:** The exact schema may depend on your deployed model and MageMaker's expected format.
+
+---
+
+### Best Practices
+
+- **Version Control:** Store your YAML query files in source control for auditability and reproducibility.
+- **Sensitive Data:** Do not include sensitive data (like API keys) in your query YAML files unless you have secured your repository.
+- **Validation:** Ensure your YAML configuration matches the input schema expected by your deployed model.
+
+---
+
+### Additional References
+
+- For deploying models, see the usage of `--hf` for Hugging Face models and other deployment options in MageMaker's documentation.
+- For more advanced querying and automation, explore MageMaker's YAML schema and API reference.
+
+---
+
+With this feature, MageMaker further streamlines MLOps workflows, making model querying transparent, repeatable, and easy to manage.
+
+---
 
 ### YAML-based Deployment (Recommended)
 
@@ -184,3 +276,5 @@ You can reach us, faizan & jneid, at [support@slashml.com](mailto:support@slashm
 If anything doesn't make sense or you have suggestions, do point them out at [magemaker.featurebase.app](https://magemaker.featurebase.app/).
 
 We'd love to hear from you! We're excited to learn how we can make this more valuable for the community and welcome any and all feedback and suggestions.
+ 
+```
