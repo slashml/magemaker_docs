@@ -10,6 +10,8 @@ Choose a model from Hugging Face, and Magemaker will spin up an instance with a 
 
 
 
+
+
 ## Getting Started
 
 Magemaker works with the three major cloud providers AWS, Azure and GCP!
