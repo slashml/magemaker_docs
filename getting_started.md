@@ -8,6 +8,8 @@ Instead of spending hours digging through documentation to figure out how to get
 
 Choose a model from Hugging Face, and Magemaker will spin up an instance with a ready-to-query endpoint of the model in minutes.
 
+
+
 ## Getting Started
 
 Magemaker works with the three major cloud providers AWS, Azure and GCP!
