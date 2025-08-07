@@ -202,9 +202,8 @@ Choose your instance type based on your model's requirements:
 4. Set up monitoring and alerting for your endpoints
 
 <Warning>
-Make sure you setup budget monitory and alerts to avoid unexpected charges.
+Make sure you set up budget monitoring and alerts to avoid unexpected charges.
 </Warning>
-
 
 ## Troubleshooting Deployments
 
@@ -225,4 +224,44 @@ Common issues and their solutions:
    - Verify model ID and version
    - Check instance memory requirements
    - Validate Hugging Face token if required
-   - Endpoing deployed but deployment failed. Check the logs, and do report this to us if you see this issue.
+   - Endpoint deployed but deployment failed. Check the logs, and do report this to us if you see this issue.
+  
+---
+
+### Additional Notes on Command-Line Options
+
+The Magemaker CLI supports both interactive and YAML-based deployments. Here’s a breakdown of relevant options:
+
+#### Cloud selection
+```sh
+magemaker --cloud [aws|gcp|azure|all]
+```
+- Launches the interactive deployment flow, walking you through options and configuration for your selected cloud.
+
+#### YAML-based deployment
+```sh
+magemaker --deploy path/to/deployment.yaml
+```
+- Deploys using the specified YAML file. The `destination` field in the YAML chooses the cloud provider.
+
+#### Advanced options
+
+| Flag         | Description                                    |
+|--------------|------------------------------------------------|
+| `--hf`       | Deploy a Hugging Face Model (and select instance interactively) |
+| `--instance` | Specify cloud instance type (overrides YAML if interactive) |
+| `--deploy`   | Path to deployment YAML file                   |
+| `--train`    | Path to training YAML file                     |
+| `--cloud`    | Specify provider for interactive mode          |
+| `-v` / `--verbose` | Increase output verbosity               |
+| `--version`  | Show Magemaker version                         |
+
+> **Note:** If you specify both `--cloud` and `--deploy`, Magemaker will use the `destination` from the YAML and issue a warning if both are provided.
+
+<Warning>
+If you run Magemaker with no arguments, you must specify a cloud provider using `--cloud`. Examples:
+- `magemaker --cloud gcp`
+- `magemaker --cloud aws`
+- `magemaker --cloud azure`
+- `magemaker --cloud all`
+</Warning>
