@@ -205,6 +205,34 @@ Choose your instance type based on your model's requirements:
 Make sure you setup budget monitory and alerts to avoid unexpected charges.
 </Warning>
 
+## Command-line Interface Changes
+
+Starting with Magemaker vNext, the CLI offers:
+
+- Improved `--cloud` option:  
+  Magemaker now **requires you to specify** which cloud provider you want to deploy on via `--cloud`, e.g. `--cloud aws`. Running just `magemaker` will prompt you with possible cloud choices and exit if none is provided.
+
+- Error messages for missing cloud provider:  
+  If you run `magemaker` without arguments, you'll see an error like:
+
+  ```
+  Error: You must specify a cloud provider.
+  Possible solutions:
+  - magemaker --cloud gcp
+  - magemaker --cloud aws
+  - magemaker --cloud azure
+  - magemaker --cloud all
+  ```
+
+- The `--cloud` flag cannot be used together with the `--deploy` option.  
+  If you try, Magemaker will print:
+
+  ```
+  Error: You cannot specify a deployment configuration file with the --cloud flag. We will pick the destination from the yaml file
+  ```
+
+- Improved help output:  
+  Use `magemaker --help` or `magemaker --version` to see available options and version info.
 
 ## Troubleshooting Deployments
 
