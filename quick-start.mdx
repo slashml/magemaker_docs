@@ -128,7 +128,6 @@ models:
 </Note>
 
 
-
 ### Model Fine-tuning
 
 Fine-tune models using the `train` command:
@@ -150,7 +149,8 @@ training: !Training
     per_device_train_batch_size: 32
     learning_rate: 2e-5
 ```
-{/* 
+
+<!-- 
 ### Recommended Models
 
 <CardGroup>
@@ -169,7 +169,8 @@ training: !Training
     Feature extraction: turns text into a 384d vector embedding for semantic
     search / clustering. Query format: "type out a sentence like this one."
   </Card>
-</CardGroup> */}
+</CardGroup> 
+-->
 
 <Warning>
   Remember to deactivate unused endpoints to avoid unnecessary charges!
@@ -184,3 +185,32 @@ You can reach us, faizan & jneid, at [support@slashml.com](mailto:support@slashm
 If anything doesn't make sense or you have suggestions, do point them out at [magemaker.featurebase.app](https://magemaker.featurebase.app/).
 
 We'd love to hear from you! We're excited to learn how we can make this more valuable for the community and welcome any and all feedback and suggestions.
+
+---
+
+### v0.1.2+ CLI Update
+
+**New:** You can now specify `--cloud all` to configure AWS, GCP, and Azure interactively, or use YAML with a `deployment.destination` field for explicit cloud targeting.
+
+#### Cloud CLI flags
+
+- `--cloud aws` — configure for AWS SageMaker
+- `--cloud gcp` — configure for Google Cloud Vertex AI
+- `--cloud azure` — configure for Azure ML
+- `--cloud all` — configure all three providers at once
+
+If you do not specify `--cloud`, the CLI will require you to choose one, and prints a help message.
+
+If you provide a YAML deployment file with `--deploy`, the CLI uses the `deployment.destination` field to determine which provider to target.
+
+**Legacy:** Previous CLI usage with e.g. `magemaker --cloud=gcp` is still supported, but the preferred usage is now:
+
+```sh
+magemaker --cloud gcp
+```
+or
+```sh
+magemaker --deploy .magemaker_config/my-deploy.yaml
+```
+
+If you run just `magemaker` with no arguments, you’ll now see a colored error indicating you must specify a cloud provider, with suggested commands.
