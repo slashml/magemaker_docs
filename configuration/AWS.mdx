@@ -10,9 +10,93 @@ Follow this guide to install the latest AWS CLI
 
 https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
 
+Once you have the CLI installed and working, follow these steps:
 
-Once you have the CLI installed and working, follow these steps
+---
 
+### Dockerized Usage
+
+Magemaker supports running entirely within Docker, with the AWS CLI pre-installed and ready to use for streamlined deployments.
+
+**Recommended Docker Setup:**
+
+1. **.dockerignore**  
+   Make sure to include a `.dockerignore` file that excludes local virtual environments, build artifacts, and configuration directories from your Docker build context:
+
+   ```dockerignore
+   venv/
+   *.pyc
+   __pycache__
+   .git
+   .env
+   *.egg-info
+   dist/
+   build/
+   ```
+
+2. **Dockerfile**
+
+   Magemaker provides a sample Dockerfile named `Dockerfile-server` that comes pre-configured with:
+   
+   - Python 3.11
+   - All development dependencies installed through pip
+   - AWS CLI (v2) pre-installed
+   - Google Cloud SDK
+   - Azure CLI
+   - Bash entrypoint that automatically sets up environment variables such as AWS credentials (if mounted as volume)
+
+   The relevant installation steps for AWS in the Dockerfile are summarized below:
+
+   ```docker
+   FROM python:3.11-slim
+
+   # ...
+
+   # Install AWS CLI
+   RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
+       && unzip awscliv2.zip \
+       && ./aws/install \
+       && rm awscliv2.zip \
+       && rm -rf aws
+
+   # Copy and setup entrypoint
+   COPY magemaker/docker/entrypoint.sh /usr/local/bin/
+   RUN chmod +x /usr/local/bin/entrypoint.sh
+
+   ENTRYPOINT ["entrypoint.sh"]
+   CMD ["bash"]
+   ```
+
+3. **Credential Handling**
+
+   When running the Docker container, you can mount local AWS credentials for use _inside_ the container. The entrypoint script `/usr/local/bin/entrypoint.sh` will automatically configure environment variables if the credentials exist:
+
+   ```sh
+   #!/bin/bash
+   set -e
+
+   # Setup AWS credentials if mounted
+   if [ -f "/root/.aws/credentials" ]; then
+       export AWS_SHARED_CREDENTIALS_FILE="/root/.aws/credentials"
+   fi
+
+   # Setup GCP credentials if mounted
+   if [ -f "/root/.config/gcloud/application_default_credentials.json" ]; then
+       export GOOGLE_APPLICATION_CREDENTIALS="/root/.config/gcloud/application_default_credentials.json"
+   fi
+
+   exec "$@"
+   ```
+
+   > **Tip:** Pass your credentials into the container by mounting them at `/root/.aws/credentials`:
+   >
+   > ```sh
+   > docker run -v ~/.aws/credentials:/root/.aws/credentials:ro magemaker
+   > ```
+   >
+   > You can now use both the AWS CLI and magemaker commands from inside the container.
+
+---
 
 ### AWS Account
 
