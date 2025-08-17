@@ -21,6 +21,15 @@ Supported providers:
 - `--cloud azure` Azure Machine Learning deployment
 - `--cloud all` Configure all three providers at the same time
 
+You can also specify compute type with `--instance` and now **`--cpu`** for CPU selection:
+
+```sh
+magemaker --cloud aws --instance ml.m5.xlarge --cpu intel
+```
+
+- `--instance` Selects the instance type (e.g., `ml.m5.xlarge`, `g2-standard-12`, `Standard_DS3_v2`)
+- `--cpu` Specifies CPU type (e.g., `intel`, `amd`) **(New!)**
+
 
 ### List Models
 
@@ -60,6 +69,7 @@ deployment: !Deployment
   instance_type: ml.m5.xlarge
   num_gpus: null
   quantization: null
+  cpu: null     # optionally specify cpu: intel or amd (new)
 models:
   - !Model
     id: facebook/opt-125m
@@ -81,6 +91,7 @@ deployment: !Deployment
   accelerator_type: NVIDIA_L4
   num_gpus: null
   quantization: null
+  cpu: null     # optionally specify cpu: intel or amd (new)
 
 models:
   - !Model
@@ -100,6 +111,7 @@ deployment: !Deployment
   endpoint_name: facebook-opt-test
   instance_count: 1
   instance_type: Standard_DS3_v2
+  cpu: null     # optionally specify cpu: intel or amd (new)
 models:
   - !Model
     id: facebook--opt-125m
@@ -184,3 +196,4 @@ You can reach us, faizan & jneid, at [support@slashml.com](mailto:support@slashm
 If anything doesn't make sense or you have suggestions, do point them out at [magemaker.featurebase.app](https://magemaker.featurebase.app/).
 
 We'd love to hear from you! We're excited to learn how we can make this more valuable for the community and welcome any and all feedback and suggestions.
+

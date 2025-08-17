@@ -125,6 +125,32 @@ models:
       max_new_tokens: 250
 ```
 
+### Specifying CPU Type
+
+You can now specify the CPU type to be used during deployment by adding a `cpu_type` field to your YAML, or directly using the `--cpu` flag in the CLI:
+
+**YAML field:**
+```yaml
+deployment: !Deployment
+  destination: aws
+  endpoint_name: cpu-type-demo
+  instance_count: 1
+  instance_type: ml.m5.xlarge
+  cpu_type: intel
+
+models:
+  - !Model
+    id: google-bert/bert-base-uncased
+    source: huggingface
+```
+
+**CLI flag:**
+```sh
+magemaker --deploy your-model.yaml --cpu amd
+```
+
+> **Note:** The `--cpu` flag and corresponding YAML field let you control the CPU architecture (e.g., intel, amd, arm64) for your deployment on supported clouds/instance types.
+
 ## Cloud-Specific Instance Types
 
 ### AWS SageMaker Types
@@ -204,7 +230,6 @@ Choose your instance type based on your model's requirements:
 <Warning>
 Make sure you setup budget monitory and alerts to avoid unexpected charges.
 </Warning>
-
 
 ## Troubleshooting Deployments
 
