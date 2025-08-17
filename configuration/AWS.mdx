@@ -10,9 +10,27 @@ Follow this guide to install the latest AWS CLI
 
 https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
 
-
 Once you have the CLI installed and working, follow these steps
 
+---
+
+### Running Magemaker with Docker
+
+Starting from this release, Magemaker provides a ready-to-use Docker image that includes the AWS CLI and SDK pre-installed, making it simple to run Magemaker in a containerized environment. The Docker image also allows for easy integration with your cloud credentials.
+
+#### Running with AWS Credentials
+
+To use your local AWS credentials inside the Docker container, mount your credentials directory when running the container:
+
+```bash
+docker run -it \
+  -v ~/.aws:/root/.aws \
+  ghcr.io/slashml/magemaker:latest
+```
+
+This will make your AWS credentials available at `/root/.aws/credentials` within the container. The Docker entrypoint automatically detects this and sets the necessary environment variables, so the AWS CLI and Magemaker can access your credentials without additional setup.
+
+---
 
 ### AWS Account
 

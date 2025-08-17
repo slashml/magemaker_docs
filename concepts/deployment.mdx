@@ -205,6 +205,36 @@ Choose your instance type based on your model's requirements:
 Make sure you setup budget monitory and alerts to avoid unexpected charges.
 </Warning>
 
+## Docker Server Support
+
+Magemaker now offers improved multi-cloud Docker support. The provided server Dockerfile supports all three major cloud CLIs (AWS CLI, Google Cloud SDK, Azure CLI) preinstalled, making it easier to deploy and manage endpoints across AWS, GCP, and Azure from within a consistent containerized environment.
+
+**Key features:**
+- Python 3.11 runtime
+- Pre-installed system build dependencies and popular editors (nano, vim)
+- Installs and adds to PATH: AWS CLI, Google Cloud SDK, Azure CLI
+- Custom `entrypoint.sh` sets up cloud credentials for AWS & GCP on container boot if credentials are mounted
+- Ideal for CI/CD, local dev, and production Docker-based workflows
+
+**Sample usage with your source code and credentials:**
+
+```dockerfile
+# See Dockerfile-server for details
+FROM python:3.11-slim
+
+# ... system dependencies and cloud CLI installation ...
+
+COPY magemaker/docker/entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+ENTRYPOINT ["entrypoint.sh"]
+CMD ["bash"]
+```
+
+Within the container, you can access all three cloud CLIs for managing endpoints and deployments! Be sure to mount your credential files/secrets appropriately:
+- AWS: mount `.aws/credentials` to `/root/.aws/credentials`
+- Google: mount `application_default_credentials.json` to `/root/.config/gcloud/application_default_credentials.json`
+- Azure: configure as needed in the container
 
 ## Troubleshooting Deployments
 
