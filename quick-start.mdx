@@ -5,7 +5,6 @@ title: Quick Start
 
 <Note> Make sure you have followed the [installation](installation) steps before proceeding. </Note>
 
-
 ## Interactive View
 
 1. Run Magemaker with your desired cloud provider:
@@ -21,7 +20,6 @@ Supported providers:
 - `--cloud azure` Azure Machine Learning deployment
 - `--cloud all` Configure all three providers at the same time
 
-
 ### List Models
 
 From the dropdown, select `Show Acitve Models` to see the list of endpoints deployed.
@@ -34,13 +32,11 @@ From the dropdown, select `Delete a Model Endpoint` to see the list of models en
 
 ![Delete Endpoints](../Images/delete-1.png)
 
-
 ### Querying Models
 
 From the dropdown, select `Query a Model Endpoint` to see the list of models endpoints. Press space to select the endpoints you want to query. Enter the query in the text box and press enter to get the response.
 
 ![Query Endpoints](../Images/query-1.png)
-
 
 ### YAML-based Deployment (Recommended)
 
@@ -119,15 +115,33 @@ models:
     	![Azure ML Creation](../Images/workspace-studio.png)
     </Step>
 
-      <Step title="Select Hugging Face in the Collections List">
+    <Step title="Select Hugging Face in the Collections List">
       Select Hugging-Face from the collections list. The id of the model card is the id you need to use in the yaml file
     	![Azure ML Creation](../Images/hugging-face.png)
     </Step>
-
   </Steps>
 </Note>
 
+### Additional CLI Arguments
 
+Magemaker now supports more fine-grained control of deployment through extra arguments:
+
+- `--instance`: EC2 (or equivalent) instance type to deploy to (e.g., `ml.g4dn.xlarge`)
+- `--cpu`: Specify the desired CPU type for deployment (e.g., `intel`, `amd`)
+
+Other supported flags:
+
+- `--hf`: Deploy a Hugging Face model directly.
+- `--deploy`: Path to YAML deployment configuration file (see above).
+- `--cloud`: Target cloud providers.
+- `--train`: Path to YAML training configuration file.
+- `--version`: Show Magemaker version and exit.
+
+Example:
+
+```sh
+magemaker --cloud aws --instance ml.g4dn.xlarge --cpu intel --hf facebook/opt-125m
+```
 
 ### Model Fine-tuning
 
@@ -175,11 +189,9 @@ training: !Training
   Remember to deactivate unused endpoints to avoid unnecessary charges!
 </Warning>
 
-
 ## Contact
 
 You can reach us, faizan & jneid, at [support@slashml.com](mailto:support@slashml.com).
-
 
 If anything doesn't make sense or you have suggestions, do point them out at [magemaker.featurebase.app](https://magemaker.featurebase.app/).
 
