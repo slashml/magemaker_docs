@@ -127,7 +127,22 @@ models:
   </Steps>
 </Note>
 
+---
 
+## Advanced: Customizing Instance and CPU Type
+
+You can specify the instance type and CPU type directly from the command line when deploying, for further tuning.
+
+```sh
+magemaker --deploy .magemaker_config/your-model.yaml --instance <instance_type> --cpu <cpu_type>
+```
+
+- `--instance` lets you specify the VM/compute instance for deployment.
+- `--cpu` lets you specify a particular CPU type (e.g., "intel", "amd", "arm", or a specific architecture if supported).
+
+This enables more granular resource control. See your cloud provider's documentation for supported values.
+
+---
 
 ### Model Fine-tuning
 
@@ -184,3 +199,4 @@ You can reach us, faizan & jneid, at [support@slashml.com](mailto:support@slashm
 If anything doesn't make sense or you have suggestions, do point them out at [magemaker.featurebase.app](https://magemaker.featurebase.app/).
 
 We'd love to hear from you! We're excited to learn how we can make this more valuable for the community and welcome any and all feedback and suggestions.
+
