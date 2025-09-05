@@ -1,158 +1,76 @@
----
-title: Installation
-description: Configure Magemaker for your cloud provider
----
+# Installation
 
+Follow these instructions to install and set up Magemaker, including optional Docker-based usage and new credential handling introduced in v0.3.0.
 
-<Note>
-  For Macs, maxOS >= 13.6.6 is required. Apply Silicon devices (M1) must use Rosetta terminal. You can verify, your terminals architecture by running `arch`. It should print `i386` for Rosetta terminal.
-</Note>
+## Prerequisites
 
+- Python 3.11+
+- `git`, `curl`, and build tools (for Docker containers)
+- Cloud provider CLI tools (AWS CLI, Google Cloud SDK, Azure CLI)—see below for details
 
-Install via pip:
+## Install Magemaker (Locally)
 
-```sh
+```bash
 pip install magemaker
 ```
 
+## Using Docker
 
-## Cloud Account Setup
-
-### AWS Configuration
-
-- Follow this detailed guide for setting up AWS credentials:
-  [AWS Setup Guide](/configuration/AWS)
-
-Once you have your AWS credentials, you can configure Magemaker by running:
+To use Magemaker in a Dockerized environment (now supports easy credential injection for AWS/GCP), build with the included Dockerfile:
 
 ```bash
-magemaker --cloud aws
+git clone https://github.com/slashml/magemaker.git
+cd magemaker
+docker build -f Dockerfile-server -t magemaker-server .
 ```
 
-It will prompt you for aws credentials and set up the necessary configurations.
+### Dockerfile Updates (v0.3.0+)
+- Switched to `python:3.11-slim`
+- Installs AWS CLI, Google Cloud SDK, Azure CLI (in container)
+- Mounts `.aws/credentials` and GCP application default credentials from your host for authentication
+- Custom `entrypoint.sh` assigns credential env vars at container start
 
-
-### GCP (Vertex AI) Configuration
-
-- Follow this detailed guide for setting up GCP credentials:
-  [GCP Setup Guide](/configuration/GCP)
-
-
-once you have your GCP credentials, you can configure Magemaker by running:
+#### Running the container with credentials
 
 ```bash
-magemaker --cloud gcp
+docker run -it \
+  -v $HOME/.aws:/root/.aws:ro \
+  -v $HOME/.config/gcloud:/root/.config/gcloud:ro \
+  magemaker-server
 ```
 
-### Azure Configuration
+*You can omit any credential directories for providers you do not use.*
 
-- Follow this detailed guide for setting up Azure credentials:
-  [GCP Setup Guide](/configuration/Azure)
+## Provider CLI Install (Locally)
 
+You will need to install the relevant cloud CLI if you are not using Docker:
 
-Once you have your Azure credentials, you can configure Magemaker by running:
+- **AWS CLI** ([install guide](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html))
+- **Google Cloud SDK** ([install guide](https://cloud.google.com/sdk/docs/install))
+- **Azure CLI** ([install guide](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli))
+
+You may use `magemaker/scripts/preflight.sh` to assist in installing CLI tools and testing credentials; see [below](#checking-cloud-credentials).
+
+## Checking Cloud Credentials
+
+Magemaker's `scripts/preflight.sh` script will check and help configure your credentials for AWS, GCP, and Azure, and test connectivity. Run:
 
 ```bash
-magemaker --cloud azure
+bash magemaker/scripts/preflight.sh
 ```
 
+Follow prompts as needed.
 
-### All three cloud providers
+**Credential Testing**: The pre-flight script now explicitly runs a test connection check for AWS credentials after setup.
 
-If you have configured all three cloud providers, you can verify your configuration by running:
+## Summary of Credential Injection
 
-```bash
-magemaker --cloud all
-```
+- For **Docker** users, mount your cloud credential folders as shown above.
+- For **local** installs, your CLI credentials are automatically picked up from their standard locations.
+- At runtime, Magemaker uses:
+    - `AWS_SHARED_CREDENTIALS_FILE` for AWS (auto-set by Docker entrypoint if available)
+    - `GOOGLE_APPLICATION_CREDENTIALS` for GCP (auto-set by Docker entrypoint if present)
 
+---
 
-### Required Config File
-By default, Magemaker will look for a `.env` file in your project root with the following variables based on which cloud provider(s) you plan to use:
-
-
-```bash
-# AWS Configuration
-AWS_ACCESS_KEY_ID="your-access-key"      # Required for AWS
-AWS_SECRET_ACCESS_KEY="your-secret-key"   # Required for AWS
-SAGEMAKER_ROLE="arn:aws:iam::..."        # Required for AWS
-
-# GCP Configuration
-PROJECT_ID="your-project-id"             # Required for GCP
-GCLOUD_REGION="us-central1"              # Required for GCP
-
-# Azure Configuration
-AZURE_SUBSCRIPTION_ID="your-sub-id"      # Required for Azure
-AZURE_RESOURCE_GROUP="ml-resources"      # Required for Azure
-AZURE_WORKSPACE_NAME="ml-workspace"      # Required for Azure
-AZURE_REGION="eastus"                    # Required for Azure
-
-# Optional configurations
-HUGGING_FACE_HUB_KEY="your-hf-token"    # Required for gated HF models like llama
-```
-
-<Warning>Never commit your .env file to version control!</Warning>
-
-<Note>
-   For gated models like llama-3.1 from Meta, you might have to accept terms of use for model on hugging face and adding Hugging face token to the environment are necessary for deployment to go through.
-</Note>
-
-{/* ## Verification
-
-To verify your configuration:
-
-```bash
-magemaker verify
-``` */}
-
-## Best Practices
-
-1. **Resource Management**
-   - Monitor quota limits
-   - Clean up unused resources
-   - Set up cost alerts
-
-2. **Environment Management**
-
-   - Use separate configurations for dev/prod
-   - Regularly rotate access keys
-   - Use environment-specific roles
-
-3. **Security**
-
-   - Follow principle of least privilege
-   - Use service accounts where possible
-   - Enable audit logging
-
-
-
-## Troubleshooting
-
-Common configuration issues:
-
-1. **AWS Issues**
-
-   - Check IAM role permissions
-   - Verify SageMaker quota
-   - Confirm region settings
-
-2. **GCP Issues**
-
-   - Verify service account permissions
-   - Check Vertex AI API enablement
-   - Confirm project ID
-
-3. **Azure Issues**
-   - Check resource provider registration status:
-     ```bash
-     az provider show -n Microsoft.MachineLearningServices
-     az provider show -n Microsoft.ContainerRegistry
-     az provider show -n Microsoft.KeyVault
-     az provider show -n Microsoft.Storage
-     az provider show -n Microsoft.Insights
-     az provider show -n Microsoft.ContainerService
-     az provider show -n Microsoft.PolicyInsights
-     az provider show -n Microsoft.Cdn
-     ```
-   - Verify workspace access
-   - Confirm subscription status
-   - Ensure all required providers are registered
+See [Configuration: AWS](configuration/AWS) and [Configuration: GCP](configuration/GCP) for more details on each provider's authentication.
