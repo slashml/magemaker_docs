@@ -1,228 +1,45 @@
----
-title: Deployment
-description: Learn how to deploy models using Magemaker
----
+# Deployment
 
-## Deployment Methods
+Deploying LLMs with Magemaker involves providing a deployment configuration, authenticating with your chosen cloud provider, and managing your service endpoints.
 
-Magemaker offers multiple ways to deploy your models to AWS, GCP and Azure. Choose the method that best fits your workflow.
+## Deployment Process
 
-### Interactive Deployment
+1. **Choose your provider:**
+   - AWS SageMaker
+   - Google Cloud Vertex AI
+   - Azure
 
-When you run the `magemaker --cloud [aws|gcp|azure|all]` command, you'll get an interactive menu that walks you through the deployment process:
+2. **Provide credentials:**
+   - See provider configuration docs for how to securely provide credentials (now with Docker environment variable detection for AWS/GCP!)
 
-```sh
-magemaker --cloud [aws|gcp|azure|all]
+3. **Run the deployment command:**
+
+   ```bash
+   magemaker deploy --provider aws --model-id google-bert/bert-base-uncased
+   ```
+
+4. **Save your configuration:**
+   - After successful deployment, Magemaker prints the path to a configuration YAML file for your model:
+
+     ```
+     Important: Configuration saved at: /config/<endpoint_name>.yml
+     You'll need this path for querying the model later.
+     ```
+   - Keep this path—you must supply it for later queries.
+
+
+## Querying
+
+Pass the correct config (path or endpoint name) to `magemaker query`:
+
+```bash
+magemaker query --endpoint <endpoint_name>
 ```
 
-This method is great for:
+If the config can't be found, Magemaker will show you the expected path (e.g.: `/app/configs/<endpoint_name>.yml`). Place the deployment config at that path or correct your command.
 
-- First-time users
-- Exploring available models
-- Testing different configurations
+## Credentials
 
-### YAML-based Deployment
-
-For reproducible deployments and CI/CD integration, use YAML configuration files:
-
-```sh
-magemaker --deploy .magemaker_config/your-model.yaml
-```
-
-This is recommended for:
-
-- Production deployments
-- CI/CD pipelines
-- Infrastructure as Code (IaC)
-- Team collaborations
-
-## Multi-Cloud Deployment
-
-Magemaker supports deployment to AWS SageMaker, GCP Vertex AI, and Azure ML. Here's how to deploy the same model (facebook/opt-125m) to different cloud providers:
-
-### AWS (SageMaker)
-
-```yaml
-deployment: !Deployment
-  destination: aws
-  endpoint_name: opt-125m-aws
-  instance_count: 1
-  instance_type: ml.m5.xlarge
-
-models:
-  - !Model
-    id: facebook/opt-125m
-    source: huggingface
-```
-
-### GCP (Vertex AI)
-
-```yaml
-deployment: !Deployment
-  destination: gcp
-  endpoint_name: opt-125m-gcp
-  instance_count: 1
-  machine_type: n1-standard-4
-  accelerator_type: NVIDIA_TESLA_T4
-  accelerator_count: 1
-
-models:
-  - !Model
-    id: facebook/opt-125m
-    source: huggingface
-```
-
-### Azure ML
-
-```yaml
-deployment: !Deployment
-  destination: azure
-  endpoint_name: opt-125m-azure
-  instance_count: 1
-  instance_type: Standard_DS3_v2
-
-models:
-  - !Model
-    id: facebook-opt-125m
-    source: huggingface
-```
-
-## YAML Configuration Reference
-
-### Basic Deployment
-
-```yaml
-deployment: !Deployment
-  destination: aws
-  endpoint_name: test-bert-uncased
-  instance_count: 1
-  instance_type: ml.m5.xlarge
-
-models:
-  - !Model
-    id: google-bert/bert-base-uncased
-    source: huggingface
-```
-
-### Advanced Configuration
-
-```yaml
-deployment: !Deployment
-  destination: aws
-  endpoint_name: test-llama3-8b
-  instance_count: 1
-  instance_type: ml.g5.12xlarge
-  num_gpus: 4
-
-models:
-  - !Model
-    id: meta-llama/Meta-Llama-3-8B-Instruct
-    source: huggingface
-    predict:
-      temperature: 0.9
-      top_p: 0.9
-      top_k: 20
-      max_new_tokens: 250
-```
-
-## Cloud-Specific Instance Types
-
-### AWS SageMaker Types
-
-Choose your instance type based on your model's requirements:
-
-<CardGroup>
-  <Card title="ml.m5.xlarge" icon="server">
-    Good for smaller models like BERT-base
-    - 4 vCPU
-    - 16 GB Memory
-    - Available in free tier
-  </Card>
-
-  <Card title="ml.g5.12xlarge" icon="server">
-    Required for larger models like LLaMA
-    - 48 vCPU
-    - 192 GB Memory
-    - 4 NVIDIA A10G GPUs
-  </Card>
-</CardGroup>
-
-<Warning>
-  Remember to deactivate unused endpoints to avoid unnecessary charges!
-</Warning>
-
-### GCP Vertex AI Types
-
-<CardGroup>
-  <Card title="n1-standard-4" icon="server">
-    Good for smaller models
-    - 4 vCPU
-    - 15 GB Memory
-    - Cost-effective option
-  </Card>
-
-  <Card title="a2-highgpu-1g" icon="server">
-    For larger models
-    - 12 vCPU
-    - 85 GB Memory
-    - 1 NVIDIA A100 GPU
-  </Card>
-</CardGroup>
-
-### Azure ML Types
-
-<CardGroup>
-  <Card title="Standard_DS3_v2" icon="server">
-    Good for smaller models
-    - 4 vCPU
-    - 14 GB Memory
-    - Balanced performance
-  </Card>
-
-  <Card title="Standard_NC6s_v3" icon="server">
-    For GPU workloads
-    - 6 vCPU
-    - 112 GB Memory
-    - 1 NVIDIA V100 GPU
-  </Card>
-</CardGroup>
-
-## Deployment Best Practices
-
-1. Use meaningful endpoint names that include:
-
-   - Model name/version
-   - Environment (dev/staging/prod)
-   - Team identifier
-
-2. Start with smaller instance types and scale up as needed
-
-3. Always version your YAML configurations
-
-4. Set up monitoring and alerting for your endpoints
-
-<Warning>
-Make sure you setup budget monitory and alerts to avoid unexpected charges.
-</Warning>
-
-
-## Troubleshooting Deployments
-
-Common issues and their solutions:
-
-1. **Deployment Timeout**
-
-   - Check instance quota limits
-   - Verify network connectivity
-
-2. **Instance Not Available**
-
-   - Try a different region
-   - Request quota increase
-   - Use an alternative instance type
-
-3. **Model Loading Failure**
-   - Verify model ID and version
-   - Check instance memory requirements
-   - Validate Hugging Face token if required
-   - Endpoing deployed but deployment failed. Check the logs, and do report this to us if you see this issue.
+- Credentials are supplied as per provider docs
+- Docker users: see [Installation](../installation)
+- Magemaker now auto-detects and sets AWS and GCP env vars if mounted in Docker
