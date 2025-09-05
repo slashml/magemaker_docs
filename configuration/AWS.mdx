@@ -1,82 +1,77 @@
----
-title: AWS
----
+# AWS Configuration
 
-### AWS CLI
+To use AWS services through Magemaker—especially AWS SageMaker deployments—you must provide AWS credentials with sufficient permissions.
 
-<Note>To install Azure SDK on MacOS, you need to have the latest OS and you need to use Rosetta terminal. Also, make sure you have the latest version of Xcode tools installed.</Note>
+## Setting up AWS Credentials
 
-Follow this guide to install the latest AWS CLI
+Magemaker looks for standard AWS CLI credentials, either locally or in the container.
 
-https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
+### 1. Creating an IAM User
 
+1. Sign in to the AWS Console
+2. Go to **IAM > Users**, and create a user with programmatic access
+3. Attach the following permissions:
+   - `AmazonSageMakerFullAccess`
+   - `AmazonS3FullAccess`
+   - Any other required policies
 
-Once you have the CLI installed and working, follow these steps
+4. Download or note your `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`.
 
+### 2. Save Credentials (Locally)
 
-### AWS Account
+Configure your local AWS CLI:
 
-<Steps>
-<Step title="Create AWS Account">
-Register for an [AWS account](https://aws.amazon.com/) and sign-in to the [console](https://console.aws.amazon.com/).
-</Step>
+```bash
+aws configure
+```
 
-<Step title="Navigate to IAM">
-From the console, use the Search bar to find and select IAM (***do not use IAM Identity Center***, which is confusingly similar but a totally different system).
+This creates a credentials file at `~/.aws/credentials`.
 
-![Enter image alt description](../Images/muJ_Image_1.png)
+### 3. Using Credentials in Docker
 
-You should see the following screen after clicking IAM.
+With Magemaker v0.3.0+, you can securely inject credentials into the container:
 
-![Enter image alt description](../Images/ldC_Image_2.png)
-</Step>
+```bash
+docker run -it \
+  -v $HOME/.aws:/root/.aws:ro \
+  magemaker-server
+```
 
-<Step title="Create or Select User">
-1. Select `Users` in the side panel
-   
-![Enter image alt description](../Images/QX4_Image_3.png)
+The container entrypoint will detect `/root/.aws/credentials` and set `AWS_SHARED_CREDENTIALS_FILE` automatically.
 
-2. Create a user if you don't already have one
+**Tip:** You may use a different profile by editing `~/.aws/credentials` or exporting `AWS_PROFILE`.
 
-![Enter image alt description](../Images/ly3_Image_4.png)
-</Step>
+### 4. Testing Credentials
 
-<Step title="Add Required Permissions">
-1. Click on "Add permissions"
-   
-![Enter image alt description](../Images/E7x_Image_5.png)
+Use the `preflight.sh` script to validate connectivity:
 
-2. Select "Attach policies directly". Under permission policies, search for and tick the boxes for:
-   - `AmazonSagemakerFullAccess`
-   - `IAMFullAccess`
-   - `ServiceQuotasFullAccess`
+```bash
+bash magemaker/scripts/preflight.sh
+```
 
-Then click Next.
+It checks your permissions and prompts to install the AWS CLI if needed.
 
-![Enter image alt description](../Images/01X_Image_6.png)
+## Environment Variables
 
-The final list should look like the following:
+Magemaker will use:
 
-![Enter image alt description](../Images/Dfp_Image_7.png)
+- `AWS_SHARED_CREDENTIALS_FILE` if set
+- Otherwise, the default credentials search path
 
-Click "Create user" on the following screen.
-</Step>
+Example (if not using the Docker entrypoint):
 
-<Step title="Generate Access Keys">
-1. Click the name of the user you've just created (or one that already exists)
-2. Go to "Security Credentials" tab
-3. Scroll down to "Access Keys" section
-4. Click "Create access key"
-5. Select Command Line Interface then click next
+```bash
+export AWS_SHARED_CREDENTIALS_FILE=/path/to/credentials
+```
 
-![Enter image alt description](../Images/BPP_Image_8.png)
+## Notes
 
-Enter a description (this is optional, can leave blank). Then click next.
+- Make sure your user is in the correct AWS region (default: `us-west-2`; can be overridden by env var `AWS_REGION`)
+- The deployment output will show where to find the configuration for querying the model:
 
-![Enter image alt description](../Images/gMD_Image_9.png)
+    ```
+    Important: Configuration saved at: /app/configs/<endpoint_name>.yml
+    You'll need this path for querying the model later.
+    ```
 
-**Store BOTH the Access Key and the Secret access key for the next step. Once you've saved both keys, click Done.**
-
-![Enter image alt description](../Images/Gjw_Image_10.png)
-</Step>
-</Steps>
+    Save the exported config path from your deployment logs!
