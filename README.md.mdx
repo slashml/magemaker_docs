@@ -1,0 +1,70 @@
+# Magemaker
+
+**Magemaker** helps you deploy, query, and manage LLMs across AWS, GCP, and Azure. Now with improved Docker/Dockerfile support, credential testing, and clear configuration path guidance.
+
+---
+
+## 🚀 Features
+- Lightweight wrapper for SageMaker, Vertex AI, and Azure
+- Deploy models from HuggingFace, custom containers, more
+- New: Improved Dockerfile with multi-cloud CLI support
+- New: Automatic credential environment variable setup in Docker
+- New: Pre-flight script now tests AWS/GCP credentials after setup
+- New: Clear configuration file path output after deployment; required for querying
+- CLI and programmatic interface
+
+---
+
+## Install
+
+```sh
+pip install magemaker
+```
+
+Or build the Docker image:
+
+```sh
+git clone https://github.com/slashml/magemaker.git
+cd magemaker
+docker build -f Dockerfile-server -t magemaker-server .
+```
+
+## Cloud Credential Setup
+
+See the [installation](installation) and [configuration](configuration/AWS) pages for details on mounting credentials with Docker, or setting up local CLI authentication.
+
+## Deploying a Model
+
+```sh
+magemaker deploy --provider aws --model-id google-bert/bert-base-uncased
+```
+
+After deployment, copy/note the **configuration file path** printed in the output:
+
+```
+Important: Configuration saved at: /app/configs/<endpoint_name>.yml
+You'll need this path for querying the model later.
+```
+
+## Querying a Model
+
+```sh
+magemaker query --endpoint <endpoint_name>
+```
+
+If the config file for your endpoint is missing or not found, Magemaker now prints an error showing the **expected config location** (and how to fix).
+
+For advanced usage, see the `/test_query.yml` example in the source repo.
+
+## Pre-flight Checks
+
+Run the bundled pre-flight script to check credential setup:
+
+```sh
+bash magemaker/scripts/preflight.sh
+```
+
+The script will also help install cloud CLIs as needed and run connectivity tests.
+
+## License
+[Apache 2.0](LICENSE)
