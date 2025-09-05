@@ -1,38 +1,62 @@
+# Google Cloud Platform (GCP) Configuration
+
+To use GCP services with Magemaker (e.g., deploying/querying Vertex AI endpoints), you must supply GCP credentials.
+
+## Setting Up GCP Credentials
+
+### 1. Create or Use a Google Cloud Service Account
+
+- Go to **IAM & Admin > Service Accounts**
+- Create a service account with Vertex AI and Storage Admin permissions
+- Download the JSON key file
+
+### 2. Install Google Cloud CLI
+
+Install via the [official guide](https://cloud.google.com/sdk/docs/install), or let Magemaker's Dockerfile install it for you.
+
+### 3. Provide the Credentials
+
+- **Locally:**
+    1. Place your JSON key at `~/.config/gcloud/application_default_credentials.json`
+    2. Authenticate:
+        ```bash
+        gcloud auth application-default login
+        # or set env var
+        export GOOGLE_APPLICATION_CREDENTIALS="/absolute/path/to/key.json"
+        ```
+- **Docker:**
+    - Mount your gcloud credentials:
+      ```bash
+      docker run -it \
+        -v $HOME/.config/gcloud:/root/.config/gcloud:ro \
+        magemaker-server
+      ```
+    - Docker entrypoint will automatically set `GOOGLE_APPLICATION_CREDENTIALS` if your application default credentials exist.
+
+### 4. Testing Credentials
+
+The `preflight.sh` script provides automated checking:
+
+```bash
+bash magemaker/scripts/preflight.sh
+```
+
+If everything is setup properly, it will check access to your GCP project.
+
+
 ---
-title: GCP 
+
+## Environment Variable Summary
+
+- `GOOGLE_APPLICATION_CREDENTIALS` — Path to your Service Account JSON key
+
 ---
-<Steps>
-<Step title="Create Google Cloud Account">
-Visit [Google Cloud Console](https://cloud.google.com/?hl=en) to create your account.
-</Step>
 
-<Step title="Create a new project">
-	Once you have created your account, create a new project. If this is your first time the default project is "My First Project". You can create a new project by clicking this button and then selecting "New Project".
+**Deployment Tip:** After deploying, you'll see a message like this:
 
-	![Enter image alt description](../Images/google_new_project.png)
+```bash
+Important: Configuration saved at: /app/configs/<endpoint_name>.yml
+You'll need this path for querying the model later.
+```
 
-</Step>
-
-<Step title="Install Google Cloud SDK">
-1. Follow the installation guide at [Google Cloud SDK Installation Documentation](https://cloud.google.com/sdk/docs/install-sdk)
-2. Initialize the SDK by running:
-   ```bash
-   gcloud init
-   ```
-</Step>
-
-3. During initialization:
-   - Create login credentials when prompted
-   - Create a new project or select an existing one
-   To make sure the initialization worked, run:
-   ```bash
-   gcloud auth application-default login
-   ```
-
-<Step title="Enable Vertex AI API">
-Navigate to the APIs & Services on the dashboard and enable the Vertex AI API for your project.
-
-![Enter image alt description](../Images/QrB_Image_11.png)
-</Step>
-
-</Steps>
+Save or copy this path to use with Magemaker's query command.
