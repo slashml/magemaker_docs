@@ -1,30 +1,41 @@
----
-title: Environment Variables
----
+# Environment Configuration
 
-### Required Config File
-A `.env` file is automatically created when you run `magemaker --cloud <cloud-provider>`. This file contains the necessary environment variables for your cloud provider(s).
+Magemaker can be configured using environment variables, `.env` files, and standard cloud credential files.
 
-By default, Magemaker will look for a `.env` file in your project root with the following variables based on which cloud provider(s) you plan to use:
+## Standard Environment Variables
+
+### AWS
+- `AWS_REGION` – The AWS region. Default: `us-west-2`
+- `AWS_SHARED_CREDENTIALS_FILE` – Use this to override the default AWS credentials path (Docker container sets this automatically if `.aws/credentials` present at `/root/.aws/credentials`).
+- `AWS_PROFILE` – Specify which AWS CLI profile to use
+
+### GCP
+- `GOOGLE_APPLICATION_CREDENTIALS` – Path to Service Account JSON credentials (Docker container sets this automatically if present).
+
+### General
+- `HUGGING_FACE_HUB_KEY` – If using Hugging Face Hub models, set this in your `.env` file for private or gated models.
+
+    Example `.env` file:
+    ```dotenv
+    HUGGING_FACE_HUB_KEY=hf_xxxxxxxxxxxxxxxx
+    ```
+
+Magemaker checks for a `.env` file at startup and loads variables if present.
+
+## Configuration File Locations
+
+When you deploy a model, Magemaker saves the deployment configuration YAML to:
 
 ```bash
-# AWS Configuration
-AWS_ACCESS_KEY_ID="your-access-key"      # Required for AWS
-AWS_SECRET_ACCESS_KEY="your-secret-key"   # Required for AWS
-SAGEMAKER_ROLE="arn:aws:iam::..."        # Required for AWS
-
-# GCP Configuration
-PROJECT_ID="your-project-id"             # Required for GCP
-GCLOUD_REGION="us-central1"              # Required for GCP
-
-# Azure Configuration
-AZURE_SUBSCRIPTION_ID="your-sub-id"      # Required for Azure
-AZURE_RESOURCE_GROUP="ml-resources"      # Required for Azure
-AZURE_WORKSPACE_NAME="ml-workspace"      # Required for Azure
-AZURE_REGION="eastus"                    # Required for Azure
-
-# Optional configurations
-HUGGING_FACE_HUB_KEY="your-hf-token"    # Required for gated HF models like llama
+/configs/<ENDPOINT_NAME>.yml
 ```
 
-<Warning>Never commit your .env file to version control!</Warning>
+**The tool prints the exact path after deployment. Save this!**
+
+## Running with Docker and Environment Variables
+
+If using Docker, mount your cloud credentials as volumes for AWS and GCP. The entrypoint script will set the appropriate environment variables automatically for:
+- AWS (`AWS_SHARED_CREDENTIALS_FILE`)
+- GCP (`GOOGLE_APPLICATION_CREDENTIALS`)
+
+For Azure, use the standard Azure CLI approach; see [Azure configuration](./Azure) for details.
