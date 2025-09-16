@@ -5,7 +5,7 @@ description: Guide to fine-tuning models with Magemaker
 
 ## Fine-tuning Overview
 
-Fine-tuning allows you to adapt pre-trained models to your specific use case. Magemaker simplifies this process through YAML configuration.
+Fine-tuning allows you to adapt pre-trained models to your specific use case. Currently, Magemaker supports fine-tuning **on AWS SageMaker only** (GCP and Azure fine-tuning are on the roadmap). The workflow is entirely YAML-driven so it can be automated in CI/CD pipelines.
 
 ### Basic Command
 
@@ -19,18 +19,24 @@ magemaker --train .magemaker_config/train-config.yaml
 
 ```yaml
 training: !Training
-  destination: aws
-  instance_type: ml.p3.2xlarge
+  destination: aws                 # only "aws" is supported for now
+  instance_type: ml.p3.2xlarge      # GPU instance for training
   instance_count: 1
-  training_input_path: s3://your-bucket/training-data.csv
+  training_input_path: s3://your-bucket/training-data.csv  # points to your dataset
 
 models:
-- !Model
-  id: your-model-id
-  source: huggingface
+  - !Model
+    id: your-model-id
+    source: huggingface
 ```
 
+• **destination** – must be `aws` at the moment.  
+• **training_input_path** – S3 URI that Magemaker will pass directly to SageMaker.  
+• **instance_type / instance_count** – any SageMaker training instance type is supported.
+
 ### Advanced Configuration
+
+Beyond the basics, you can supply custom hyperparameters. If omitted, Magemaker will attempt to infer sensible defaults based on the model family (see `get_hyperparameters_for_model()` in the codebase).
 
 ```yaml
 training: !Training
@@ -49,20 +55,38 @@ training: !Training
     save_steps: 1000
 ```
 
+<Note>
+If you omit `hyperparameters`, Magemaker will fall back to task-specific defaults. For example, text-generation models automatically receive the hyperparameters returned by `get_hyperparameters_for_model()`.
+</Note>
+
+### Optional Parameters
+
+The `Training` schema also supports the following optional fields (all are optional and have sensible defaults):
+
+| Field                | Description                                                               |
+| -------------------- | ------------------------------------------------------------------------- |
+| `output_path`        | S3 URI where training artifacts should be stored                          |
+| `max_run`            | Maximum training job runtime in seconds                                   |
+| `volume_size_in_gb`  | Size of the EBS volume attached to the training instance                  |
+| `spot`               | `true/false` – use SageMaker Spot Training to save costs                  |
+| `checkpoint_s3_uri`  | S3 URI for incremental checkpoints (only relevant if `spot: true`)        |
+
+*(See the `Training` Pydantic model in `magemaker/schemas/training.py` for the full list.)*
+
 ## Data Preparation
 
 ### Supported Formats
 
 <CardGroup>
   <Card title="CSV Format" icon="file-csv">
-    - Simple tabular data
-    - Easy to prepare
+    - Simple tabular data<br />
+    - Easy to prepare<br />
     - Good for classification tasks
   </Card>
   
   <Card title="JSON Lines" icon="file-code">
-    - Flexible data format
-    - Good for complex inputs
+    - Flexible data format<br />
+    - Good for complex inputs<br />
     - Supports nested structures
   </Card>
 </CardGroup>
@@ -71,48 +95,43 @@ training: !Training
 
 <Steps>
   <Step title="Prepare Data">
-    Format your data according to model requirements
+    Format your dataset according to the model requirements (e.g., one JSON line per training example).
   </Step>
   <Step title="Upload to S3">
-    Use AWS CLI or console to upload data
+    Use the AWS CLI or console to upload your dataset:
+    ```bash
+    aws s3 cp local/path/to/data.csv s3://your-bucket/data.csv
+    ```
   </Step>
   <Step title="Configure Path">
-    Specify S3 path in training configuration
+    Reference the S3 URI in `training_input_path` of your YAML file.
   </Step>
 </Steps>
 
 ## Instance Selection
 
-### Training Instance Types
-
-Choose based on:
-- Dataset size
-- Model size
-- Training time requirements
-- Cost constraints
+Choosing the right training instance impacts both training time and cost.
 
 Popular choices:
-- ml.p3.2xlarge (1 GPU)
-- ml.p3.8xlarge (4 GPUs)
-- ml.p3.16xlarge (8 GPUs)
+
+| Instance            | GPUs | Typical use-case                              |
+| ------------------- | ---- | -------------------------------------------- |
+| `ml.p3.2xlarge`     | 1    | Small to medium models (<7B parameters)       |
+| `ml.p3.8xlarge`     | 4    | Larger models / shorter turnaround            |
+| `ml.p3.16xlarge`    | 8    | Large-scale training / distributed workloads  |
+
+<Warning>
+Always check your current SageMaker GPU quota and request increases if necessary.
+</Warning>
 
 ## Hyperparameter Tuning
 
-### Basic Parameters
+While you can hard-code values, you can also pass ranges to let SageMaker perform hyperparameter tuning (HPO). Use the `min`, `max`, or `values` keys as shown below:
 
 ```yaml
 hyperparameters: !Hyperparameters
   epochs: 3
-  learning_rate: 2e-5
-  batch_size: 32
-```
-
-### Advanced Tuning
-
-```yaml
-hyperparameters: !Hyperparameters
-  epochs: 3
-  learning_rate: 
+  learning_rate:
     min: 1e-5
     max: 1e-4
     scaling: log
@@ -122,9 +141,27 @@ hyperparameters: !Hyperparameters
 
 ## Monitoring Training
 
-### CloudWatch Metrics
+Magemaker streams CloudWatch metrics for every training job. Key metrics include:
 
-Available metrics:
-- Loss
-- Learning rate
-- GPU utilization
+- `Train/Loss`
+- `Eval/Loss`
+- `LearningRate`
+- `GPUUtilization`
+
+You can access logs directly in the SageMaker console or via the AWS CLI:
+
+```bash
+aws logs tail /aws/sagemaker/TrainingJobs --follow --since 1h
+```
+
+<Note>
+Job status (Started, InProgress, Completed, Failed) is also surfaced in the CLI output.
+</Note>
+
+## Cleaning Up
+
+Training jobs store artifacts (model checkpoints, logs) in S3. Delete these objects when no longer needed to avoid storage costs:
+
+```bash
+aws s3 rm --recursive s3://your-bucket/<training-job-name>
+```
