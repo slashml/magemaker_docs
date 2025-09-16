@@ -1,0 +1,68 @@
+---
+title: Searching & Deploying SageMaker JumpStart Models
+---
+
+## Overview
+AWS SageMaker JumpStart offers hundreds of pre-trained foundation models.  Magemaker’s **interactive search** feature (powered by `search_jumpstart_models.py`) lets you:
+
+1. Discover available JumpStart models from the terminal
+2. Pick a model with arrow-key navigation & fuzzy search
+3. Deploy it to SageMaker with a single press of <kbd>Enter</kbd>
+
+No YAML required – great for fast experimentation.
+
+## Step 1 – Launch the interactive menu
+
+```bash
+magemaker --cloud aws   # or just `magemaker` if AWS is your default
+```
+Choose **“Search JumpStart Models”** from the main menu.
+
+![JumpStart search GIF](../Images/jumpstart-search.gif)
+
+
+## Step 2 – Select a model
+
+* Start typing to fuzzy-search (`llama`, `t5`, `stable-diffusion`, …)
+* Use ↑ / ↓ to highlight a result
+* Press <kbd>Space</kbd> to view model metadata (parameters, licenses, etc.)
+* Press <kbd>Enter</kbd> to continue
+
+## Step 3 – Configure the deployment
+
+Magemaker will ask for:
+
+1. **Endpoint name** – defaults to the model id
+2. **Instance type** – suggestions are filtered by the model’s minimum requirements
+3. **Initial instance count**
+
+After confirmation the usual SageMaker deployment progress bar appears.
+
+## Step 4 – Query the endpoint
+
+Once deployment succeeds you can query the model via:
+
+```bash
+# Interactive query menu
+magemaker --cloud aws
+```
+Select **“Query a Model Endpoint”** and follow the prompt.
+
+Or fetch it programmatically:
+
+```python
+from sagemaker.huggingface.model import HuggingFacePredictor
+
+predictor = HuggingFacePredictor("my-endpoint-name")
+print(predictor.predict({"inputs": "Hello JumpStart!"}))
+```
+
+## Converting the deployment to YAML
+
+The tool automatically writes a reproducible YAML file to `.magemaker_config/<endpoint>.yaml` so you can re-deploy the same model later or commit it to source control.
+
+## Notes & Quotas
+
+* JumpStart models follow the same cost model as normal SageMaker endpoints.
+* Some models (e.g. Meta Llama) are gated – you must provide a valid `HUGGING_FACE_HUB_KEY` in your `.env`.
+* If you hit `LimitExceededException`, request a quota increase for the required instance family & region.
