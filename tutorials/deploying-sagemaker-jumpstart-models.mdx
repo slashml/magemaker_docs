@@ -1,0 +1,45 @@
+---
+title: Deploying AWS JumpStart Models with Magemaker
+---
+
+## Overview
+Magemaker’s interactive menu lets you browse and deploy any model available in **Amazon SageMaker JumpStart**—no YAML required.
+
+## 1 – Open the interactive menu
+```bash
+magemaker --cloud aws
+```
+
+Choose **“Deploy a model endpoint”** ➜ **“Deploy a SageMaker model”**.  
+A searchable list of JumpStart models appears. Start typing to filter by **task** (e.g. *eqa*) or **model name** (e.g. *llama*).
+
+![JumpStart Search](../Images/jumpstart-search.png)
+
+## 2 – Select an instance type
+Magemaker automatically fetches your service-quota limits in the background. When prompted, pick an available instance (e.g. `ml.g5.2xlarge`).
+
+<Warning>
+If you do not see GPU instances, open an AWS quota-increase request for SageMaker.
+</Warning>
+
+## 3 – Deployment
+Magemaker creates the model, endpoint configuration and endpoint for you. Progress is streamed directly in the terminal.
+
+Once finished, you’ll see:
+```text
+✅ Endpoint jumpstart-bert-20240615 is InService
+```
+A YAML file describing the deployment is saved to `.magemaker_config/` so you can reproduce or modify it later.
+
+## 4 – Querying and managing the endpoint
+Use the same menu to:
+* **List** active endpoints  
+* **Query** a text-generation model  
+* **Delete** endpoints you no longer need
+
+## 5 – Best practices
+- Always shut down endpoints when idle.
+- Version-control the generated YAML for CI/CD workflows.
+- Use the **`--verbose`** flag for full debug logs (`magemaker --cloud aws --verbose`).
+
+Enjoy one-click access to the entire JumpStart catalogue! 🚀

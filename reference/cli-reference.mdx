@@ -1,0 +1,45 @@
+---
+title: CLI Reference
+---
+
+## `magemaker` Command-Line Interface
+Below is a concise reference of all public flags exposed by the Magemaker CLI (`python -m magemaker.runner`).  Run `magemaker --help` at any time for the authoritative list.
+
+| Flag / Option        | Type      | Description                                                                                         |
+|----------------------|-----------|-----------------------------------------------------------------------------------------------------|
+| `--cloud`            | string    | Configure credentials for one or more cloud providers.<br>Values: `aws`, `gcp`, `azure`, `all`      |
+| `--deploy`           | path      | Deploy a model using a YAML configuration file (see examples in `.magemaker_config/`).              |
+| `--train`            | path      | Fine-tune a model using a Training YAML spec.                                                       |
+| `--config-dir`       | path      | Override the default `.magemaker_config` directory used for generated YAML files.                   |
+| `--log-level`        | string    | Set logging verbosity. Values: `debug`, `info` *(default)*, `warning`, `error`.                     |
+| `--version`          | flag      | Print Magemaker version and exit.                                                                   |
+
+<Note>
+The historical `--query` flag has been **removed** in favour of:
+1. The interactive **“Query a Model Endpoint”** option in the main menu, **or**  
+2. Using SDK helpers (`magemaker.sagemaker.query_endpoint`, `magemaker.gcp.query_endpoint`, `magemaker.azure.query_endpoint`), or the new OpenAI-compatible proxy.
+</Note>
+
+## Examples
+
+### 1. Configure AWS & GCP credentials
+```bash
+magemaker --cloud all
+```
+
+### 2. Deploy from YAML
+```bash
+magemaker --deploy .magemaker_config/llama3-aws.yaml
+```
+
+### 3. Fine-tune a model
+```bash
+magemaker --train .magemaker_config/train-bert.yaml
+```
+
+### 4. Change config directory
+```bash
+magemaker --config-dir ./infra/configs --deploy ./infra/configs/opt.yaml
+```
+
+---

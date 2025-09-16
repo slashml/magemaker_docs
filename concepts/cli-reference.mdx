@@ -1,0 +1,38 @@
+---
+title: CLI Reference
+---
+
+## Global syntax
+```bash
+magemaker [OPTIONS]
+```
+
+| Flag | Description |
+|------|-------------|
+| `--cloud [aws\|gcp\|azure\|all]` | Configure or use a specific cloud provider. **Required on first run**. |
+| `--deploy <path>` | Deploy a model defined in a YAML file. |
+| `--train <path>` | Fine-tune a model using a YAML training config. |
+| `--instance <type>` | Override the default instance type when using quick-deploy flags. |
+| `--verbose` | Enable debug-level logging. |
+| `--version` | Display Magemaker version and exit. |
+
+### Deprecated / Removed Flags
+- `--query` — superseded by the interactive *Query* menu and Python SDK.
+
+## Examples
+Deploy a BERT model to SageMaker:
+```bash
+magemaker --deploy configs/bert-uncased.yaml
+```
+
+Configure all three clouds in one go:
+```bash
+magemaker --cloud all
+```
+
+Run with detailed logs:
+```bash
+magemaker --cloud aws --verbose
+```
+
+Refer to individual tutorials for provider-specific YAML examples.

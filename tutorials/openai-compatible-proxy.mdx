@@ -1,0 +1,111 @@
+---
+title: Self-Hosted OpenAI-Compatible Proxy
+---
+
+## Introduction
+
+Magemaker ships with a lightweight FastAPI server (`server.py`) that exposes any SageMaker–deployed model **through the OpenAI Chat Completions API**.  
+This means you can point the official `openai` Python / JS SDK—or any OpenAI-compatible client—at your own endpoint and avoid vendor lock-in while keeping the familiar developer experience.
+
+Typical use-cases:
+
+1. Use commercial tools that only speak the OpenAI API (LangChain, Llama-Index, Supabase Vector search, etc.)  
+2. Centrally manage multiple in-house models behind a single `/chat/completions` endpoint.  
+3. Experiment locally before moving traffic to production.
+
+<Warning>
+Running the proxy **does not** deploy any models for you. Make sure you have already deployed at least one endpoint via Magemaker before starting the server.
+</Warning>
+
+---
+
+## 1  Starting the server
+
+```bash
+# In the root of your project (where server.py lives)
+python server.py
+# or, if you prefer uvicorn CLI directly
+uvicorn server:app --host 0.0.0.0 --port 8000
+```
+
+The server automatically picks up your AWS region from the `.env` file created by the `magemaker --cloud aws` command.
+
+Once running you will have three REST endpoints:
+
+| Method | Path | Description |
+| ------ | ---- | ----------- |
+| GET | `/endpoint/{endpoint_name}` | Fetch basic metadata about a SageMaker endpoint |
+| POST | `/endpoint/{endpoint_name}/query` | Free-form query against a specific endpoint (uses the Magemaker YAML config for that endpoint) |
+| POST | `/chat/completions` | **OpenAI Chat Completions-compatible** endpoint backed by SageMaker |
+
+---
+
+## 2  Using the OpenAI SDK
+
+Point the SDK to **your** base URL and keep the rest of the code unchanged:
+
+```python
+import openai
+
+openai.api_key = "sk-totally-ignored"       # A dummy key is still required by the client
+openai.base_url = "http://localhost:8000/v1" # Add the /v1 prefix so the paths match the OpenAI spec
+
+response = openai.chat.completions.create(
+    model="meta-llama/Meta-Llama-3-8B-Instruct",  # any model id you previously deployed
+    messages=[
+        {"role": "user", "content": "Explain the greenhouse effect in one paragraph"}
+    ],
+)
+print(response.choices[0].message.content)
+```
+
+Behind the scenes the proxy will:
+
+1. Look up SageMaker endpoints that serve the requested `model`.
+2. Take the **first available** endpoint (future versions will add load-balancing and routing rules).
+3. Forward the prompt to `make_query_request()` using Magemaker’s built-in helpers.
+4. Return a response that is 1-to-1 compatible with the official OpenAI schema.
+
+---
+
+## 3  Direct endpoint queries
+
+If you need full control over inference parameters you can bypass the OpenAI layer and hit the lower-level route:
+
+```bash
+curl -X POST http://localhost:8000/endpoint/llama3-endpoint/query \
+     -H "Content-Type: application/json" \
+     -d '{
+           "input": "Translate \"good morning\" to French",
+           "parameters": {"max_new_tokens": 64, "temperature": 0.3}
+         }'
+```
+
+The payload is the same `Query` schema you use in Magemaker YAML files.
+
+---
+
+## 4  Error handling
+
+• If the requested model is **not deployed**, the server raises `NotDeployedException` and returns HTTP 404.  
+• Any SageMaker runtime errors are proxied back with HTTP 500.
+
+<Note>
+The current implementation always chooses the *first* endpoint that matches a model. If you run a multi-model endpoint or multiple copies of the same model, you may want to extend `get_endpoints_for_model()` to apply custom routing logic.
+</Note>
+
+---
+
+## 5  Deploying alongside Magemaker in production
+
+1. Build a Docker image that installs `magemaker[server]` (FastAPI + Uvicorn) and your favourite web server.
+2. Mount the folder that holds your `mint.json` & Magemaker YAML configs so the proxy can resolve models.
+3. Add a CI step that redeploys / restarts the container whenever you merge a new model configuration.
+
+---
+
+## Conclusion
+
+You now have a local OpenAI-compatible proxy running on top of your own SageMaker endpoints—zero vendor lock-in, same developer experience.
+
+For questions or feature requests open an issue on GitHub or ping us at [support@slashml.com](mailto:support@slashml.com).

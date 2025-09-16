@@ -5,7 +5,13 @@ description: Guide to fine-tuning models with Magemaker
 
 ## Fine-tuning Overview
 
-Fine-tuning allows you to adapt pre-trained models to your specific use case. Magemaker simplifies this process through YAML configuration.
+Fine-tuning allows you to adapt pre-trained models to your specific use case.  
+Magemaker currently supports **fine-tuning on AWS SageMaker** (GCP/Azure support is on the roadmap).  
+Everything is driven by a YAML configuration that describes the training job and the model you want to fine-tune.
+
+<Note>
+If you don’t specify any hyper-parameters, Magemaker will automatically choose sensible defaults based on the model task (e.g. `text-generation`, `text-classification`).  You can always override any of these values explicitly in your YAML file.
+</Note>
 
 ### Basic Command
 
@@ -13,20 +19,27 @@ Fine-tuning allows you to adapt pre-trained models to your specific use case. Ma
 magemaker --train .magemaker_config/train-config.yaml
 ```
 
+Running the command will:
+1. Upload your training data to S3 (if it is on a local path)
+2. Spin up a SageMaker Training Job with the instance type you request
+3. Stream training logs to your terminal
+4. Output the S3 URI of the fine-tuned model artefact when training finishes
+
+---
 ## Configuration
 
 ### Basic Training Configuration
 
 ```yaml
 training: !Training
-  destination: aws
-  instance_type: ml.p3.2xlarge
+  destination: aws                 # Only aws is supported for now
+  instance_type: ml.p3.2xlarge     # GPU instances are recommended
   instance_count: 1
   training_input_path: s3://your-bucket/training-data.csv
 
 models:
 - !Model
-  id: your-model-id
+  id: google-bert/bert-base-uncased
   source: huggingface
 ```
 
@@ -35,7 +48,7 @@ models:
 ```yaml
 training: !Training
   destination: aws
-  instance_type: ml.p3.2xlarge
+  instance_type: ml.p3.8xlarge       # 4×V100 GPUs
   instance_count: 1
   training_input_path: s3://your-bucket/data.csv
   hyperparameters: !Hyperparameters
@@ -49,56 +62,74 @@ training: !Training
     save_steps: 1000
 ```
 
+### Optional & Auto-generated Fields
+
+| Field | Description | Default |
+|-------|-------------|---------|
+| `hyperparameters` | Fine-tuning hyper-params | Auto-generated based on model task |
+| `output_path` | S3 URI to store model artefacts | `s3://<default-bucket>/magemaker/<job-id>` |
+| `metric_definitions` | Regexes for CloudWatch metrics | Provided automatically |
+
+---
 ## Data Preparation
 
 ### Supported Formats
 
 <CardGroup>
   <Card title="CSV Format" icon="file-csv">
-    - Simple tabular data
-    - Easy to prepare
-    - Good for classification tasks
+    • Simple tabular data  
+    • Easy to prepare  
+    • Good for classification tasks
   </Card>
   
   <Card title="JSON Lines" icon="file-code">
-    - Flexible data format
-    - Good for complex inputs
-    - Supports nested structures
+    • Flexible data format  
+    • Good for generative tasks  
+    • Supports nested structures
   </Card>
 </CardGroup>
 
-### Data Upload
+### Uploading Your Data
 
 <Steps>
   <Step title="Prepare Data">
-    Format your data according to model requirements
+    Ensure the data columns match the input format expected by your model (e.g. `text`, `label`).
   </Step>
   <Step title="Upload to S3">
-    Use AWS CLI or console to upload data
+    ```bash
+    aws s3 cp ./data/train.csv s3://your-bucket/train.csv
+    ```
+    <Note>Magemaker will upload local files automatically, but pre-uploading can speed up jobs.</Note>
   </Step>
-  <Step title="Configure Path">
-    Specify S3 path in training configuration
+  <Step title="Reference in YAML">
+    Set `training_input_path` to the S3 URI in your YAML file.
   </Step>
 </Steps>
 
+---
 ## Instance Selection
 
-### Training Instance Types
-
-Choose based on:
-- Dataset size
-- Model size
-- Training time requirements
-- Cost constraints
+Choose instance types based on:
+• Dataset size  
+• Model size  
+• Time-to-train vs. cost trade-off
 
 Popular choices:
-- ml.p3.2xlarge (1 GPU)
-- ml.p3.8xlarge (4 GPUs)
-- ml.p3.16xlarge (8 GPUs)
+- **ml.p3.2xlarge** (1 × V100 GPU)
+- **ml.p3.8xlarge** (4 × V100 GPUs)
+- **ml.p3.16xlarge** (8 × V100 GPUs)
 
-## Hyperparameter Tuning
+<Warning>
+Remember to delete training jobs and models you no longer need to avoid ongoing storage charges in S3.
+</Warning>
 
-### Basic Parameters
+---
+## Hyper-parameter Tuning
+
+You can provide fixed values **or** ranges/sets for automated tuning (coming soon).  
+Below are two common patterns:
+
+### Fixed Parameters
 
 ```yaml
 hyperparameters: !Hyperparameters
@@ -107,24 +138,39 @@ hyperparameters: !Hyperparameters
   batch_size: 32
 ```
 
-### Advanced Tuning
+### Ranges / Sets (Experimental)
 
 ```yaml
 hyperparameters: !Hyperparameters
-  epochs: 3
-  learning_rate: 
+  learning_rate:
     min: 1e-5
-    max: 1e-4
+    max: 5e-5
     scaling: log
   batch_size:
     values: [16, 32, 64]
 ```
 
+---
 ## Monitoring Training
 
-### CloudWatch Metrics
+During training Magemaker streams the CloudWatch logs to your terminal. Key metrics include:
 
-Available metrics:
-- Loss
-- Learning rate
-- GPU utilization
+- `loss` (training / evaluation)
+- `learning_rate`
+- `eval_accuracy` / `eval_f1` (task dependent)
+- GPU utilisation (viewable in the SageMaker console)
+
+You can also open the SageMaker Training Job in the AWS Console for a full dashboard view.
+
+---
+## Next Steps
+
+1. Deploy the fine-tuned model using the artefact S3 URI:  
+   ```yaml
+   models:
+     - !Model
+       id: s3://<artefact-path>/model.tar.gz
+       source: sagemaker
+   ```
+2. Enable automatic hyper-parameter tuning (multi-job search) – feature coming soon.
+3. Share feedback or request features at [magemaker.featurebase.app](https://magemaker.featurebase.app).

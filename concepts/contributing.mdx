@@ -3,9 +3,11 @@ title: Contributing
 description: Guide to contributing to Magemaker
 ---
 
-## Welcome to Magemaker Contributing Guide
+## Welcome to the Magemaker Contributing Guide
 
-We're excited that you're interested in contributing to Magemaker! This document will guide you through the process of contributing to the project.
+We're excited that you're interested in contributing to Magemaker!  This document explains **code**, **tests**, and **documentation** workflows so you can get productive quickly.
+
+---
 
 ## Ways to Contribute
 
@@ -17,12 +19,14 @@ We're excited that you're interested in contributing to Magemaker! This document
     Suggest new features or improvements
   </Card>
   <Card title="Documentation" icon="book">
-    Help improve our documentation
+    Help improve our documentation (yes, even fixing a typo counts!)
   </Card>
   <Card title="Code" icon="code">
-    Submit pull requests with bug fixes or new features
+    Submit pull-requests with bug-fixes or new features
   </Card>
 </CardGroup>
+
+---
 
 ## Development Setup
 
@@ -38,23 +42,25 @@ We're excited that you're interested in contributing to Magemaker! This document
     pip install -e ".[dev]"
     ```
   </Step>
-  <Step title="Create Branch">
+  <Step title="Create a Branch">
     ```bash
-    git checkout -b feature/your-feature-name
+    git checkout -b feat/your-feature-name
     ```
   </Step>
 </Steps>
 
+---
+
 ## Development Guidelines
 
-### Code Style
+### Code Style & Linting
 
-We use the following tools to maintain code quality:
-- Black for Python code formatting
-- isort for import sorting
-- flake8 for style guide enforcement
+We enforce a consistent style-guide via:
+- **Black** for auto-formatting
+- **isort** for import ordering
+- **flake8** for static analysis
 
-Run the following before committing:
+Run before committing:
 ```bash
 black .
 isort .
@@ -63,106 +69,126 @@ flake8
 
 ### Testing
 
-<Note>
-All new features should include tests. We use pytest for our test suite.
-</Note>
+<Note>All new features **must** include unit tests.  We use **pytest** across the repo & CI.</Note>
 
-Run tests locally:
+Run the full suite locally:
 ```bash
-pytest tests/
+pytest -q
 ```
+
+For integration tests requiring cloud credentials you may mark them with
+`@pytest.mark.integration` and gate them behind relevant environment variables so
+CI can skip them safely.
 
 ### Documentation
 
-When adding new features, please update the relevant documentation:
+1. Update/extend code-level docstrings.
+2. Add or update `.mdx` files under the `docs/` folder.
+3. **Always** run the documentation site locally to verify links & formatting.
 
-1. Update the README.md if needed
-2. Add/update docstrings for new functions/classes
-3. Create/update relevant .mdx files in the docs directory
+#### Running Docs Locally
 
-## Pull Request Process
+We use [Mintlify](https://mintlify.com) for the docs site.
+```bash
+npm i -g mintlify
+mintlify dev               # runs on http://localhost:3000
+```
+
+If you introduce a brand-new page remember to:
+1. Add the file under `docs/` (e.g. `docs/tutorials/your-topic.mdx`).
+2. Add the page to `mint.json -> navigation` so it appears in the sidebar.
+
+See the new pages **OpenAI-compatible Proxy**, **JumpStart Search**, and **CLI Reference** for examples.
+
+---
+
+## Pull-Request Process
 
 <Steps>
   <Step title="Create Branch">
-    Create a new branch for your changes:
     ```bash
-    git checkout -b feature/your-feature
+    git checkout -b feat/my-change
     ```
   </Step>
-  <Step title="Make Changes">
-    Make your changes and commit them with clear commit messages:
+  <Step title="Make Changes & Commit">
     ```bash
     git add .
-    git commit -m "feat: add new deployment option"
+    git commit -m "feat: add <concise description>"
     ```
   </Step>
-  <Step title="Push Changes">
-    Push your changes to your fork:
+  <Step title="Push to Fork">
     ```bash
-    git push origin feature/your-feature
+    git push origin feat/my-change
     ```
   </Step>
-  <Step title="Create PR">
-    Open a Pull Request against the main repository
+  <Step title="Open PR">
+    Open a Pull-Request against the **main** branch.  Our GitHub Action will
+    automatically stage preview docs and comment with a live URL.
   </Step>
 </Steps>
 
-### Pull Request Guidelines
+### PR Checklist
 
 <CardGroup cols={2}>
   <Card title="Clear Description" icon="pen">
-    Provide a clear description of your changes
+    Explain **what** & **why** – screenshots/GIFs encouraged
   </Card>
   <Card title="Tests" icon="vial">
-    Include relevant tests for new features
+    Add unit/integration tests for all new behavior
   </Card>
   <Card title="Documentation" icon="book">
-    Update documentation as needed
+    Update docs + `mint.json` navigation when adding user-facing features
   </Card>
   <Card title="Clean History" icon="clock-rotate-left">
-    Keep commits focused and clean
+    Rebase / squash to keep commits focused
   </Card>
 </CardGroup>
+
+---
 
 ## Commit Message Convention
 
-We follow the [Conventional Commits](https://www.conventionalcommits.org/) specification:
-
-- `feat:` New feature
-- `fix:` Bug fix
-- `docs:` Documentation changes
-- `style:` Code style changes
-- `refactor:` Code refactoring
-- `test:` Adding missing tests
-- `chore:` Maintenance tasks
+We follow [Conventional Commits](https://www.conventionalcommits.org/):
+- **feat:**     new feature
+- **fix:**      bug fix
+- **docs:**     documentation only changes
+- **style:**    formatting, missing semi-colons, etc.
+- **refactor:** code change that neither fixes a bug nor adds a feature
+- **test:**     adding or correcting tests
+- **chore:**    maintenance tasks
 
 Example:
 ```bash
-feat(deployment): add support for custom docker images
+feat(proxy): add OpenAI-compatible /chat/completions route
 ```
+
+---
 
 ## Getting Help
 
-If you need help with your contribution:
-
 <CardGroup>
-  <Card title="Discord Community" icon="discord">
-    Join our Discord server for real-time discussions
+  <Card title="Discord" icon="discord">
+    Real-time chat with maintainers & community
   </Card>
-  
   <Card title="GitHub Discussions" icon="github">
-    Start a discussion in our GitHub repository
+    Long-form Q&A and design proposals
   </Card>
-  
-  <Card title="Email Support" icon="envelope">
-    Contact us at support@slashml.com
+  <Card title="Email" icon="envelope">
+    support@slashml.com
   </Card>
 </CardGroup>
 
+---
+
 ## Code of Conduct
 
-We are committed to providing a welcoming and inclusive experience for everyone. Please read our [Code of Conduct](https://github.com/slashml/magemaker/CODE_OF_CONDUCT.md) before participating.
+We are committed to a welcoming, inclusive environment.  Please read our
+[Code of Conduct](https://github.com/slashml/magemaker/CODE_OF_CONDUCT.md)
+before participating.
+
+---
 
 ## License
 
-By contributing to Magemaker, you agree that your contributions will be licensed under the Apache 2.0 License.
+By contributing you agree your work is licensed under the
+Apache 2.0 License.

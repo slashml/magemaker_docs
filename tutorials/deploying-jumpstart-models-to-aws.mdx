@@ -1,0 +1,86 @@
+---
+title: Deploying SageMaker JumpStart Models
+---
+
+## Overview
+AWS SageMaker JumpStart offers hundreds of pre-built foundation models and solutions that can be deployed with only a few clicks. Magemaker now integrates directly with JumpStart, letting you **search, configure, and deploy** JumpStart models from the same interactive CLI you already use for Hugging Face deployments.
+
+<Note>
+JumpStart models are available only on AWS. Make sure you have completed the [AWS configuration](/configuration/AWS) steps before continuing.
+</Note>
+
+## 1. Launch the JumpStart Search Interface
+Run the Magemaker CLI and pick **“Deploy a JumpStart Model”** from the interactive menu:
+
+```bash
+magemaker --cloud aws
+```
+
+You will be prompted to choose a **framework** (PyTorch, TensorFlow, etc.) and then type a **search term**. Magemaker will display matching JumpStart models in a table with their model IDs, tasks, and recommended instance types.
+
+![JumpStart Search](../Images/jumpstart-search.png)
+
+## 2. Select and Configure the Model
+After selecting a model, Magemaker asks you to fill in the deployment details:
+
+- Endpoint name (defaults to the model ID)
+- Instance type (pre-filtered to what the model supports)
+- Instance count
+- Optional GPU count and quantization settings
+
+Once confirmed, Magemaker generates a YAML spec and starts the deployment.
+
+```yaml
+deployment: !Deployment
+  destination: aws
+  endpoint_name: textgeneration-gpt2-jumpstart
+  instance_count: 1
+  instance_type: ml.g5.2xlarge
+
+models:
+  - !Model
+    id: huggingface-textgeneration-gpt2
+    source: sagemaker
+```
+
+The YAML file is saved automatically in `.magemaker_config/` for reproducibility.
+
+## 3. Monitor Deployment Progress
+Magemaker streams the SageMaker deployment logs in real time. Large JumpStart models (for example GPT-2 XL) can take 10–15 minutes to finish.
+
+<Warning>
+Make sure the selected instance type is available in your account/region. If you hit **QuotasExceeded** errors, open a quota-increase request in the AWS console.
+</Warning>
+
+## 4. Query the Deployed Endpoint
+You can query the endpoint either interactively (`Query a Model Endpoint` in the CLI) or via a YAML file:
+
+```yaml
+query: !Query
+  input: "Write a limerick about deployment pipelines."
+```
+
+```bash
+magemaker --query .magemaker_config/textgeneration-gpt2-jumpstart-query.yaml
+```
+
+Alternatively, use Python:
+
+```python
+from sagemaker.huggingface.model import HuggingFacePredictor
+
+predictor = HuggingFacePredictor("textgeneration-gpt2-jumpstart")
+print(predictor.predict({"inputs": "Hello from Magemaker!"}))
+```
+
+## 5. Clean Up
+As with all SageMaker endpoints, **billing starts as soon as the instance is live**. Remember to delete unused endpoints:
+
+```bash
+magemaker --cloud aws   # choose "Delete a Model Endpoint" from the menu
+```
+
+## Next Steps
+- Combine JumpStart models with your own fine-tuned checkpoints
+- Automate deployments in CI using `magemaker --deploy` inside GitHub Actions
+- Explore multi-model endpoints to host several JumpStart models behind one endpoint
