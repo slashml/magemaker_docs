@@ -24,20 +24,26 @@ Supported providers:
 
 ### List Models
 
-From the dropdown, select `Show Acitve Models` to see the list of endpoints deployed.
+From the dropdown, select `Show Active Models` to see the list of endpoints deployed.
 
-![Acitve Endpoints](../Images/active-1.png)
+![Active Endpoints](../Images/active-1.png)
+
+### Search JumpStart Models (AWS only)
+
+A new interactive option, `Search JumpStart Models`, lets you browse and deploy models available in AWS SageMaker JumpStart without leaving the CLI. Type a search query (for example, *llama* or *bert*) and follow the prompts to deploy the selected model.
+
+![JumpStart Search](../Images/jumpstart-search.png)
 
 ### Delete Models
 
-From the dropdown, select `Delete a Model Endpoint` to see the list of models endpoints. Press space to select the endpoints you want to delete
+From the dropdown, select `Delete a Model Endpoint` to see the list of model endpoints. Press <kbd>Space</kbd> to select the endpoints you want to delete.
 
 ![Delete Endpoints](../Images/delete-1.png)
 
 
 ### Querying Models
 
-From the dropdown, select `Query a Model Endpoint` to see the list of models endpoints. Press space to select the endpoints you want to query. Enter the query in the text box and press enter to get the response.
+From the dropdown, select `Query a Model Endpoint` to see the list of model endpoints. Press <kbd>Space</kbd> to select the endpoint you want to query. Enter the query in the text box and press <kbd>Enter</kbd> to get the response.
 
 ![Query Endpoints](../Images/query-1.png)
 
@@ -110,23 +116,22 @@ models:
     version: null
 ```
 <Note>
-  The model ids for Azure are different from AWS and GCP. Make sure to use the one provided by Azure in the Azure Model Catalog. 
+  The model IDs for Azure are different from AWS and GCP. Make sure to use the one provided by Azure in the Azure Model Catalog. 
 
-  To find the relevant model id, follow the following steps
+  To find the relevant model ID, follow the steps below:
   <Steps>
     <Step title="Go to your workspace studio">
-      Find the workpsace in the Azure portal and click on the studio url provided. Click on the `Model Catalog` on the left side bar
-    	![Azure ML Creation](../Images/workspace-studio.png)
+      Find the workspace in the Azure portal and click on the Studio URL provided. Click on the `Model Catalog` on the left sidebar.
+      ![Azure ML Creation](../Images/workspace-studio.png)
     </Step>
 
-      <Step title="Select Hugging Face in the Collections List">
-      Select Hugging-Face from the collections list. The id of the model card is the id you need to use in the yaml file
-    	![Azure ML Creation](../Images/hugging-face.png)
+    <Step title="Select Hugging Face in the Collections List">
+      Select **Hugging Face** from the collections list. The ID shown on the model card is the ID you need to use in the YAML file.
+      ![Azure ML Creation](../Images/hugging-face.png)
     </Step>
 
   </Steps>
 </Note>
-
 
 
 ### Model Fine-tuning
@@ -150,26 +155,6 @@ training: !Training
     per_device_train_batch_size: 32
     learning_rate: 2e-5
 ```
-{/* 
-### Recommended Models
-
-<CardGroup>
-  <Card
-    title="google-bert/bert-base-uncased"
-    href="https://huggingface.co/google-bert/bert-base-uncased"
-  >
-    Fill Mask: tries to complete your sentence like Madlibs. Query format: text
-    string with [MASK] somewhere in it.
-  </Card>
-
-  <Card
-    title="sentence-transformers/all-MiniLM-L6-v2"
-    href="https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2"
-  >
-    Feature extraction: turns text into a 384d vector embedding for semantic
-    search / clustering. Query format: "type out a sentence like this one."
-  </Card>
-</CardGroup> */}
 
 <Warning>
   Remember to deactivate unused endpoints to avoid unnecessary charges!
@@ -178,7 +163,7 @@ training: !Training
 
 ## Contact
 
-You can reach us, faizan & jneid, at [support@slashml.com](mailto:support@slashml.com).
+You can reach us, Faizan & Jneid, at [support@slashml.com](mailto:support@slashml.com).
 
 
 If anything doesn't make sense or you have suggestions, do point them out at [magemaker.featurebase.app](https://magemaker.featurebase.app/).
