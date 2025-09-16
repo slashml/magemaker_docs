@@ -3,184 +3,88 @@ title: Quick Start
 "og:title": "Magemaker"
 ---
 
-<Note> Make sure you have followed the [installation](installation) steps before proceeding. </Note>
+<Note>
+Make sure you have completed the <a href="/installation">installation</a> & initial <code>magemaker --cloud ...</code> configuration before proceeding.
+</Note>
 
+---
 
-## Interactive View
+## 1 – Interactive Mode
 
-1. Run Magemaker with your desired cloud provider:
-
-```sh
+```bash
 magemaker --cloud [aws|gcp|azure|all]
 ```
 
-Supported providers:
+The TUI lets you:
+• Deploy new models  
+• List active endpoints  
+• Query or delete endpoints
 
-- `--cloud aws` AWS SageMaker deployment
-- `--cloud gcp` Google Cloud Vertex AI deployment
-- `--cloud azure` Azure Machine Learning deployment
-- `--cloud all` Configure all three providers at the same time
+---
 
+## 2 – YAML-Based Deployment (Recommended)
 
-### List Models
-
-From the dropdown, select `Show Acitve Models` to see the list of endpoints deployed.
-
-![Acitve Endpoints](../Images/active-1.png)
-
-### Delete Models
-
-From the dropdown, select `Delete a Model Endpoint` to see the list of models endpoints. Press space to select the endpoints you want to delete
-
-![Delete Endpoints](../Images/delete-1.png)
-
-
-### Querying Models
-
-From the dropdown, select `Query a Model Endpoint` to see the list of models endpoints. Press space to select the endpoints you want to query. Enter the query in the text box and press enter to get the response.
-
-![Query Endpoints](../Images/query-1.png)
-
-
-### YAML-based Deployment (Recommended)
-
-For reproducible deployments, use YAML configuration:
-
-```sh
+```bash
 magemaker --deploy .magemaker_config/your-model.yaml
 ```
 
-Example YAML for AWS deployment:
-
+Example (AWS):
 ```yaml
 deployment: !Deployment
-  destination: aws 
-  endpoint_name: facebook-opt-test
+  destination: aws
+  endpoint_name: bert-base-demo
   instance_count: 1
   instance_type: ml.m5.xlarge
-  num_gpus: null
-  quantization: null
-models:
-  - !Model
-    id: facebook/opt-125m
-    location: null
-    predict: null
-    source: huggingface
-    task: text-generation
-    version: null
-```
-
-For GCP Vertex AI:
-
-```yaml
-deployment: !Deployment
-  destination: gcp
-  endpoint_name: facebook-opt-test
-  accelerator_count: 1
-  instance_type: g2-standard-12
-  accelerator_type: NVIDIA_L4
-  num_gpus: null
-  quantization: null
 
 models:
   - !Model
-    id: facebook/opt-125m
-    location: null
-    predict: null
+    id: google-bert/bert-base-uncased
     source: huggingface
-    task: null
-    version: null
 ```
 
-For Azure ML:
+Full schema & advanced flags are documented in the <a href="/concepts/cli-reference">CLI reference</a>.
 
-```yaml
-deployment: !Deployment
-  destination: azure
-  endpoint_name: facebook-opt-test
-  instance_count: 1
-  instance_type: Standard_DS3_v2
-models:
-  - !Model
-    id: facebook--opt-125m
-    location: null
-    predict: null
-    source: huggingface
-    task: text-generation
-    version: null
+---
+
+## 3 – Fine-Tuning
+
+```bash
+magemaker --train .magemaker_config/train-bert.yaml
 ```
-<Note>
-  The model ids for Azure are different from AWS and GCP. Make sure to use the one provided by Azure in the Azure Model Catalog. 
+See <a href="/concepts/fine-tuning">Fine-tuning</a> for details.
 
-  To find the relevant model id, follow the following steps
-  <Steps>
-    <Step title="Go to your workspace studio">
-      Find the workpsace in the Azure portal and click on the studio url provided. Click on the `Model Catalog` on the left side bar
-    	![Azure ML Creation](../Images/workspace-studio.png)
-    </Step>
+---
 
-      <Step title="Select Hugging Face in the Collections List">
-      Select Hugging-Face from the collections list. The id of the model card is the id you need to use in the yaml file
-    	![Azure ML Creation](../Images/hugging-face.png)
-    </Step>
+## 4 – OpenAI-Compatible Proxy
+Run a local FastAPI server and plug Magemaker into any OpenAI SDK:
 
-  </Steps>
-</Note>
-
-
-
-### Model Fine-tuning
-
-Fine-tune models using the `train` command:
-
-```sh
-magemaker --train .magemaker_config/train-config.yaml
+```bash
+uvicorn server:app --reload  # default http://localhost:8000
 ```
 
-Example training configuration:
+```python
+from openai import OpenAI
+client = OpenAI(base_url="http://localhost:8000", api_key="unused")
 
-```yaml
-training: !Training
-  destination: aws # or gcp, azure
-  instance_type: ml.p3.2xlarge # varies by cloud provider
-  instance_count: 1
-  training_input_path: s3://your-bucket/data.csv
-  hyperparameters: !Hyperparameters
-    epochs: 3
-    per_device_train_batch_size: 32
-    learning_rate: 2e-5
+chat = client.chat.completions.create(
+    model="meta-llama/Meta-Llama-3-8B-Instruct",
+    messages=[{"role": "user", "content": "Hello!"}]
+)
+print(chat.choices[0].message.content)
 ```
-{/* 
-### Recommended Models
+More on the <a href="/concepts/api-proxy">API Proxy</a> page.
 
-<CardGroup>
-  <Card
-    title="google-bert/bert-base-uncased"
-    href="https://huggingface.co/google-bert/bert-base-uncased"
-  >
-    Fill Mask: tries to complete your sentence like Madlibs. Query format: text
-    string with [MASK] somewhere in it.
-  </Card>
+---
 
-  <Card
-    title="sentence-transformers/all-MiniLM-L6-v2"
-    href="https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2"
-  >
-    Feature extraction: turns text into a 384d vector embedding for semantic
-    search / clustering. Query format: "type out a sentence like this one."
-  </Card>
-</CardGroup> */}
+## 5 – Clean Up & Cost Control
+```bash
+magemaker --delete my-endpoint
+```
+<Warning>Endpoints incur charges while running—delete what you don’t use!</Warning>
 
-<Warning>
-  Remember to deactivate unused endpoints to avoid unnecessary charges!
-</Warning>
+---
 
-
-## Contact
-
-You can reach us, faizan & jneid, at [support@slashml.com](mailto:support@slashml.com).
-
-
-If anything doesn't make sense or you have suggestions, do point them out at [magemaker.featurebase.app](https://magemaker.featurebase.app/).
-
-We'd love to hear from you! We're excited to learn how we can make this more valuable for the community and welcome any and all feedback and suggestions.
+## Next Steps
+• Explore the <a href="/concepts/cli-reference">full CLI</a>.  
+• Read the <a href="/concepts/deployment">Deployment guide</a> for best practices.  
+• Need help? Join our <a href="https://discord.gg/SBQsD63d">Discord</a> or open an issue on GitHub.
