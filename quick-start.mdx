@@ -35,14 +35,16 @@ From the dropdown, select `Delete a Model Endpoint` to see the list of models en
 ![Delete Endpoints](../Images/delete-1.png)
 
 
-### Querying Models
+### Querying Models (Interactive)
 
-From the dropdown, select `Query a Model Endpoint` to see the list of models endpoints. Press space to select the endpoints you want to query. Enter the query in the text box and press enter to get the response.
+From the dropdown, select `Query a Model Endpoint` to see the list of model endpoints. Press space to select the endpoints you want to query. Enter the query in the text box and press enter to get the response.
 
 ![Query Endpoints](../Images/query-1.png)
 
 
-### YAML-based Deployment (Recommended)
+---
+
+## YAML-based Deployment (Recommended)
 
 For reproducible deployments, use YAML configuration:
 
@@ -128,6 +130,37 @@ models:
 </Note>
 
 
+---
+
+## YAML-based Querying (New)
+
+Once an endpoint is deployed you can issue batch or ad-hoc queries directly from a YAML file without opening the interactive menu.
+
+1. Create a query YAML (e.g. `llama3-query.yaml`):
+
+```yaml
+deployment: !Deployment
+  destination: aws
+  endpoint_name: llama3-endpoint
+
+query: !Query
+  input: "What are the key differences between Llama 2 and Llama 3?"
+```
+
+2. Execute the query with the new `--query` flag:
+
+```sh
+magemaker --query .magemaker_config/llama3-query.yaml
+```
+
+This flag is now available for all three cloud providers (AWS, GCP, Azure) and mirrors the request/response you would get when using the SDKs directly.
+
+<Warning>
+End-points continue to accrue costs while running—remember to delete them when you’re done!
+</Warning>
+
+
+---
 
 ### Model Fine-tuning
 
@@ -150,26 +183,6 @@ training: !Training
     per_device_train_batch_size: 32
     learning_rate: 2e-5
 ```
-{/* 
-### Recommended Models
-
-<CardGroup>
-  <Card
-    title="google-bert/bert-base-uncased"
-    href="https://huggingface.co/google-bert/bert-base-uncased"
-  >
-    Fill Mask: tries to complete your sentence like Madlibs. Query format: text
-    string with [MASK] somewhere in it.
-  </Card>
-
-  <Card
-    title="sentence-transformers/all-MiniLM-L6-v2"
-    href="https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2"
-  >
-    Feature extraction: turns text into a 384d vector embedding for semantic
-    search / clustering. Query format: "type out a sentence like this one."
-  </Card>
-</CardGroup> */}
 
 <Warning>
   Remember to deactivate unused endpoints to avoid unnecessary charges!
@@ -179,7 +192,6 @@ training: !Training
 ## Contact
 
 You can reach us, faizan & jneid, at [support@slashml.com](mailto:support@slashml.com).
-
 
 If anything doesn't make sense or you have suggestions, do point them out at [magemaker.featurebase.app](https://magemaker.featurebase.app/).
 
