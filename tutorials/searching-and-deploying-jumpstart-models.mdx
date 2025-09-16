@@ -1,0 +1,84 @@
+---
+title: Deploying AWS JumpStart Models with Magemaker
+---
+
+## Introduction
+AWS JumpStart provides a catalogue of pre-configured foundation models that you can deploy directly to SageMaker. Magemaker now ships with an **interactive search** that lets you find and deploy these models without leaving the terminal.
+
+<Note>
+JumpStart models are only deployable to **AWS SageMaker** at the moment.
+</Note>
+
+## 1 – Configure AWS
+Make sure you have already run `magemaker --cloud aws` and that your AWS credentials & SageMaker role are in place. See the [installation](/installation) guide if you haven't.
+
+## 2 – Open the Interactive Menu
+```bash
+magemaker --cloud aws
+```
+Choose **“Search JumpStart Models”** from the main menu.
+
+![JumpStart search](../Images/jumpstart-search.png)
+
+## 3 – Search & Select a Model
+1. Type a keyword (e.g. `llama`, `mistral`, `falcon`).
+2. Use the arrow keys to highlight a model.
+3. Press **Enter** to view details and confirm deployment.
+
+The tool will automatically:
+- Suggest compatible instance types.
+- Validate that you have quota for the chosen instance.
+- Create a unique endpoint name based on the model and timestamp.
+
+## 4 – Monitor the Deployment
+A progress bar shows each SageMaker step (model upload, endpoint config, endpoint creation). Large models can take 10-20 minutes.
+
+Once complete, Magemaker writes a YAML file to `.magemaker_config/<endpoint>.yaml` that captures the deployment so you can re-deploy via CI/CD later.
+
+## 5 – Query the Endpoint
+Use the interactive menu **“Query a Model Endpoint”** or follow the Python example in the [Llama 3 AWS tutorial](/tutorials/deploying-llama-3-to-aws).
+
+```bash
+magemaker --cloud aws   # choose "Query a Model Endpoint"
+```
+
+---
+
+## YAML-Only Workflow
+Prefer Infrastructure-as-Code? Once you know the JumpStart model ID you can skip the menu entirely:
+
+```yaml
+# .magemaker_config/falcon-7b.yaml
+models:
+- !Model
+  id: huggingface-textgeneration-falcon-7b-instruct
+  source: sagemaker
+
+deployment: !Deployment
+  destination: aws
+  endpoint_name: falcon7b-endpoint
+  instance_type: ml.g5.12xlarge
+  instance_count: 1
+```
+
+```bash
+magemaker --deploy .magemaker_config/falcon-7b.yaml
+```
+
+---
+
+## Cleaning Up
+Remember to delete endpoints you no longer need:
+
+```bash
+magemaker --cloud aws   # choose "Delete a Model Endpoint"
+```
+
+---
+
+## FAQ
+**Q:** *Why do I see `InsufficientCapacity` errors?*  
+**A:** The requested GPU instance isn’t available in your region. Try a different region or request more quota.
+
+**Q:** *Can I fine-tune JumpStart models?*  
+**A:** Not yet through Magemaker. Fine-tuning currently supports Hugging Face models on SageMaker only.
