@@ -5,39 +5,54 @@ description: Guide to fine-tuning models with Magemaker
 
 ## Fine-tuning Overview
 
-Fine-tuning allows you to adapt pre-trained models to your specific use case. Magemaker simplifies this process through YAML configuration.
+Fine-tuning allows you to adapt pre-trained models to your specific use case.  
+**Today, fine-tuning is only supported on AWS SageMaker** (Vertex AI & Azure ML support are on the roadmap).
 
-### Basic Command
+<Warning>
+  You’ll need sufficient **SageMaker training quota** in the region where you plan to train.  GPU instances (e.g. `ml.p3.*`) are not enabled by default on new AWS accounts.
+</Warning>
 
-```sh
+---
+
+## Basic Workflow
+
+1. Prepare & upload your dataset to **S3** (CSV or JSONL – see below).  
+2. Create a YAML config that contains a `!Training` block and at least one `!Model` block.  
+3. Run:
+
+```bash
 magemaker --train .magemaker_config/train-config.yaml
 ```
 
-## Configuration
+Magemaker will validate the YAML, start an **SageMaker Training Job** and stream logs to your terminal.
 
-### Basic Training Configuration
+---
+
+## Configuration Reference
+
+### Minimal Training Configuration
 
 ```yaml
 training: !Training
-  destination: aws
-  instance_type: ml.p3.2xlarge
-  instance_count: 1
-  training_input_path: s3://your-bucket/training-data.csv
+  destination: aws               # only "aws" is supported for now
+  instance_type: ml.p3.2xlarge    # 1× V100 GPU
+  instance_count: 1               # distributed training coming soon
+  training_input_path: s3://my-bucket/my-data.csv  # dataset location
 
 models:
 - !Model
-  id: your-model-id
+  id: google-bert/bert-base-uncased   # Hugging Face model ID
   source: huggingface
 ```
 
-### Advanced Configuration
+### Advanced Example
 
 ```yaml
 training: !Training
   destination: aws
-  instance_type: ml.p3.2xlarge
+  instance_type: ml.p3.8xlarge        # 4× V100 GPUs
   instance_count: 1
-  training_input_path: s3://your-bucket/data.csv
+  training_input_path: s3://my-bucket/data.jsonl
   hyperparameters: !Hyperparameters
     epochs: 3
     per_device_train_batch_size: 32
@@ -47,84 +62,91 @@ training: !Training
     evaluation_strategy: "steps"
     eval_steps: 500
     save_steps: 1000
+
+# You can fine-tune **any** model that supports text training on HF
+models:
+- !Model
+  id: meta-llama/Meta-Llama-3-8B-Instruct
+  source: huggingface
+  task: text-generation
 ```
+
+<Note>
+  `training_input_path` **must** start with `s3://` – local paths are not yet supported.  A helper to automatically upload local files is planned.
+</Note>
+
+---
 
 ## Data Preparation
 
 ### Supported Formats
 
 <CardGroup>
-  <Card title="CSV Format" icon="file-csv">
-    - Simple tabular data
-    - Easy to prepare
-    - Good for classification tasks
+  <Card title="CSV" icon="file-csv">
+    - Simple tabular format – one row per training example  
+    - Ideal for classification & regression
   </Card>
-  
-  <Card title="JSON Lines" icon="file-code">
-    - Flexible data format
-    - Good for complex inputs
-    - Supports nested structures
+  <Card title="JSON Lines (JSONL)" icon="file-code">
+    - One JSON object **per line**  
+    - Flexible structure – recommended for generative tasks
   </Card>
 </CardGroup>
 
-### Data Upload
+### Uploading to S3
 
 <Steps>
   <Step title="Prepare Data">
-    Format your data according to model requirements
+    Ensure the dataset matches the expected input format for your model / task.
   </Step>
   <Step title="Upload to S3">
-    Use AWS CLI or console to upload data
+    ```bash
+    aws s3 cp my-data.csv s3://my-bucket/my-data.csv
+    ```
   </Step>
-  <Step title="Configure Path">
-    Specify S3 path in training configuration
+  <Step title="Reference in YAML">
+    Use the full `s3://…` URI in `training_input_path`.
   </Step>
 </Steps>
 
-## Instance Selection
+---
 
-### Training Instance Types
+## Choosing Instance Types
 
-Choose based on:
-- Dataset size
-- Model size
-- Training time requirements
-- Cost constraints
+| Instance | GPUs | Typical Use-case |
+|----------|------|------------------|
+| `ml.p3.2xlarge`  | 1× V100 | small-to-medium datasets |
+| `ml.p3.8xlarge`  | 4× V100 | larger datasets / faster training |
+| `ml.p3.16xlarge` | 8× V100 | distributed training |
 
-Popular choices:
-- ml.p3.2xlarge (1 GPU)
-- ml.p3.8xlarge (4 GPUs)
-- ml.p3.16xlarge (8 GPUs)
+<Warning>
+  GPU capacity is region-specific.  If you hit *CapacityError* try another region or request a quota increase.
+</Warning>
 
-## Hyperparameter Tuning
+---
 
-### Basic Parameters
+## Hyperparameter Shortcuts
 
-```yaml
-hyperparameters: !Hyperparameters
-  epochs: 3
-  learning_rate: 2e-5
-  batch_size: 32
-```
+If you omit `hyperparameters`, Magemaker will call `get_hyperparameters_for_model()` to generate sensible defaults for common text tasks (batch size, learning-rate schedule, etc.).  You can override **any** of them in the YAML file.
 
-### Advanced Tuning
+---
 
-```yaml
-hyperparameters: !Hyperparameters
-  epochs: 3
-  learning_rate: 
-    min: 1e-5
-    max: 1e-4
-    scaling: log
-  batch_size:
-    values: [16, 32, 64]
-```
+## Monitoring Your Training Job
 
-## Monitoring Training
+1. Real-time logs stream to your terminal.  
+2. Detailed metrics are pushed to **CloudWatch** → *SageMaker / TrainingJobs* namespace:
+   - `TrainingLoss`
+   - `ValidationLoss`
+   - `GPUUtilization`
 
-### CloudWatch Metrics
+Set up CloudWatch alarms to catch OOM or stalled jobs.
 
-Available metrics:
-- Loss
-- Learning rate
-- GPU utilization
+---
+
+## Next Steps
+
+- Use the trained model artefact to **deploy a new endpoint** with another YAML file (replace `training:` with `deployment:`).  
+- Automate training & deployment in CI/CD by chaining `--train` and `--deploy` commands.
+
+<Note>
+  Vertex AI & Azure ML fine-tuning support is under active development.  Follow the progress on our [GitHub Issues](https://github.com/slashml/magemaker/issues).
+</Note>
