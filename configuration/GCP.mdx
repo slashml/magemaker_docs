@@ -1,38 +1,111 @@
 ---
-title: GCP 
+title: GCP (Vertex AI)
+description: Configure Magemaker for Google Cloud Platform
 ---
+
+## Overview
+This page walks you through **all** the steps required to use Magemaker with **Google Cloud Vertex AI**:
+
+1. Creating / selecting a GCP project
+2. Installing & initializing the **gcloud** CLI
+3. Enabling **Vertex AI** and related APIs
+4. Setting the required **environment variables** (`PROJECT_ID`, `GCLOUD_REGION`, …)
+5. (Optional) Creating a dedicated **service-account** for CI/CD deployments
+
+<Note>
+Magemaker supports Python&nbsp;≥&nbsp;3.11 (3.12 is currently not supported) and uses the official Vertex AI SDK under the hood.
+</Note>
+
+---
+
 <Steps>
-<Step title="Create Google Cloud Account">
-Visit [Google Cloud Console](https://cloud.google.com/?hl=en) to create your account.
-</Step>
+  <Step title="Create Google Cloud Account">
+    Visit the <a href="https://cloud.google.com" target="_blank">Google Cloud Console</a> and sign up / sign in.
+  </Step>
 
-<Step title="Create a new project">
-	Once you have created your account, create a new project. If this is your first time the default project is "My First Project". You can create a new project by clicking this button and then selecting "New Project".
+  <Step title="Create (or Select) a Project">
+    If this is your first time, the default project is <strong>“My First Project”</strong>. Use the project-picker at the top of the console to create a new project if you prefer a clean slate.
+    
+    ![Create GCP Project](../Images/google_new_project.png)
+  </Step>
 
-	![Enter image alt description](../Images/google_new_project.png)
+  <Step title="Install Google Cloud SDK">
+    1. Follow the official <a href="https://cloud.google.com/sdk/docs/install-sdk" target="_blank">installation guide</a> for your OS.<br />
+    2. Initialize the SDK:
+    ```bash
+    gcloud init
+    ```
+  </Step>
 
-</Step>
+  <Step title="Authenticate & Set Default Project">
+    During <code>gcloud init</code> you will:
+    - Log in with your browser
+    - Pick the project you created earlier
 
-<Step title="Install Google Cloud SDK">
-1. Follow the installation guide at [Google Cloud SDK Installation Documentation](https://cloud.google.com/sdk/docs/install-sdk)
-2. Initialize the SDK by running:
-   ```bash
-   gcloud init
-   ```
-</Step>
+    Verify the default credentials work:
+    ```bash
+    gcloud auth application-default login
+    ```
+  </Step>
 
-3. During initialization:
-   - Create login credentials when prompted
-   - Create a new project or select an existing one
-   To make sure the initialization worked, run:
-   ```bash
-   gcloud auth application-default login
-   ```
+  <Step title="Enable Required APIs">
+    Open <em>APIs & Services → Library</em> and enable **Vertex AI API** for your project.
+    
+    ![Enable Vertex AI](../Images/QrB_Image_11.png)
 
-<Step title="Enable Vertex AI API">
-Navigate to the APIs & Services on the dashboard and enable the Vertex AI API for your project.
+    <Note>
+      For training or custom container deployments you may also need <code>Cloud Storage</code>, <code>Artifact Registry</code>, and <code>Cloud Build</code>.
+    </Note>
+  </Step>
 
-![Enter image alt description](../Images/QrB_Image_11.png)
-</Step>
+  <Step title="(Optional) Create a Service Account">
+    For automated pipelines:
+    ```bash
+    gcloud iam service-accounts create magemaker-sa \
+      --description="CI/CD deployments" \
+      --display-name="magemaker-sa"
 
+    gcloud projects add-iam-policy-binding $PROJECT_ID \
+      --member="serviceAccount:magemaker-sa@$PROJECT_ID.iam.gserviceaccount.com" \
+      --role="roles/aiplatform.admin"
+    ```
+    Download the JSON key and reference it via <code>GOOGLE_APPLICATION_CREDENTIALS</code>.
+  </Step>
 </Steps>
+
+---
+
+## Environment Variables (.env)
+Magemaker loads cloud-specific settings from a **.env** file in your project root. Make sure the following exist for GCP deployments:
+
+```bash
+# GCP Configuration
+PROJECT_ID="your-project-id"          # gcloud config get-value project
+GCLOUD_REGION="us-central1"           # default region for Vertex AI
+
+# (Optional) Path to a service-account JSON key
+GOOGLE_APPLICATION_CREDENTIALS="/path/to/magemaker-sa.json"
+```
+
+<Warning>
+Never commit your <code>.env</code> file to version control!
+</Warning>
+
+---
+
+## Verifying Your Setup
+```bash
+# 1. Configure Magemaker for GCP
+magemaker --cloud gcp
+
+# 2. List existing Vertex AI endpoints
+magemaker --list
+```
+If you see an empty list instead of an error, your credentials and environment variables are correct.
+
+---
+
+## Next Steps
+• Learn how to <a href="/concepts/deployment">deploy a model</a> via YAML.  
+• Explore the <a href="/concepts/cli-reference">CLI reference</a> for advanced flags.  
+• Try the <a href="/concepts/api-proxy">local API proxy</a> to query endpoints through an OpenAI-compatible API.
