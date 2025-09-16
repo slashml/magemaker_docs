@@ -50,6 +50,7 @@ You should see the following screen after clicking IAM.
    - `AmazonSagemakerFullAccess`
    - `IAMFullAccess`
    - `ServiceQuotasFullAccess`
+   - `AmazonS3FullAccess` <!-- NEW: required for uploading custom artifacts & training data -->
 
 Then click Next.
 
@@ -58,6 +59,10 @@ Then click Next.
 The final list should look like the following:
 
 ![Enter image alt description](../Images/Dfp_Image_7.png)
+
+<Note>
+`AmazonS3FullAccess` is needed because Magemaker automatically uploads training data and custom model artefacts to S3 during deployments and fine-tuning jobs.
+</Note>
 
 Click "Create user" on the following screen.
 </Step>

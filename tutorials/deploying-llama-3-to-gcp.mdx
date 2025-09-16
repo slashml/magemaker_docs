@@ -3,10 +3,10 @@ title: Deploying Llama 3 to GCP
 ---
 
 ## Introduction
-This tutorial guides you through deploying Llama 3 to Google Cloud Platform (GCP) Vertex AI using Magemaker and querying it using the interactive dropdown menu. Ensure you have followed the [installation](installation) steps before proceeding. 
+This tutorial guides you through deploying Llama 3 to Google Cloud Platform (GCP) Vertex AI using Magemaker and querying it via the interactive dropdown menu. Make sure you have completed the [installation](installation) and GCP configuration steps before proceeding.
 
-<Note> 
-You may need to request a quota increase for specific machine types and GPUs in the region where you plan to deploy the model. Check your GCP quotas before proceeding. 
+<Note>
+For large models you may need to request a quota increase for specific machine types and GPUs in the region where you plan to deploy the model. Check your GCP quotas before proceeding.
 </Note>
 
 ## Step 1: Setting Up Magemaker for GCP
@@ -17,11 +17,11 @@ Run the following command to configure Magemaker for GCP Vertex AI deployment:
 magemaker --cloud gcp
 ```
 
-This initializes Magemaker with the necessary configurations for deploying models to Vertex AI.
+This initializes Magemaker with the necessary environment variables (PROJECT_ID, GCLOUD_REGION, etc.) and creates/updates your `.env` file.
 
 ## Step 2: YAML-based Deployment
 
-For reproducible deployments, use YAML configuration:
+For reproducible deployments, use a YAML configuration:
 
 ```sh
 magemaker --deploy .magemaker_config/your-model.yaml
@@ -33,92 +33,79 @@ Example YAML for GCP deployment:
 deployment: !Deployment
   destination: gcp
   endpoint_name: llama3-endpoint
+  instance_type: n1-standard-8      # a.k.a. machine_type in Vertex AI UI
+  accelerator_type: NVIDIA_T4       # GPU type
   accelerator_count: 1
-  instance_type: n1-standard-8
-  accelerator_type: NVIDIA_T4
-  num_gpus: 1
-  quantization: null
+  num_gpus: 1                       # optional – overrides accelerator_count if set
+  quantization: null                # optional – bf16 / int8 / bitsandbytes
 
 models:
   - !Model
     id: meta-llama/Meta-Llama-3-8B-Instruct
-    location: null
-    predict: null
     source: huggingface
     task: text-generation
+    predict: null                   # optional inference parameters
     version: null
+    location: null                  # optional custom artefact path
 ```
+
 <Note>
-   For gated models like llama from Meta, you have to accept terms of use for model on hugging face and adding Hugging face token to the environment are necessary for deployment to go through.
+For gated models like Llama you must (1) accept the terms of use on Hugging Face and (2) add your `HUGGING_FACE_HUB_KEY` to the `.env` file.
 </Note>
 
-
-### Selecting an Appropriate Instance
-For Llama 3, a machine type such as `n1-standard-8` with an attached NVIDIA T4 GPU (`NVIDIA_T4`) is a suitable configuration for most use cases. Adjust the instance type and GPU based on your workload requirements.
+### Choosing an Instance Type
+A common configuration for Llama 3 (8B) is `n1-standard-8` with one T4 GPU. Adjust `instance_type`, `accelerator_type`, and `accelerator_count` according to your latency and cost requirements.
 
 <Warning>
-If you encounter quota issues, submit a quota increase request in the GCP console under "IAM & Admin > Quotas" for the specific GPU type in your deployment region.
+If you encounter quota issues, submit a quota increase request in the GCP console under **IAM & Admin → Quotas** for the specific GPU type and region.
 </Warning>
 
 ## Step 3: Querying the Deployed Model
 
-Once the deployment is complete, note down the endpoint id.
+After deployment completes, note the **endpoint ID** printed by Magemaker.
 
-You can use the interactive dropdown menu to quickly query the model.
-
-### Querying Models
-
-From the dropdown, select `Query a Model Endpoint` to see the list of model endpoints. Press space to select the endpoint you want to query. Enter your query in the text box and press enter to get the response.
+### Option A – Interactive Dropdown
+Use `Query a Model Endpoint` from the Magemaker menu to send prompts directly from your terminal.
 
 ![Query Endpoints](../Images/query-1.png)
 
-Or you can use the following code:
-```python 
-from google.cloud import aiplatform
-from google.protobuf import json_format
-from google.protobuf.struct_pb2 import Value
-import json
+### Option B – Python (Vertex AI REST)
+If you prefer code, you can call the endpoint with a simple REST helper:
+
+```python
 from dotenv import dotenv_values
+import google.auth
+import google.auth.transport.requests
+import requests
 
 
-def query_vertexai_endpoint_rest(
-    endpoint_id: str,
-    input_text: str,
-    token_path: str = None
-):
-    import google.auth
-    import google.auth.transport.requests
-    import requests
+def query_vertexai_endpoint_rest(endpoint_id: str, input_text: str, token_path: str | None = None):
+    """Send a text-generation request to a Vertex AI endpoint."""
 
-    # TODO: this will have to come from config files
-    project_id = dotenv_values('.env').get('PROJECT_ID')
-    location = dotenv_values('.env').get('GCLOUD_REGION')
+    project_id = dotenv_values(".env").get("PROJECT_ID")
+    location   = dotenv_values(".env").get("GCLOUD_REGION")
 
-    
-    # Get credentials
+    # Obtain an access token
     if token_path:
-        credentials, project = google.auth.load_credentials_from_file(token_path)
+        credentials, _ = google.auth.load_credentials_from_file(token_path)
     else:
-        credentials, project = google.auth.default()
-    
-    # Refresh token
-    auth_req = google.auth.transport.requests.Request()
-    credentials.refresh(auth_req)
-    
-    # Prepare headers and URL
+        credentials, _ = google.auth.default()
+    credentials.refresh(google.auth.transport.requests.Request())
+
     headers = {
         "Authorization": f"Bearer {credentials.token}",
         "Content-Type": "application/json"
     }
-    
-    url = f"https://{location}-aiplatform.googleapis.com/v1/projects/{project_id}/locations/{location}/endpoints/{endpoint_id}:predict"
-    
-    # Prepare payload
+
+    url = (
+        f"https://{location}-aiplatform.googleapis.com/v1/projects/"
+        f"{project_id}/locations/{location}/endpoints/{endpoint_id}:predict"
+    )
+
     payload = {
         "instances": [
             {
                 "inputs": input_text,
-                # TODO: this also needs to come from configs
                 "parameters": {
                     "max_new_tokens": 100,
                     "temperature": 0.7,
@@ -127,20 +114,28 @@ def query_vertexai_endpoint_rest(
             }
         ]
     }
-    
-    # Make request
-    response = requests.post(url, headers=headers, json=payload)
-    print('Raw Response Content:', response.content.decode())
 
+    response = requests.post(url, headers=headers, json=payload, timeout=300)
+    response.raise_for_status()
     return response.json()
 
-endpoint_id="your-endpoint-id-here"
 
-input_text='What are you?"'
-resp = query_vertexai_endpoint_rest(endpoint_id=endpoint_id, input_text=input_text)
-print(resp)
+# Example usage
+if __name__ == "__main__":
+    ENDPOINT_ID = "your-endpoint-id-here"
+    prompt = "What are you?"
+    print(query_vertexai_endpoint_rest(ENDPOINT_ID, prompt))
+```
+
+### Option C – Built-in Helper
+Magemaker also ships with a helper function that wraps the above logic:
+
+```python
+from magemaker.gcp.query_endpoint import query_vertexai_endpoint
+
+answer = query_vertexai_endpoint(endpoint_name="your-endpoint-id-here", query="What are you?")
+print(answer)
 ```
 
 ## Conclusion
-You have successfully deployed and queried Llama 3 on GCP Vertex AI using Magemaker's interactive dropdown menu. For any questions or feedback, feel free to contact us at [support@slashml.com](mailto:support@slashml.com).
-
+You have successfully deployed and queried Llama 3 on GCP Vertex AI using Magemaker. For questions or feedback, reach us at [support@slashml.com](mailto:support@slashml.com).

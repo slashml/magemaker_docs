@@ -16,7 +16,7 @@ To get a local copy up and running follow these simple steps.
 
 ### Prerequisites
 
-* Python 3.11 (3.13 is not supported because of azure)
+* Python 3.11+ **(Python 3.12 is currently unsupported due to an Azure SDK issue)**
 * Cloud Configuration
     * An account to your preferred cloud provider, AWS, GCP and Azure.
         * Each cloud requires slightly different accesses, Magemaker will guide you through getting the necessary credentials to the selected cloud provider
@@ -176,7 +176,6 @@ If you’re using the `ml.m5.xlarge` instance type, here are some small Hugging 
 
 <br>
 <br>
-
 
 
 ## Deactivating Models
