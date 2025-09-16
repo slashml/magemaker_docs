@@ -1,0 +1,89 @@
+---
+title: Deploying Llama 3 to SageMaker using the Query Flag
+---
+
+## Introduction
+This tutorial guides you through deploying Llama 3 to AWS SageMaker using Magemaker **and** shows how to query it using the new `--query` flag. Ensure you have followed the [installation](installation) steps before proceeding.
+
+## Step 1: Setting Up Magemaker for AWS
+Run the following command to configure Magemaker for AWS SageMaker deployment:
+```sh
+magemaker --cloud aws
+```
+This initializes Magemaker with the necessary configurations for deploying models to SageMaker.
+
+## Step 2: YAML-based Deployment
+For reproducible deployments, use YAML configuration:
+```sh
+magemaker --deploy .magemaker_config/llama3-deploy.yaml
+```
+
+Example deployment YAML:
+```yaml
+deployment: !Deployment
+  destination: aws
+  endpoint_name: llama3-endpoint
+  instance_count: 1
+  instance_type: ml.g5.2xlarge
+  num_gpus: 1
+  quantization: null
+models:
+  - !Model
+    id: meta-llama/Meta-Llama-3-8B-Instruct
+    location: null
+    predict: null
+    source: huggingface
+    task: text-generation
+    version: null
+```
+
+<Note>
+   For gated models like Llama from Meta you must (1) accept the model licence on Hugging Face **and** (2) provide a valid `HUGGING_FACE_HUB_KEY` in your environment for the deployment to succeed.
+</Note>
+
+<Warning>
+You may need to request a quota increase for specific machine types and GPUs in the region where you plan to deploy the model. Check your AWS quotas before proceeding.
+</Warning>
+
+## Step 3: Querying with the `--query` Flag
+After the deployment finishes you can issue requests directly from the CLI without the interactive dropdown.
+
+### 3.1 Create a Query YAML
+Create `llama3-query.yaml`:
+```yaml
+deployment: !Deployment
+  destination: aws 
+  endpoint_name: llama3-endpoint
+
+query: !Query
+  input: "Explain the concept of quantum entanglement in simple terms."
+```
+
+### 3.2 Execute the Query
+```sh
+magemaker --query .magemaker_config/llama3-query.yaml
+```
+
+Sample Response:
+```json
+{
+  "generated_text": "Quantum entanglement is like having two magical coins…",
+  "model": "meta-llama/Meta-Llama-3-8B-Instruct",
+  "total_tokens": 95,
+  "generation_time": 1.3
+}
+```
+
+## Step 4: Programmatic Query (Python)
+You can also call the endpoint via the SageMaker SDK:
+```python
+from sagemaker.huggingface.model import HuggingFacePredictor
+import sagemaker
+
+predictor = HuggingFacePredictor(endpoint_name="llama3-endpoint",
+                                 sagemaker_session=sagemaker.Session())
+print(predictor.predict({"inputs": "What are you?"}))
+```
+
+## Conclusion
+You have successfully deployed and queried Llama 3 on AWS SageMaker using Magemaker’s new `--query` workflow. For any questions or feedback, feel free to contact us at [support@slashml.com](mailto:support@slashml.com).
