@@ -1,43 +1,65 @@
 ---
 title: About
-description: Deploy open source AI models to AWS, GCP, and Azure in minutes
+description: Deploy open-source AI models to AWS, GCP, and Azure in minutes
 "og:title": "Magemaker"
 ---
 
 ## About Magemaker
 
-Magemaker is a Python tool that simplifies the process of deploying open source AI models to your preferred cloud provider. Instead of spending hours digging through documentation, Magemaker lets you deploy Hugging Face models directly to AWS SageMaker, Google Cloud Vertex AI, or Azure Machine Learning.
+Magemaker is a Python-based DevOps toolkit that lets you turn any open-source AI model into a production-ready, fully managed endpoint on **AWS SageMaker, GCP Vertex AI, or Azure Machine Learning**—all from a single CLI.
 
-## What we're working on next
+Key capabilities:
 
-- More robust error handling for various edge cases
-- Verbose logging
-- Enabling / disabling autoscaling
-- Enhanced multi-cloud support features
+<CardGroup cols={3}>
+  <Card title="Multi-Cloud Deploy" icon="cloud">
+    Deploy to AWS, GCP, or Azure with a single YAML file or interactive CLI.
+  </Card>
+  <Card title="Fine-Tuning" icon="rocket">
+    One-command fine-tuning pipeline for Hugging Face models on SageMaker.
+  </Card>
+  <Card title="OpenAI-Compatible API" icon="plug">
+    Built-in FastAPI server (`server.py`) that exposes your SageMaker endpoints via `/chat/completions`—drop-in replacement for the OpenAI API.
+  </Card>
+</CardGroup>
 
-Do submit your feature requests at https://magemaker.featurebase.app/
+## What’s New 🎉
 
-## Known issues
+1. **OpenAI-Compatible Proxy**  
+   Run `python server.py` to expose any deployed SageMaker endpoint at `/chat/completions` (see the new [API Proxy Guide](/concepts/api-proxy)).
+2. **Environment-Driven Config**  
+   Most settings (cloud credentials, custom `CONFIG_DIR`, default region, etc.) are now auto-detected from `.env`.
 
-- Querying within Magemaker currently only works with text-based models
-- Deleting a model is not instant, it may show up briefly after deletion
-- Deploying the same model within the same minute will break
-- Hugging-face models on Azure have different Ids than their Hugging-face counterparts. Follow the steps specified in the quick-start guide to find the relevant models
-- For Azure deploying models other than Hugging-face is not supported yet. 
-- Python3.13 is not supported because of an open-issue by Azure. https://github.com/Azure/azure-sdk-for-python/issues/37600
+## Roadmap
 
+- More robust error handling for edge cases
+- Verbose / structured logging
+- Autoscaling enable / disable per deployment
+- Enhanced multi-cloud feature parity (fine-tuning & managed datasets on GCP/Azure)
+- API proxy hardening (streaming, function-calling, rate-limits)
 
-If there is anything we missed, do point them out at https://magemaker.featurebase.app/
+Have a feature request? Add it at https://magemaker.featurebase.app/
 
+## Known Issues
+
+<Warning>
+These are temporary limitations. Check the GitHub Issues board for the latest status.
+</Warning>
+
+- Only text-based pipelines are supported for querying (no vision/multimodal yet)
+- Endpoint deletion is asynchronous; the name may linger for ~60 s after deletion
+- Deploying the **same** model within the **same minute** can fail due to name collision
+- Azure model IDs differ from Hugging Face IDs (see [Quick Start](/quick-start))
+- Azure: only Hugging Face models are currently supported
+- Python 3.13 is not yet supported (Azure SDK issue [#37600](https://github.com/Azure/azure-sdk-for-python/issues/37600))
+
+If we missed something, let us know on https://magemaker.featurebase.app/
 
 ## License
 
-Distributed under the Apache 2.0 License. See `LICENSE` for more information.
+Distributed under the Apache 2.0 License. See `LICENSE` for details.
 
 ## Contact
 
-You can reach us, faizan & jneid, at [faizan|jneid@slashml.com](mailto:support@slashml.com).
+Questions or feedback? Reach out to **Faizan & Jneid** at <mailto:support@slashml.com>.
 
-You can give feedback at https://magemaker.featurebase.app/
-
-We'd love to hear from you! We're excited to learn how we can make this more valuable for the community and welcome any and all feedback and suggestions.
+We’d love to hear your ideas for making Magemaker even better!
