@@ -1,205 +1,131 @@
 ---
 title: Models
-description: Guide to supported models and their requirements
+description: Overview of supported model sources and hardware requirements
 ---
 
-## Supported Models
+## Supported Model Sources
+
+Magemaker can deploy models from **multiple sources**.  The exact options depend on the cloud provider.
+
+<CardGroup>
+  <Card title="🤗 Hugging Face" icon="hugging-face" href="https://huggingface.co/models">
+    All public Hugging Face models are supported on AWS, GCP & Azure.
+  </Card>
+  <Card title="AWS JumpStart" icon="aws">
+    Browse and deploy SageMaker JumpStart models (classification, text-gen, vision, etc.) **directly from the CLI**.
+  </Card>
+  <Card title="Custom (S3 / Local)" icon="folder">
+    Point Magemaker at a local directory or an S3 URI – handy for fine-tuned checkpoints or proprietary models (AWS only for now).
+  </Card>
+</CardGroup>
 
 <Note>
-Currently, Magemaker supports deployment of Hugging Face models only. Support for cloud provider marketplace models is coming soon!
+  JumpStart & custom S3 models are currently **AWS-only**.  GCP Model Garden / Azure ML Registry integration is in progress.
 </Note>
 
-### Hugging Face Models
+---
 
-<CardGroup>
-  <Card title="Text Generation" icon="pen-to-square" href="https://huggingface.co/models?pipeline_tag=text-generation">
-    - LLaMA
-    - BERT
-    - GPT-2
-    - T5
-  </Card>
-  
-  <Card title="Feature Extraction" icon="vector-square" href="https://huggingface.co/models?pipeline_tag=feature-extraction">
-    - Sentence Transformers
-    - CLIP
-    - DPR
-  </Card>
-</CardGroup>
+## Tasks & Example Models
 
-### Future Support
+| Task | Popular HF Models |
+|------|-------------------|
+| Text Generation | `meta-llama/Meta-Llama-3-8B-Instruct`, `gpt2`, `tiiuae/falcon-7b` |
+| Text Classification | `facebook/bart-large-mnli`, `distilbert-base-uncased` |
+| Embeddings / Feature Extraction | `sentence-transformers/all-MiniLM-L6-v2`, `intfloat/e5-small-v2` |
 
-We plan to add support for the following model sources:
+---
 
-<CardGroup>
-  <Card title="AWS SageMaker" icon="aws">
-    Models from AWS Marketplace and SageMaker built-in algorithms
-  </Card>
-  
-  <Card title="GCP Vertex AI" icon="google">
-    Models from Vertex AI Model Garden and Foundation Models
-  </Card>
-  
-  <Card title="Azure ML" icon="microsoft">
-    Models from Azure ML Model Catalog and Azure OpenAI
-  </Card>
-</CardGroup>
-## Model Requirements
+## Instance Recommendations
 
-### Instance Type Recommendations by Cloud Provider
+Below are **rule-of-thumb** suggestions.  Always check actual GPU/CPU requirements of your model.
 
-#### AWS SageMaker
-1. **Small Models** (ml.m5.xlarge)
-   ```yaml
-   instance_type: ml.m5.xlarge
-   ```
-2. **Medium Models** (ml.g4dn.xlarge)
-   ```yaml
-   instance_type: ml.g4dn.xlarge
-   ```
-3. **Large Models** (ml.g5.12xlarge)
-   ```yaml
-   instance_type: ml.g5.12xlarge
-   num_gpus: 4
-   ```
+### AWS SageMaker
 
-#### GCP Vertex AI
-1. **Small Models** (n1-standard-4)
-   ```yaml
-   machine_type: n1-standard-4
-   ```
-2. **Medium Models** (n1-standard-8 + GPU)
-   ```yaml
-   machine_type: n1-standard-8
-   accelerator_type: NVIDIA_TESLA_T4
-   accelerator_count: 1
-   ```
-3. **Large Models** (a2-highgpu-1g)
-   ```yaml
-   machine_type: a2-highgpu-1g
-   ```
+| Model Size        | Instance                | GPUs | Notes |
+|-------------------|-------------------------|------|-------|
+| ≤ 1 B parameters  | `ml.m5.xlarge`          | –    | CPU-only, cheapest |
+| 1–7 B parameters  | `ml.g4dn.xlarge`        | 1× T4 | good balance |
+| 7–70 B parameters | `ml.g5.12xlarge`        | 4× A10G | HF Llama-3-8B works here |
 
-#### Azure ML
-1. **Small Models** (Standard_DS3_v2)
-   ```yaml
-   instance_type: Standard_DS3_v2
-   ```
-2. **Medium Models** (Standard_NC6s_v3)
-   ```yaml
-   instance_type: Standard_NC6s_v3
-   ```
-3. **Large Models** (Standard_ND40rs_v2)
-   ```yaml
-   instance_type: Standard_ND40rs_v2
-   ```
+### GCP Vertex AI
+
+| Model Size | Machine Type       | GPU            |
+|------------|--------------------|----------------|
+| small      | `n1-standard-4`    | –              |
+| medium     | `n1-standard-8`    | 1× T4          |
+| large      | `a2-highgpu-1g`    | 1× A100        |
+
+### Azure ML
+
+| Model Size | VM Size                | GPU        |
+|------------|------------------------|------------|
+| small      | `Standard_DS3_v2`      | –          |
+| medium     | `Standard_NC6s_v3`     | 1× V100    |
+| large      | `Standard_NC24ads_A100_v4` | 4× A100 |
+
+<Warning>
+  GPU names differ across clouds (A10G ≈ L4 ≈ V100). Always double check memory & cost.
+</Warning>
+
+---
 
 ## Example Deployments
 
-### Example Hugging Face Model Deployment
-
-Deploy the same Hugging Face model to different cloud providers:
-
-AWS SageMaker:
 ```yaml
+# Hugging Face model → AWS
 models:
 - !Model
   id: facebook/opt-125m
   source: huggingface
+
+deployment: !Deployment
+  destination: aws
+  instance_type: ml.g4dn.xlarge
+```
+
+```yaml
+# JumpStart model → AWS (interactive CLI can search for IDs)
+models:
+- !Model
+  id: jumpstart-lang-textclassification-bert-base
+  source: sagemaker
+
 deployment: !Deployment
   destination: aws
 ```
 
-GCP Vertex AI:
 ```yaml
+# Hugging Face model → GCP
 models:
 - !Model
-  id: facebook/opt-125m
+  id: meta-llama/Meta-Llama-3-8B-Instruct
   source: huggingface
+
 deployment: !Deployment
   destination: gcp
-```
-
-Azure ML:
-```yaml
-models:
-- !Model
-  id: facebook-opt-125m
-  source: huggingface
-deployment: !Deployment
-  destination: azure
+  machine_type: a2-highgpu-1g
+  accelerator_type: NVIDIA_A100
+  accelerator_count: 1
 ```
 
 <Note>
-  The model ids for Azure are different from AWS and GCP. Make sure to use the one provided by Azure in the Azure Model Catalog. 
-
-  To find the relevnt model id, follow the following steps
-  <Steps>
-    <Step title="Go to your workpsace studio">
-      Find the workpsace in the Azure portal and click on the studio url provided. Click on the `Model Catalog` on the left side bar
-    	![Azure ML Creation](../Images/workspace-studio.png)
-    </Step>
-
-      <Step title="Select Hugging Face in the Collections List">
-      Select Hugging-Face from the collections list. The id of the model card is the id you need to use in the yaml file
-    	![Azure ML Creation](../Images/hugging-face.png)
-    </Step>
-
-  </Steps>
+  Azure uses *different* model IDs for Hugging Face.  Use the Azure ML **Model Catalog** to copy the correct ID.
 </Note>
 
-
-## Model Configuration
-
-### Basic Parameters
-
-```yaml
-models:
-- !Model
-  id: your-model-id
-  source: huggingface|sagemaker # we don't support vertex and azure specific models yet
-  revision: latest  # Optional: specify model version
-```
-
-### Advanced Parameters
-
-```yaml
-models:
-- !Model
-  id: your-model-id
-  source: huggingface
-  predict:
-    temperature: 0.7
-    top_p: 0.9
-    top_k: 50
-    max_new_tokens: 500
-    do_sample: true
-```
+---
 
 ## Best Practices
 
-1. **Model Selection**
-   - Compare pricing across cloud providers
-   - Consider data residency requirements
-   - Test latency from different regions
+1. **Start small** – prototype with CPU instances, then scale up.  
+2. **Monitor costs & quotas** – big GPUs can be expensive and scarce.  
+3. **Version your YAML** – keep configs in Git for reproducibility.
 
-3. **Cost Management**
-   - Compare instance pricing
-   - Make sure you set up the relevant alerting
+---
 
 ## Troubleshooting
 
-Common model-related issues:
-
-1. **Cloud-Specific Issues**
-   - Check quota limits
-   - Verify regional availability
-   - Review cloud-specific logs
-
-2. **Performance Issues**
-   - Compare cross-cloud latencies
-   - Check network connectivity
-   - Monitor resource utilization
-
-3. **Authentication Issues**
-   - Verify cloud credentials
-   - Check model access permissions
-   - Validate API keys
+| Issue | Possible Cause | Fix |
+|-------|----------------|-----|
+| `RuntimeError: CUDA out of memory` | Instance has insufficient GPU RAM | Pick a bigger instance / enable quantization |
+| Deployment stuck in *Creating* | Region capacity, missing quota | Try another region or request quota increase |
+| 403 accessing model | Gated HF model | Accept terms on HF & set `HUGGING_FACE_HUB_KEY` in `.env` |
