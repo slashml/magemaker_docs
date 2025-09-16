@@ -2,29 +2,50 @@
 title: Environment Variables
 ---
 
-### Required Config File
-A `.env` file is automatically created when you run `magemaker --cloud <cloud-provider>`. This file contains the necessary environment variables for your cloud provider(s).
-
-By default, Magemaker will look for a `.env` file in your project root with the following variables based on which cloud provider(s) you plan to use:
+### Auto-generated `.env`
+A `.env` file is automatically created the first time you run one of the configuration commands:
 
 ```bash
-# AWS Configuration
-AWS_ACCESS_KEY_ID="your-access-key"      # Required for AWS
-AWS_SECRET_ACCESS_KEY="your-secret-key"   # Required for AWS
-SAGEMAKER_ROLE="arn:aws:iam::..."        # Required for AWS
-
-# GCP Configuration
-PROJECT_ID="your-project-id"             # Required for GCP
-GCLOUD_REGION="us-central1"              # Required for GCP
-
-# Azure Configuration
-AZURE_SUBSCRIPTION_ID="your-sub-id"      # Required for Azure
-AZURE_RESOURCE_GROUP="ml-resources"      # Required for Azure
-AZURE_WORKSPACE_NAME="ml-workspace"      # Required for Azure
-AZURE_REGION="eastus"                    # Required for Azure
-
-# Optional configurations
-HUGGING_FACE_HUB_KEY="your-hf-token"    # Required for gated HF models like llama
+magemaker --cloud [aws|gcp|azure|all]
 ```
 
-<Warning>Never commit your .env file to version control!</Warning>
+The wizard writes the credentials you supply and any cloud-specific defaults.  You can edit this file later or set the variables in your CI system / shell-profile instead.
+
+### Core variables recognised by Magemaker
+
+```bash
+# ────────────────────────  AWS  ────────────────────────
+AWS_ACCESS_KEY_ID="xxx"          # Required – programmatic IAM user key
+AWS_SECRET_ACCESS_KEY="xxx"     # Required – matching secret key
+AWS_REGION="us-east-1"           # Optional – defaults to us-west-2 if unset
+SAGEMAKER_ROLE="arn:aws:iam::…"  # Required – execution role used by endpoints
+
+# ────────────────────────  GCP  ────────────────────────
+PROJECT_ID="my-gcp-project"      # Required – Google Cloud project ID
+GCLOUD_REGION="us-central1"      # Required – Vertex AI region
+
+# ───────────────────────  Azure  ───────────────────────
+AZURE_SUBSCRIPTION_ID="xxx"      # Required – subscription that hosts the workspace
+AZURE_RESOURCE_GROUP="ml-rg"      # Required – resource-group name
+AZURE_WORKSPACE_NAME="ml-ws"      # Required – Azure ML workspace
+AZURE_REGION="eastus"             # Required – region where the workspace lives
+
+# ─────────────────────── Optional  ──────────────────────
+HUGGING_FACE_HUB_KEY="hf_xxx"     # Required for gated HF models (e.g. Llama-3)
+CONFIG_DIR=".magemaker_configs"    # Override default location for YAML artefacts
+```
+
+<Warning>
+Never commit your `.env` file to version control or share it publicly!
+</Warning>
+
+#### Notes
+1. **AWS_REGION** – Magemaker will fall back to `us-west-2` if the variable is absent, but setting it explicitly prevents surprises when your SageMaker quotas exist in a different region.
+2. **CONFIG_DIR** – If you prefer to store deployment YAMLs outside the project root, set this variable before running Magemaker.  Any new endpoint YAMLs will be written there.
+3. **Execution role permissions** – The IAM role referenced by `SAGEMAKER_ROLE` must include:
+   * `AmazonSageMakerFullAccess`
+   * `IAMFullAccess`
+   * `ServiceQuotasFullAccess`
+   * `AmazonS3FullAccess` (required for custom-model uploads)
+
+For a complete walk-through of cloud-specific setup, see the dedicated guides under **Configuration** in the sidebar.
