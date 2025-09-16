@@ -83,20 +83,18 @@ From the dropdown, select `Query a Model Endpoint` to see the list of model endp
 Or you can use the following code
 
 ```python 
-
 from azure.identity import DefaultAzureCredential
 from azure.ai.ml import MLClient
-from azure.mgmt.resource import ResourceManagementClient
-
 from dotenv import dotenv_values
+import json
 import os
 
 
-def query_azure_endpoint(endpoint_name, query):
+def query_azure_endpoint(endpoint_name: str, query: str):
     # Initialize the ML client
-    subscription_id   = dotenv_values(".env").get("AZURE_SUBSCRIPTION_ID")
-    resource_group    = dotenv_values(".env").get("AZURE_RESOURCE_GROUP")
-    workspace_name    = dotenv_values(".env").get("AZURE_WORKSPACE_NAME")
+    subscription_id = dotenv_values(".env").get("AZURE_SUBSCRIPTION_ID")
+    resource_group   = dotenv_values(".env").get("AZURE_RESOURCE_GROUP")
+    workspace_name   = dotenv_values(".env").get("AZURE_WORKSPACE_NAME")
 
     credential = DefaultAzureCredential()
     ml_client = MLClient(
@@ -106,38 +104,31 @@ def query_azure_endpoint(endpoint_name, query):
         workspace_name=workspace_name
     )
 
-    import json
+    # Prepare request payload
+    payload = {"inputs": query}
 
-    # Test data
-    test_data = {
-        "inputs": query
-    }
+    # Save payload to a temporary file
+    with open("request.json", "w") as f:
+        json.dump(payload, f)
 
-    # Save the test data to a temporary file
-    with open("test_request.json", "w") as f:
-        json.dump(test_data, f)
-
-    # Get prediction
+    # Invoke the endpoint
     response = ml_client.online_endpoints.invoke(
         endpoint_name=endpoint_name,
-        request_file = 'test_request.json'
+        request_file="request.json"
     )
 
-    print('Raw Response Content:', response)
-    # delete a file
-    os.remove("test_request.json")
+    print("Raw Response Content:", response)
+    os.remove("request.json")
     return response
-    
-endpoint_id = 'your-endpoint-id-here'
-    
-input_text = 'What are you?'
 
 
-resp = query_azure_endpoint(endpoint_id=endpoint_id, input_text=input_text)
-print(resp)
+if __name__ == "__main__":
+    endpoint_name = "your-endpoint-id-here"
+    input_text    = "What are you?"
 
+    resp = query_azure_endpoint(endpoint_name=endpoint_name, query=input_text)
+    print(resp)
 ```
 
 ## Conclusion
 You have successfully deployed and queried Llama 3 on Azure using Magemaker's interactive dropdown menu. For any questions or feedback, feel free to contact us at [support@slashml.com](mailto:support@slashml.com).
-
