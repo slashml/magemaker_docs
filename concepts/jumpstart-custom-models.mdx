@@ -1,0 +1,88 @@
+---
+title: JumpStart & Custom Models
+description: Deploy AWS JumpStart marketplace and custom models with Magemaker
+---
+
+## Overview
+Besides Hugging Face models, Magemaker can now deploy two additional model types **on AWS SageMaker**:
+
+1. **JumpStart models** – pre-packaged models provided by Amazon or third-party sellers.
+2. **Custom models** – your own fine-tuned artefacts (.tar.gz or directory) stored locally or in S3.
+
+<GithubContribTag />
+
+---
+## 1 · Deploying a JumpStart Model
+
+### 1.1 Find the *model_id*
+Browse the [JumpStart Model Zoo](https://docs.aws.amazon.com/sagemaker/latest/dg/jumpstart-model-zoo.html) or call:
+```python
+from sagemaker.jumpstart.notebook_utils import list_jumpstart_models
+list_jumpstart_models()
+```
+
+### 1.2 Create a YAML
+```yaml
+models:
+- !Model
+  id: huggingface-text2text-flan-t5-large  # JumpStart model_id
+  source: sagemaker
+
+deployment: !Deployment
+  destination: aws
+  instance_type: ml.g5.2xlarge
+  instance_count: 1
+```
+
+### 1.3 Deploy
+```bash
+magemaker --deploy .magemaker_config/flan-t5.yaml
+```
+Magemaker handles the EULA acceptance (`accept_eula=True`) automatically.
+
+---
+## 2 · Deploying a Custom Model
+Custom models are useful when you have already trained a model locally or with SageMaker Training.
+
+### 2.1 Package Artifacts
+- For **Hugging Face** style, create a directory containing `config.json`, `tokenizer.json`, etc.  
+- Optionally compress to `model.tar.gz`.
+
+### 2.2 Upload (optional)
+If your artefact is not yet on S3, Magemaker will upload it for you.
+
+### 2.3 YAML Example
+```yaml
+models:
+- !Model
+  id: my-distilbert-finetuned
+  source: huggingface
+  location: ./artifacts/distilbert.tar.gz  # or s3://bucket/key
+
+deployment: !Deployment
+  destination: aws
+  instance_type: ml.m5.xlarge
+```
+
+### 2.4 Deploy
+```bash
+magemaker --deploy .magemaker_config/my-distilbert.yaml
+```
+Magemaker will:
+1. Upload the local artefact to `s3://<default-bucket>/models/my-distilbert-finetuned/` (if needed)
+2. Create a `HuggingFaceModel` pointing to that S3 path
+3. Spin up the endpoint.
+
+---
+## Tips & Quotas
+- **GPU quota** – JumpStart LLMs often need a GPU instance (`ml.g5.*`). Request a quota increase first.
+- **Endpoint names** – If `endpoint_name` is omitted, Magemaker appends a timestamp to ensure uniqueness.
+- **Cost control** – Delete endpoints when not in use: `magemaker --cloud aws → Delete a Model Endpoint`.
+
+---
+## FAQ
+**Q : Do JumpStart models work on GCP / Azure?**  
+*A : Not yet. JumpStart is an AWS-specific marketplace.*
+
+**Q : Can I pass inference parameters to a JumpStart model?**  
+*A : Yes. Use the same `predict:` block as with Hugging Face models.*
