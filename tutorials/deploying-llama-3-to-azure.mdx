@@ -3,141 +3,135 @@ title: Deploying Llama 3 to Azure
 ---
 
 ## Introduction
-This tutorial guides you through deploying Llama 3 to Azure ML platform using Magemaker and querying it using the interactive dropdown menu. Ensure you have followed the [installation](installation) steps before proceeding. 
+This tutorial walks you through **deploying the Meta‐Llama 3 8B Instruct model to Azure Machine Learning (Azure ML)** using Magemaker and then querying the endpoint. Make sure you have completed the [installation](/installation) and initial [Azure configuration](/configuration/Azure) guides first.
 
-<Note> 
-You may need to request a quota increase for specific machine types and GPUs in the region where you plan to deploy the model. Check your Azure quotas before proceeding. 
-</Note>
+<Warning>
+You may need to request a **quota increase** for specific GPU VM series (e.g. NC A100, NC V100) in the Azure region where you will deploy. Check quotas *before* starting the deployment.
+</Warning>
 
 <Note>
-  The model ids for Azure are different from AWS and GCP. Make sure to use the one provided by Azure in the Azure Model Catalog. 
+Azure uses **different model-id formats** than Hugging Face (slashes are replaced by double dashes). Use the model-id shown in the Azure *Model Catalog* card.
 
-  To find the relevnt model id, follow the steps in the [quick start](For Azure ML)
+Example – Meta Llama 3 8B Instruct:
+```
+meta-llama--meta-llama-3-8b-instruct
+```
 </Note>
 
-## Step 1: Setting Up Magemaker for Azure
-
-Run the following command to configure Magemaker for Azure deployment:
-
-```sh
+---
+## Step 1 · Configure Magemaker for Azure
+If you have not configured Azure yet, run:
+```bash
 magemaker --cloud azure
 ```
+This command will:
+1. Prompt you to sign in via `az login` (if needed)
+2. Ask for the **subscription-id**, **resource-group**, and **workspace**
+3. Create/append a `.env` file with the required environment variables.
 
-This initializes Magemaker with the necessary configurations for deploying models to Azure ML Studio.
-
-## Step 2: YAML-based Deployment
-
-For reproducible deployments, use YAML configuration:
-
-```sh
-magemaker --deploy .magemaker_config/your-model.yaml
+You should now have at least these variables in `.env`:
+```bash
+AZURE_SUBSCRIPTION_ID=<your-sub-id>
+AZURE_RESOURCE_GROUP=<rg-name>
+AZURE_WORKSPACE_NAME=<workspace>
+AZURE_REGION=<region>
+HUGGING_FACE_HUB_KEY=<hf-token>  # required for gated models such as Llama-3
 ```
 
-Example YAML for Azure deployment:
-
+---
+## Step 2 · Create a YAML Deployment File
+Magemaker recommends YAML for reproducibility and CI/CD integration. Save the following as `.magemaker_config/llama3-azure.yaml`:
 ```yaml
+# .magemaker_config/llama3-azure.yaml
+
 deployment: !Deployment
   destination: azure
-  endpoint_name: llama3-endpoint
+  endpoint_name: llama3-endpoint          # must be globally unique within the workspace
   instance_count: 1
-  instance_type: Standard_NC24ads_A100_v4 
+  instance_type: Standard_NC24ads_A100_v4 # or Standard_NC24s_v3 for V100
+  # num_gpus is *not* required for Azure
 
 models:
   - !Model
-    id: meta-llama-meta-llama-3-8b-instruct
-    location: null
-    predict: null
+    id: meta-llama--meta-llama-3-8b-instruct  # Azure-style id
     source: huggingface
     task: text-generation
-    version: null
+    predict:            # optional inference parameters
+      temperature: 0.7
+      top_p: 0.9
+      max_new_tokens: 250
 ```
 
-<Note>
-   For gated models like llama from Meta, you have to accept terms of use for model on hugging face and adding Hugging face token to the environment are necessary for deployment to go through.
-</Note>
+Then deploy with:
+```bash
+magemaker --deploy .magemaker_config/llama3-azure.yaml
+```
+Magemaker will:
+1. Upload a container image & model metadata to the workspace
+2. Provision the chosen VM(s)
+3. Create an online endpoint
+4. Return the **endpoint name** once healthy.
 
-### Selecting an Appropriate Instance
-For 8B parameter models, recommended instance types include:
+---
+## Step 3 · Query the Deployed Endpoint
+### 3.1 Interactive CLI (Recommended)
+Run:
+```bash
+magemaker --cloud azure
+```
+Choose **“Query a Model Endpoint”**, pick `llama3-endpoint`, enter your prompt, and view the response directly in the terminal.
 
-- Standard_NC24ads_A100_v4 (optimal performance)
-- Standard_NC24s_v3 (cost-effective option with V100)
-
-<Warning>
-If you encounter quota issues, submit a quota increase request in the Azure console. In the search bar search for `Quotas` and select the subscription you are using. In the `provider` select `Machine Learning` and then select the relevant region for the quota increase
-
-![Azure Quota](../Images/quotas.png)
-</Warning>
-
-## Step 3: Querying the Deployed Model
-
-Once the deployment is complete, note down the endpoint id.
-
-You can use the interactive dropdown menu to quickly query the model.
-
-### Querying Models
-
-From the dropdown, select `Query a Model Endpoint` to see the list of model endpoints. Press space to select the endpoint you want to query. Enter your query in the text box and press enter to get the response.
-
-![Query Endpoints](../Images/query-1.png)
-
-Or you can use the following code
-
-```python 
-
+### 3.2 Python Example
+If you prefer code, use the snippet below. It relies on the same `.env` file generated earlier.
+```python
 from azure.identity import DefaultAzureCredential
 from azure.ai.ml import MLClient
-from azure.mgmt.resource import ResourceManagementClient
-
 from dotenv import dotenv_values
-import os
+import json, os
 
-
-def query_azure_endpoint(endpoint_name, query):
-    # Initialize the ML client
-    subscription_id   = dotenv_values(".env").get("AZURE_SUBSCRIPTION_ID")
-    resource_group    = dotenv_values(".env").get("AZURE_RESOURCE_GROUP")
-    workspace_name    = dotenv_values(".env").get("AZURE_WORKSPACE_NAME")
-
+def query_azure_endpoint(endpoint_name: str, prompt: str):
+    env = dotenv_values(".env")
     credential = DefaultAzureCredential()
+
     ml_client = MLClient(
         credential=credential,
-        subscription_id=subscription_id,
-        resource_group_name=resource_group,
-        workspace_name=workspace_name
+        subscription_id=env["AZURE_SUBSCRIPTION_ID"],
+        resource_group_name=env["AZURE_RESOURCE_GROUP"],
+        workspace_name=env["AZURE_WORKSPACE_NAME"],
     )
 
-    import json
+    payload_path = "tmp_request.json"
+    with open(payload_path, "w") as f:
+        json.dump({"inputs": prompt}, f)
 
-    # Test data
-    test_data = {
-        "inputs": query
-    }
-
-    # Save the test data to a temporary file
-    with open("test_request.json", "w") as f:
-        json.dump(test_data, f)
-
-    # Get prediction
     response = ml_client.online_endpoints.invoke(
         endpoint_name=endpoint_name,
-        request_file = 'test_request.json'
+        request_file=payload_path,
     )
 
-    print('Raw Response Content:', response)
-    # delete a file
-    os.remove("test_request.json")
+    os.remove(payload_path)
     return response
-    
-endpoint_id = 'your-endpoint-id-here'
-    
-input_text = 'What are you?'
 
-
-resp = query_azure_endpoint(endpoint_id=endpoint_id, input_text=input_text)
-print(resp)
-
+if __name__ == "__main__":
+    endpoint = "llama3-endpoint"  # replace if you used a different name
+    print(query_azure_endpoint(endpoint, "What are you?"))
 ```
 
-## Conclusion
-You have successfully deployed and queried Llama 3 on Azure using Magemaker's interactive dropdown menu. For any questions or feedback, feel free to contact us at [support@slashml.com](mailto:support@slashml.com).
+---
+## Troubleshooting
+1. **Quota errors** – Go to *Azure Portal → Quotas* → choose your subscription & region → request more GPUs/cores.
+2. **Authentication errors** – Confirm `az login` is active and your `.env` variables are correct.
+3. **Deployment stuck in ‘Failed’** – Open *Azure ML Studio → Endpoints* → click the endpoint → check *Logs* for detailed error messages.
 
+<Info>
+Want to use your endpoint with the OpenAI SDK or LangChain? Magemaker ships an [OpenAI-compatible proxy](/concepts/openai-proxy) you can start with `python -m magemaker.server`.
+</Info>
+
+---
+## Conclusion
+You have successfully deployed and queried **Llama 3 8B Instruct** on Azure ML using Magemaker.  Remember to **delete** the endpoint once you are done to avoid ongoing GPU charges:
+```bash
+magemaker --cloud azure → Delete a Model Endpoint
+```
+
+Need help?  Reach us at [support@slashml.com](mailto:support@slashml.com).
