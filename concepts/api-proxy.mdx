@@ -1,0 +1,126 @@
+---
+title: Local API & OpenAI-Compatible Proxy
+description: Run Magemaker as a FastAPI server and query your endpoints through a REST or OpenAI-style interface
+---
+
+## Overview
+
+Magemaker ships with a lightweight **FastAPI** server (`server.py`) that lets you:
+
+1. Query SageMaker (or other cloud) endpoints via a simple REST API
+2. Expose an **OpenAI-compatible** `/chat/completions` route (powered by [LiteLLM](https://github.com/BerriAI/litellm)) so you can drop Magemaker into any tooling that expects the OpenAI API.
+
+<Note>
+This server is optional – you only need it if you want a local HTTP interface or OpenAI proxy. Standard `magemaker --deploy` workflows continue to work without it.
+</Note>
+
+---
+
+## Running the Server
+
+```bash
+uvicorn server:app --host 0.0.0.0 --port 8000 --reload
+```
+
+Requirements:
+
+- A valid `.env` with at least your **AWS credentials** (see [Environment Variables](/configuration/Environment)) because the server uses the same Magemaker session to talk to SageMaker.
+- Python ≥ 3.11 (same as Magemaker).
+
+---
+
+## REST Endpoints
+
+| Method | Path | Description |
+| ------ | ---- | ----------- |
+| `GET`  | `/endpoint/{endpoint_name}` | Returns metadata for the specified SageMaker endpoint. |
+| `POST` | `/endpoint/{endpoint_name}/query` | Submit a `Query` payload (see schema below) and receive the model response. |
+| `POST` | `/chat/completions` | OpenAI-style chat completion endpoint (see *OpenAI Compatibility*). |
+
+### Query Schema (`POST /endpoint/{endpoint_name}/query`)
+
+```jsonc
+{
+  "inputs": "Your prompt here",
+  "parameters": {
+    "max_new_tokens": 100,
+    "temperature": 0.7
+  },
+  "context": "optional-system-context"
+}
+```
+
+The schema matches `magemaker.schemas.query.Query` and supports text generation as well as other Hugging Face tasks.
+
+---
+
+## OpenAI Compatibility
+
+The `/chat/completions` route follows the OpenAI v1 spec. Example request:
+
+```bash
+curl http://localhost:8000/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+        "model": "meta-llama/Meta-Llama-3-8B-Instruct",
+        "messages": [{"role": "user", "content": "Hello!"}],
+        "temperature": 0.9
+      }'
+```
+
+How it works:
+
+1. We look up **all** deployed endpoints that serve the requested `model`.
+2. The first matching endpoint is proxied via `litellm.completion()` using the custom `sagemaker/{endpoint_name}` LiteLLM adapter.
+3. The JSON response mirrors OpenAI's format, so libraries like `openai` or `LangChain` work out-of-the-box:
+
+```python
+from openai import OpenAI
+client = OpenAI(base_url="http://localhost:8000", api_key="unused")
+
+chat = client.chat.completions.create(
+    model="meta-llama/Meta-Llama-3-8B-Instruct",
+    messages=[{"role": "user", "content": "Tell me a joke."}]
+)
+print(chat.choices[0].message.content)
+```
+
+<Warning>
+If the model has **no deployed endpoints**, the server raises `NotDeployedException` (HTTP 500). Deploy the model first with `magemaker --deploy`.
+</Warning>
+
+---
+
+## Authentication & Security
+
+The local server **does not** implement auth by default – it is intended for local prototyping behind your firewall. If you plan to expose it publicly, we recommend putting it behind an API Gateway / reverse proxy with authentication.
+
+---
+
+## Environment Variables
+
+The server automatically sets `AWS_REGION_NAME` based on your Magemaker session. Ensure the following are available in `.env`:
+
+```bash
+AWS_ACCESS_KEY_ID=...
+AWS_SECRET_ACCESS_KEY=...
+SAGEMAKER_ROLE=arn:aws:iam::123456789012:role/...
+# Optional: Hugging Face token for gated models
+HUGGING_FACE_HUB_KEY=hf_...
+```
+
+---
+
+## Troubleshooting
+
+1. **`NotDeployedException`** – No SageMaker endpoint found for the requested model. Deploy first.
+2. **`botocore.exceptions.NoCredentialsError`** – Check AWS credentials in `.env`.
+3. **CORS errors** – Use a proxy or set appropriate CORS headers in `server.py` if calling from a browser.
+
+---
+
+## Next Steps
+
+- Deploy an endpoint with `magemaker --deploy your-config.yaml`.
+- Start the local server and integrate Magemaker with any OpenAI-compatible client.
+- Contribute! Improvements to the proxy (streaming, async, multi-endpoint routing) are welcome – see the [Contributing](/contributing) guide.

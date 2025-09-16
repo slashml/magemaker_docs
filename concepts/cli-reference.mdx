@@ -1,0 +1,132 @@
+---
+title: CLI Reference
+description: Command-line interface for Magemaker
+---
+
+## Overview
+
+`magemaker` ships with a rich CLI that wraps common deployment, training, and resource-management operations. This page documents every top-level flag and sub-command.
+
+### Basic Syntax
+
+```bash
+magemaker [global-opts] [operation] [operation-opts]
+```
+
+Global options:
+
+| Flag | Description |
+|------|-------------|
+| `--cloud <aws|gcp|azure|all>` | Configure credentials & default region for the provider(s) |
+| `--config-dir <path>` | Override the default `.magemaker_config` folder |
+| `--verbose` | Enable debug logging |
+
+
+---
+
+## Operations
+
+### 1. `--deploy <yaml-path>`
+Deploy the model(s) described in the YAML file.
+
+```bash
+magemaker --deploy .magemaker_config/bert.yaml
+```
+
+*Important flags*
+| Flag | Description |
+|------|-------------|
+| `--dry-run` | Validate YAML & quotas without creating resources |
+| `--wait` | Block until the endpoint is *InService* |
+
+### 2. `--train <yaml-path>`
+Kick off a fine-tuning job using the training block in the YAML file.
+
+```bash
+magemaker --train .magemaker_config/train-bert.yaml
+```
+
+### 3. `--delete <endpoint-name>`
+Delete one or multiple endpoints.
+
+```bash
+magemaker --delete bert-base-uncased-dev
+```
+
+If no endpoint name is supplied the interactive menu opens so you can select multiple endpoints at once.
+
+### 4. `--list`
+List active endpoints for the configured provider.
+
+```bash
+magemaker --list
+```
+
+### 5. `--query <endpoint-name>` *(non-interactive)*
+Send a JSON query to an endpoint (bypasses the interactive prompt).
+
+```bash
+echo '{"inputs":"Hello world"}' | magemaker --query llama3-dev
+```
+
+---
+
+## Exit Codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Success |
+| `10` | Validation error (bad YAML, missing env vars, etc.) |
+| `20` | Cloud provider error (quota, auth, etc.) |
+
+---
+
+## Environment Variables
+
+| Variable | Purpose |
+|----------|---------|
+| `AWS_ACCESS_KEY_ID` | AWS deployments |
+| `PROJECT_ID`, `GCLOUD_REGION` | GCP deployments |
+| `AZURE_SUBSCRIPTION_ID`, `AZURE_RESOURCE_GROUP` | Azure deployments |
+| `HUGGING_FACE_HUB_KEY` | Access to gated HF models |
+
+<Warning>
+Never commit `.env` to source control.
+</Warning>
+
+---
+
+## Examples
+
+1. **Deploy**, wait until ready, then **query**:
+
+```bash
+magemaker --deploy llama3.yaml --wait \
+  && echo '{"inputs":"Tell me a joke"}' | magemaker --query llama3-prod
+```
+
+2. **CI/CD:** deploy on `main` merge only if YAML passes dry-run validation.
+
+```yaml
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate YAML
+        run: magemaker --deploy ml.yaml --dry-run
+      - name: Deploy
+        run: magemaker --deploy ml.yaml --wait
+```
+
+## Troubleshooting
+
+- **`No credentials found`** – run `magemaker --cloud aws` (or gcp/azure) first.
+- **`Quota exceeded`** – request a service quota increase or pick a smaller instance.
+- **Other issues** – run with `--verbose` and attach logs when opening a GitHub issue.
+
+---
+
+## Changelog
+
+This page documents CLI features as of **Magemaker v0.4.0**. Use `magemaker --version` to check your local version.

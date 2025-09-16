@@ -2,81 +2,100 @@
 title: AWS
 ---
 
-### AWS CLI
+## Overview
 
-<Note>To install Azure SDK on MacOS, you need to have the latest OS and you need to use Rosetta terminal. Also, make sure you have the latest version of Xcode tools installed.</Note>
+This guide walks you through setting up **AWS credentials, IAM roles, and quotas** so Magemaker can:
 
-Follow this guide to install the latest AWS CLI
+1. Create or reuse a **SageMaker execution role** (`SAGEMAKER_ROLE`).  
+2. Spin-up training & inference instances.  
+3. Access your S3 buckets for data & model artefacts.
 
-https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
+<Note>
+  All steps can be completed via the AWS Console **or** the CLI. Pick whichever you’re more comfortable with.
+</Note>
 
+---
 
-Once you have the CLI installed and working, follow these steps
+### 1. Install & Configure the AWS CLI
 
+Follow the official instructions:  
+<https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html>
 
-### AWS Account
+```bash
+# After installation
+aws configure                        # enter Access Key, Secret, default region
+```
+
+We recommend `us-east-1` because most JumpStart models are available there, but any region works as long as you have SageMaker quota.
+
+---
+
+### 2. Create an IAM User (Console)
 
 <Steps>
-<Step title="Create AWS Account">
-Register for an [AWS account](https://aws.amazon.com/) and sign-in to the [console](https://console.aws.amazon.com/).
-</Step>
-
-<Step title="Navigate to IAM">
-From the console, use the Search bar to find and select IAM (***do not use IAM Identity Center***, which is confusingly similar but a totally different system).
-
-![Enter image alt description](../Images/muJ_Image_1.png)
-
-You should see the following screen after clicking IAM.
-
-![Enter image alt description](../Images/ldC_Image_2.png)
-</Step>
-
-<Step title="Create or Select User">
-1. Select `Users` in the side panel
-   
-![Enter image alt description](../Images/QX4_Image_3.png)
-
-2. Create a user if you don't already have one
-
-![Enter image alt description](../Images/ly3_Image_4.png)
-</Step>
-
-<Step title="Add Required Permissions">
-1. Click on "Add permissions"
-   
-![Enter image alt description](../Images/E7x_Image_5.png)
-
-2. Select "Attach policies directly". Under permission policies, search for and tick the boxes for:
-   - `AmazonSagemakerFullAccess`
-   - `IAMFullAccess`
-   - `ServiceQuotasFullAccess`
-
-Then click Next.
-
-![Enter image alt description](../Images/01X_Image_6.png)
-
-The final list should look like the following:
-
-![Enter image alt description](../Images/Dfp_Image_7.png)
-
-Click "Create user" on the following screen.
-</Step>
-
-<Step title="Generate Access Keys">
-1. Click the name of the user you've just created (or one that already exists)
-2. Go to "Security Credentials" tab
-3. Scroll down to "Access Keys" section
-4. Click "Create access key"
-5. Select Command Line Interface then click next
-
-![Enter image alt description](../Images/BPP_Image_8.png)
-
-Enter a description (this is optional, can leave blank). Then click next.
-
-![Enter image alt description](../Images/gMD_Image_9.png)
-
-**Store BOTH the Access Key and the Secret access key for the next step. Once you've saved both keys, click Done.**
-
-![Enter image alt description](../Images/Gjw_Image_10.png)
-</Step>
+  <Step title="Navigate to IAM">
+    Open the console and search for **IAM** (not *IAM Identity Center*).
+  </Step>
+  <Step title="Add User & Permissions">
+    1. Create a new user (or select an existing one).  
+    2. Attach the following *managed policies*:
+       - `AmazonSageMakerFullAccess`
+       - `IAMFullAccess` (needed once to create the execution role)
+       - `ServiceQuotasFullAccess` (for quota look-ups)
+  </Step>
+  <Step title="Generate Access Keys">
+    Go to *Security Credentials* → *Access Keys* → **Create access key**.  
+    Store **both** the *Access Key ID* and *Secret Access Key* – you’ll need them for `aws configure` *and* Magemaker.
+  </Step>
 </Steps>
+
+<Warning>
+  Do **not** commit your keys to GitHub.  Use a `.env` file (see Environment Variables).
+</Warning>
+
+---
+
+### 3. Create / Verify a SageMaker Execution Role
+
+Magemaker expects an **ARN** in `SAGEMAKER_ROLE` that has `AmazonSageMakerFullAccess`.
+
+```bash
+aws iam create-role \
+  --role-name magemaker-sagemaker-role \
+  --assume-role-policy-document file://trust-policy.json
+
+aws iam attach-role-policy \
+  --role-name magemaker-sagemaker-role \
+  --policy-arn arn:aws:iam::aws:policy/AmazonSageMakerFullAccess
+```
+
+Copy the resulting role ARN into your `.env`.
+
+---
+
+### 4. Check / Request Service Quotas
+
+1. Open **Service Quotas** in the console.  
+2. Filter by *SageMaker*.  
+3. Verify you have at least **2 × `ml.m5.xlarge` instances** (default).  
+4. Request additional quota for GPU instances (e.g. `ml.g5.*`, `ml.p3.*`) if you plan to deploy large models.
+
+<Note>
+  Approval can take anywhere from minutes to 48 h depending on your AWS account history.
+</Note>
+
+---
+
+## Final Checklist
+
+- [x] AWS CLI installed & `aws configure` completed  
+- [x] `.env` contains `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION_NAME`, `SAGEMAKER_ROLE`  
+- [x] SageMaker quota for the instance types you plan to use
+
+You’re now ready to run:
+
+```bash
+magemaker --cloud aws
+```
+
+This command validates your credentials, writes/updates the `.env`, and caches your default region.

@@ -1,53 +1,61 @@
 ---
 title: Deployment
-description: Learn how to deploy models using Magemaker
+description: Learn how to deploy, update, and remove model endpoints with Magemaker
 ---
 
-## Deployment Methods
+## Deployment Workflows
 
-Magemaker offers multiple ways to deploy your models to AWS, GCP and Azure. Choose the method that best fits your workflow.
+Magemaker supports two primary workflows for spinning-up model endpoints on the three major clouds (AWS, GCP, Azure):
 
-### Interactive Deployment
+1. **Interactive CLI** – best for ad-hoc experimentation.
+2. **YAML-first (IaC)** – best for reproducibility, CI/CD pipelines, and team hand-offs.
 
-When you run the `magemaker --cloud [aws|gcp|azure|all]` command, you'll get an interactive menu that walks you through the deployment process:
+### 1. Interactive CLI
+
+Run the following command and pick a cloud provider from the prompt:
 
 ```sh
 magemaker --cloud [aws|gcp|azure|all]
 ```
 
-This method is great for:
+The interactive menu lets you:
 
-- First-time users
-- Exploring available models
-- Testing different configurations
+- Deploy a new model
+- List active endpoints
+- Query an endpoint
+- Delete (deactivate) one or more endpoints
+- Fine-tune a model (if the selected provider supports it)
 
-### YAML-based Deployment
+<Note>
+The same binary is also used for non-interactive operations (`--deploy`, `--train`, `--delete`, etc.). See the new [CLI Reference](/concepts/cli-reference) for the full command matrix.
+</Note>
 
-For reproducible deployments and CI/CD integration, use YAML configuration files:
+### 2. YAML-based Deployment  *(recommended)*
+
+YAML files give you **Infrastructure-as-Code** super-powers and plug nicely into GitHub Actions, GitLab CI, or any other pipeline tool.
 
 ```sh
 magemaker --deploy .magemaker_config/your-model.yaml
 ```
 
-This is recommended for:
+Benefits:
 
-- Production deployments
-- CI/CD pipelines
-- Infrastructure as Code (IaC)
-- Team collaborations
+- Version control for model + infra settings
+- Repeatable environments (dev / staging / prod)
+- Easier peer reviews & audits
 
-## Multi-Cloud Deployment
+## Multi-Cloud Examples
 
-Magemaker supports deployment to AWS SageMaker, GCP Vertex AI, and Azure ML. Here's how to deploy the same model (facebook/opt-125m) to different cloud providers:
+Below is the **same Hugging Face model** (`facebook/opt-125m`) deployed to the three supported clouds.
 
-### AWS (SageMaker)
+### AWS SageMaker
 
 ```yaml
 deployment: !Deployment
   destination: aws
   endpoint_name: opt-125m-aws
   instance_count: 1
-  instance_type: ml.m5.xlarge
+  instance_type: ml.m5.xlarge  # CPU; good for small models
 
 models:
   - !Model
@@ -55,7 +63,7 @@ models:
     source: huggingface
 ```
 
-### GCP (Vertex AI)
+### Google Vertex AI
 
 ```yaml
 deployment: !Deployment
@@ -83,19 +91,18 @@ deployment: !Deployment
 
 models:
   - !Model
-    id: facebook-opt-125m
+    id: facebook-opt-125m   # ⚠️ Azure uses a different HF ID scheme
     source: huggingface
 ```
 
-## YAML Configuration Reference
+## YAML Schema Cheat-Sheet
 
-### Basic Deployment
+### Minimal Deployment
 
 ```yaml
 deployment: !Deployment
   destination: aws
-  endpoint_name: test-bert-uncased
-  instance_count: 1
+  endpoint_name: demo-bert
   instance_type: ml.m5.xlarge
 
 models:
@@ -104,125 +111,89 @@ models:
     source: huggingface
 ```
 
-### Advanced Configuration
+### Full Deployment (advanced)
 
 ```yaml
 deployment: !Deployment
   destination: aws
-  endpoint_name: test-llama3-8b
+  endpoint_name: llama3-8b-prod
+  instance_type: ml.g5.12xlarge  # 4×A10G
   instance_count: 1
-  instance_type: ml.g5.12xlarge
   num_gpus: 4
+  quantization: bitsandbytes   # optional
 
 models:
   - !Model
     id: meta-llama/Meta-Llama-3-8B-Instruct
     source: huggingface
     predict:
-      temperature: 0.9
+      temperature: 0.7
       top_p: 0.9
-      top_k: 20
-      max_new_tokens: 250
+      max_new_tokens: 256
 ```
 
-## Cloud-Specific Instance Types
+<Note>
+`quantization` is only respected on AWS today. Support for GCP & Azure is on the roadmap.
+</Note>
 
-### AWS SageMaker Types
+## Instance-Type Cheat-Sheet
 
-Choose your instance type based on your model's requirements:
+### AWS SageMaker
 
 <CardGroup>
   <Card title="ml.m5.xlarge" icon="server">
-    Good for smaller models like BERT-base
-    - 4 vCPU
-    - 16 GB Memory
-    - Available in free tier
+    Ideal for small BERT-size models<br/>
+    4 vCPU / 16 GiB RAM (CPU-only)
   </Card>
-
-  <Card title="ml.g5.12xlarge" icon="server">
-    Required for larger models like LLaMA
-    - 48 vCPU
-    - 192 GB Memory
-    - 4 NVIDIA A10G GPUs
+  <Card title="ml.g5.12xlarge" icon="gpu">
+    Required for 7-13 B parameter LLaMA<br/>
+    4 × A10G GPU / 192 GiB RAM
   </Card>
 </CardGroup>
 
-<Warning>
-  Remember to deactivate unused endpoints to avoid unnecessary charges!
-</Warning>
-
-### GCP Vertex AI Types
+### Google Vertex AI
 
 <CardGroup>
   <Card title="n1-standard-4" icon="server">
-    Good for smaller models
-    - 4 vCPU
-    - 15 GB Memory
-    - Cost-effective option
+    Entry-level CPU option
   </Card>
-
-  <Card title="a2-highgpu-1g" icon="server">
-    For larger models
-    - 12 vCPU
-    - 85 GB Memory
-    - 1 NVIDIA A100 GPU
+  <Card title="a2-highgpu-1g" icon="gpu">
+    Single A100 GPU – great for 7-13 B models
   </Card>
 </CardGroup>
 
-### Azure ML Types
+### Azure ML
 
 <CardGroup>
   <Card title="Standard_DS3_v2" icon="server">
-    Good for smaller models
-    - 4 vCPU
-    - 14 GB Memory
-    - Balanced performance
+    4 vCPU / 14 GiB RAM (CPU-only)
   </Card>
-
-  <Card title="Standard_NC6s_v3" icon="server">
-    For GPU workloads
-    - 6 vCPU
-    - 112 GB Memory
-    - 1 NVIDIA V100 GPU
+  <Card title="Standard_NC6s_v3" icon="gpu">
+    1 × V100 GPU – balanced price/perf
   </Card>
 </CardGroup>
 
-## Deployment Best Practices
-
-1. Use meaningful endpoint names that include:
-
-   - Model name/version
-   - Environment (dev/staging/prod)
-   - Team identifier
-
-2. Start with smaller instance types and scale up as needed
-
-3. Always version your YAML configurations
-
-4. Set up monitoring and alerting for your endpoints
-
 <Warning>
-Make sure you setup budget monitory and alerts to avoid unexpected charges.
+Always delete or stop endpoints you’re not actively using—cloud providers bill **by the minute**.
 </Warning>
 
+## Best Practices Checklist
 
-## Troubleshooting Deployments
+1. **Meaningful endpoint names:** `<model>-<env>-<team>`
+2. **Start small, then scale up** once latency or throughput is a problem.
+3. **Version-control YAML** in the same repo as your application.
+4. **Enable budget alerts** in your cloud account.
+5. **Monitor logs & metrics:** CloudWatch, Stackdriver, or Azure Monitor.
 
-Common issues and their solutions:
+## Troubleshooting
 
-1. **Deployment Timeout**
+| Symptom | Likely Cause | Fix |
+|---------|--------------|-----|
+| *CreateModel* times out | Quota limits / GPU unavailable | Request quota increase or change region |
+| Endpoint stuck in *Creating* | Incompatible instance type | Pick a larger instance or one with GPU |
+| 403 from HF Hub | Gated model | Accept license and set `HUGGING_FACE_HUB_KEY` in `.env` |
+| Deployment fails after model download | Out-of-memory | Choose instance with more RAM / GPU |
 
-   - Check instance quota limits
-   - Verify network connectivity
-
-2. **Instance Not Available**
-
-   - Try a different region
-   - Request quota increase
-   - Use an alternative instance type
-
-3. **Model Loading Failure**
-   - Verify model ID and version
-   - Check instance memory requirements
-   - Validate Hugging Face token if required
-   - Endpoing deployed but deployment failed. Check the logs, and do report this to us if you see this issue.
+<Note>
+Still stuck? Join our Discord or file an issue with logs & your YAML file.
+</Note>

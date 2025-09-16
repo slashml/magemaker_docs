@@ -3,126 +3,141 @@ title: Contributing
 description: Guide to contributing to Magemaker
 ---
 
-## Welcome to Magemaker Contributing Guide
+## Welcome to the Magemaker Contributing Guide
 
-We're excited that you're interested in contributing to Magemaker! This document will guide you through the process of contributing to the project.
+We're excited that you're interested in contributing to Magemaker! This document will guide you through everything you need to know—from cloning the repo to submitting a pull-request.
+
+<Alert>
+  If you discover a bug or would like to request a feature **but don't have time to submit a PR**, please open a GitHub Issue instead. We track all community requests there.
+</Alert>
 
 ## Ways to Contribute
 
 <CardGroup cols={2}>
   <Card title="Report Bugs" icon="bug">
-    Create issues for bugs you encounter while using Magemaker
+    Create issues for bugs you encounter while using Magemaker.
   </Card>
   <Card title="Feature Requests" icon="lightbulb">
-    Suggest new features or improvements
+    Suggest new features or improvements.
   </Card>
   <Card title="Documentation" icon="book">
-    Help improve our documentation
+    Help improve our documentation. All docs live in the `/docs` folder and are written in MDX.
   </Card>
   <Card title="Code" icon="code">
-    Submit pull requests with bug fixes or new features
+    Submit pull requests with bug fixes or new features.
   </Card>
 </CardGroup>
+
+---
 
 ## Development Setup
 
 <Steps>
-  <Step title="Fork and Clone">
-    ```bash
-    git clone https://github.com/YOUR_USERNAME/magemaker.git
-    cd magemaker
-    ```
+  <Step title="Fork & Clone">
+
+  ```bash
+  git clone https://github.com/YOUR_USERNAME/magemaker.git
+  cd magemaker
+  ```
   </Step>
-  <Step title="Install Dependencies">
-    ```bash
-    pip install -e ".[dev]"
-    ```
+
+  <Step title="Create Virtual-env & Install Deps">
+  We ship optional extras for development:
+  
+  ```bash
+  python -m venv .venv
+  source .venv/bin/activate
+  pip install -e ".[dev]"
+  ```
   </Step>
-  <Step title="Create Branch">
-    ```bash
-    git checkout -b feature/your-feature-name
-    ```
+
+  <Step title="Configure .env (optional)">
+  Some tests and the local API proxy rely on cloud credentials. Copy `.env.template` to `.env` and populate the values you need (see [Environment Variables](/configuration/Environment)).
+  </Step>
+
+  <Step title="Create a Feature Branch">
+  ```bash
+  git checkout -b feat/my-awesome-change
+  ```
   </Step>
 </Steps>
 
-## Development Guidelines
+---
 
-### Code Style
+## Running the Test-Suite
 
-We use the following tools to maintain code quality:
-- Black for Python code formatting
-- isort for import sorting
-- flake8 for style guide enforcement
+We use **pytest** for unit & integration tests.
 
-Run the following before committing:
+```bash
+pytest -q
+```
+
+<Note>
+Integration tests that touch the cloud are marked with `@pytest.mark.integration`.  Use `pytest -m integration` to run them explicitly.
+</Note>
+
+---
+
+## Linting & Formatting
+
+We enforce a strict style to keep the codebase painless to review:
+
 ```bash
 black .
 isort .
 flake8
 ```
 
-### Testing
+<Warning>
+CI will fail if your PR doesn’t pass linting & type-checks.
+</Warning>
 
-<Note>
-All new features should include tests. We use pytest for our test suite.
-</Note>
+---
 
-Run tests locally:
+## Working on the API Proxy 🛰️
+
+Magemaker ships a **FastAPI** server (`server.py`) that acts as:
+
+1. A thin REST wrapper around SageMaker endpoints, and
+2. An **OpenAI-compatible** `/chat/completions` proxy.
+
+### Local Usage
+
 ```bash
-pytest tests/
+uvicorn server:app --reload --host 0.0.0.0 --port 8000
 ```
 
-### Documentation
+Make sure your `.env` contains valid AWS creds **and** `AWS_REGION_NAME` (or let Magemaker create it via `magemaker --cloud aws`). See the brand-new [API Proxy docs](/concepts/api-proxy) for a full walkthrough.
 
-When adding new features, please update the relevant documentation:
+### Tests
 
-1. Update the README.md if needed
-2. Add/update docstrings for new functions/classes
-3. Create/update relevant .mdx files in the docs directory
+All proxy logic lives in `magemaker/sagemaker/query_endpoint.py` and `server.py`.  Corresponding unit tests are in `tests/test_openai_proxy.py`.
 
-## Pull Request Process
+---
 
-<Steps>
-  <Step title="Create Branch">
-    Create a new branch for your changes:
-    ```bash
-    git checkout -b feature/your-feature
-    ```
-  </Step>
-  <Step title="Make Changes">
-    Make your changes and commit them with clear commit messages:
-    ```bash
-    git add .
-    git commit -m "feat: add new deployment option"
-    ```
-  </Step>
-  <Step title="Push Changes">
-    Push your changes to your fork:
-    ```bash
-    git push origin feature/your-feature
-    ```
-  </Step>
-  <Step title="Create PR">
-    Open a Pull Request against the main repository
-  </Step>
-</Steps>
+## Documentation Workflow
 
-### Pull Request Guidelines
+1. All docs pages live in the `/docs` folder and are written in MDX.
+2. Install Mintlify to preview docs:
 
-<CardGroup cols={2}>
-  <Card title="Clear Description" icon="pen">
-    Provide a clear description of your changes
-  </Card>
-  <Card title="Tests" icon="vial">
-    Include relevant tests for new features
-  </Card>
-  <Card title="Documentation" icon="book">
-    Update documentation as needed
-  </Card>
-  <Card title="Clean History" icon="clock-rotate-left">
-    Keep commits focused and clean
-  </Card>
-</CardGroup>
+   ```bash
+   npm i -g mintlify
+   mintlify dev
+   ```
+3. **Every new feature must ship with docs.**
+
+---
+
+## Pull-Request Checklist
+
+- [ ] Linted & formatted (Black / isort / flake8)
+- [ ] All tests pass (`pytest`)
+- [ ] Added/updated unit tests
+- [ ] Added/updated documentation pages (Mintlify)
+- [ ] PR title follows **Conventional Commits**
+- [ ] Linked to any relevant issues
+
+---
 
 ## Commit Message Convention
 
@@ -131,38 +146,41 @@ We follow the [Conventional Commits](https://www.conventionalcommits.org/) speci
 - `feat:` New feature
 - `fix:` Bug fix
 - `docs:` Documentation changes
-- `style:` Code style changes
-- `refactor:` Code refactoring
-- `test:` Adding missing tests
-- `chore:` Maintenance tasks
+- `style:` Code style changes (non-functional)
+- `refactor:` Code refactoring (no feature change)
+- `test:` Adding or refactoring tests
+- `chore:` Build tasks, CI, etc.
 
 Example:
+
 ```bash
-feat(deployment): add support for custom docker images
+feat(api-proxy): add support for streaming responses
 ```
+
+---
 
 ## Getting Help
 
-If you need help with your contribution:
-
 <CardGroup>
   <Card title="Discord Community" icon="discord">
-    Join our Discord server for real-time discussions
+    Join our Discord for real-time discussions and help.
   </Card>
-  
   <Card title="GitHub Discussions" icon="github">
-    Start a discussion in our GitHub repository
+    Start a discussion in our GitHub repo.
   </Card>
-  
   <Card title="Email Support" icon="envelope">
-    Contact us at support@slashml.com
+    Contact us at support@slashml.com.
   </Card>
 </CardGroup>
+
+---
 
 ## Code of Conduct
 
 We are committed to providing a welcoming and inclusive experience for everyone. Please read our [Code of Conduct](https://github.com/slashml/magemaker/CODE_OF_CONDUCT.md) before participating.
 
+---
+
 ## License
 
-By contributing to Magemaker, you agree that your contributions will be licensed under the Apache 2.0 License.
+By contributing to Magemaker, you agree that your contributions will be licensed under the **Apache 2.0 License**.
