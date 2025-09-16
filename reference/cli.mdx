@@ -1,0 +1,53 @@
+---
+title: Magemaker CLI Reference
+---
+
+This page lists all public flags exposed by the `magemaker` CLI (see `runner.py`).  Use `magemaker --help` for the authoritative source.
+
+## Global syntax
+
+```bash
+magemaker [GLOBAL_FLAGS] [COMMAND_FLAGS]
+```
+
+## Global flags
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--cloud <aws|gcp|azure|all>` | Launch the interactive TUI for the specified provider(s) and handle first-time setup. | *none* |
+| `--deploy <path>` | Deploy a model using a YAML file. | *n/a* |
+| `--train  <path>` | Fine-tune / train a model using a YAML file. | *n/a* |
+| `--config-dir <path>` | Override the folder where Magemaker reads & writes YAML configs. | `.magemaker_config` |
+| `--version` | Print Magemaker version and exit. |  |
+| `-h`, `--help` | Show built-in help. |  |
+
+<Note>
+The old `--query` flag was **removed** in v0.8.  Query endpoints via the interactive menu or the SDK examples shown in each tutorial.
+</Note>
+
+## Examples
+
+### 1. First-time AWS setup
+```bash
+magemaker --cloud aws
+```
+
+### 2. Deploy from YAML
+```bash
+magemaker --deploy .magemaker_config/bert.yaml
+```
+
+### 3. Fine-tune from YAML
+```bash
+magemaker --train  .magemaker_config/train-bert.yaml
+```
+
+### 4. Custom config directory
+```bash
+export CONFIG_DIR="infra/configs"
+
+magemaker --deploy infra/configs/llama.yaml
+```
+
+---
+Keeping this reference up-to-date helps prevent documentation drift.  If you add or rename CLI flags, please update this page in the same PR.
