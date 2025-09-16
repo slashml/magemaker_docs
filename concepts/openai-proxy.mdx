@@ -1,0 +1,60 @@
+---
+title: OpenAI-Compatible Proxy
+description: Use your SageMaker / Vertex AI / AzureML endpoint with OpenAI SDKs via Magemaker's built-in proxy
+---
+
+## Overview
+Magemaker ships with a lightweight FastAPI server (`server.py`) that exposes a **Chat Completion**-compatible API.  This lets you swap OpenAI’s URL with `http://<your-host>:8000` and keep using the official `openai` Python / JS SDKs, LangChain, or any other OpenAI-compatible client.
+
+<Info>
+The proxy is an **optional** component.  You still deploy models the usual way; the server only forwards requests to the selected endpoint under the hood.
+</Info>
+
+## 1 · Start the proxy
+```bash
+python -m magemaker.server  # default: 0.0.0.0:8000
+```
+
+Environment variables from your `.env` file are automatically loaded, so the server knows how to reach SageMaker / Vertex AI / Azure ML.
+
+You should see:
+```
+INFO:     Started server process […]
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+```
+
+## 2 · Point the OpenAI SDK to the proxy
+```python
+import openai
+
+openai.api_key = "sk-ignore"             # any non-empty value works
+openai.base_url = "http://localhost:8000/v1"  # important – include /v1
+
+response = openai.ChatCompletion.create(
+    model="your-endpoint-name",           # equals SageMaker / Vertex / Azure endpoint
+    messages=[{"role": "user", "content": "Hello!"}]
+)
+print(response.choices[0].message.content)
+```
+
+### Supported routes
+| Method | Path                | Description                         |
+| ------ | ------------------- | ----------------------------------- |
+| POST   | `/v1/chat/completions` | Streams request to the backing endpoint |
+| GET    | `/endpoints`        | Lists all active endpoints found via Magemaker |
+
+## 3 · Authentication & CORS
+The proxy does **not** enforce authentication.  Run it behind a reverse proxy (NGINX, CloudFront, APIM, etc.) if you need tokens, rate-limiting, or HTTPS termination.
+
+## 4 · Deployment suggestions
+- **Docker**: Build an image with your `.env` baked in and deploy to ECS / Cloud Run / ACI.
+- **Systemd**: On a small EC2/VPS, create a service that starts `python -m magemaker.server` on boot.
+
+## 5 · Limitations
+1. Only the `chat/completions` endpoint is implemented at present.
+2. Streaming (`stream=True`) is not yet supported – responses are returned once inference completes.
+3. The proxy currently forwards to a **single** cloud endpoint per request; multi-model routing is on the roadmap.
+
+<Warning>
+Do **not** expose the proxy publicly without additional security controls – anyone could burn cloud inference credits.
+</Warning>
