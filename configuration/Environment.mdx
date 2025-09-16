@@ -2,29 +2,52 @@
 title: Environment Variables
 ---
 
-### Required Config File
-A `.env` file is automatically created when you run `magemaker --cloud <cloud-provider>`. This file contains the necessary environment variables for your cloud provider(s).
+## Overview
 
-By default, Magemaker will look for a `.env` file in your project root with the following variables based on which cloud provider(s) you plan to use:
+Magemaker uses a simple **`.env`** file (loaded via `python-dotenv`) to store cloud credentials and tool settings.  The file is created/updated automatically when you run:
 
 ```bash
-# AWS Configuration
-AWS_ACCESS_KEY_ID="your-access-key"      # Required for AWS
-AWS_SECRET_ACCESS_KEY="your-secret-key"   # Required for AWS
-SAGEMAKER_ROLE="arn:aws:iam::..."        # Required for AWS
-
-# GCP Configuration
-PROJECT_ID="your-project-id"             # Required for GCP
-GCLOUD_REGION="us-central1"              # Required for GCP
-
-# Azure Configuration
-AZURE_SUBSCRIPTION_ID="your-sub-id"      # Required for Azure
-AZURE_RESOURCE_GROUP="ml-resources"      # Required for Azure
-AZURE_WORKSPACE_NAME="ml-workspace"      # Required for Azure
-AZURE_REGION="eastus"                    # Required for Azure
-
-# Optional configurations
-HUGGING_FACE_HUB_KEY="your-hf-token"    # Required for gated HF models like llama
+magemaker --cloud <aws|gcp|azure|all>
 ```
 
-<Warning>Never commit your .env file to version control!</Warning>
+If you prefer manual setup, copy the template below and adjust per provider.
+
+---
+
+### Template
+
+```bash
+# ─── AWS ──────────────────────────────────────────────────────
+AWS_ACCESS_KEY_ID="…"
+AWS_SECRET_ACCESS_KEY="…"
+AWS_REGION_NAME="us-east-1"       # default region for deployments
+SAGEMAKER_ROLE="arn:aws:iam::123456789012:role/magemaker-sagemaker-role"
+
+# ─── GCP ──────────────────────────────────────────────────────
+PROJECT_ID="my-gcp-project"
+GCLOUD_REGION="us-central1"
+# Optional: path to a service-account JSON for Vertex AI queries
+GOOGLE_APPLICATION_CREDENTIALS="/path/to/key.json"
+
+# ─── AZURE ────────────────────────────────────────────────────
+AZURE_SUBSCRIPTION_ID="<sub-id>"
+AZURE_RESOURCE_GROUP="ml-resources"
+AZURE_WORKSPACE_NAME="ml-workspace"
+AZURE_REGION="eastus"
+
+# ─── GENERAL ─────────────────────────────────────────────────
+HUGGING_FACE_HUB_KEY="hf_…"       # required for gated models (e.g. Llama 3)
+CONFIG_DIR=".magemaker_config"    # override default config folder (optional)
+```
+
+<Warning>
+  **Never** commit `.env` to version control.  Add it to `.gitignore`.
+</Warning>
+
+---
+
+## Tips
+
+1. Use **separate AWS accounts** or IAM roles for dev vs prod to keep things isolated.  
+2. Rotate credentials regularly and prefer short-lived tokens (e.g. AWS SSO).  
+3. When running Magemaker in CI/CD, inject env vars via your secrets manager instead of committing `.env`.
