@@ -1,0 +1,43 @@
+---
+title: Deploying AWS JumpStart Models via Interactive Search
+---
+
+## Overview
+Magemaker includes an **interactive JumpStart search utility** (`search_jumpstart_models.py`) that lets you browse, filter, and deploy AWS SageMaker JumpStart models without leaving the terminal.
+
+<Note>
+JumpStart is AWS’s curated catalogue of pre-built model packages (open-source and proprietary).  Magemaker automates the heavy lifting of selecting the right container, instance type, and deployment parameters for you.
+</Note>
+
+## Launching the Search Tool
+
+```bash
+magemaker --cloud aws   # ensure AWS is configured
+```
+In the interactive main menu choose **“Search JumpStart Models”**.
+
+![JumpStart Search](../Images/jumpstart-search.png)
+
+## Workflow
+1. Type to filter by model name, task (NLP, CV, etc.), or framework.  
+2. Press **Enter** on a model to view details (description, recommended instance types, license).  
+3. Confirm deployment settings (instance size, endpoint name, etc.).  
+4. Magemaker will start the deployment and stream progress.
+
+## YAML Output for Re-deployments
+After a successful deployment Magemaker writes a YAML file into `.magemaker_config/` so you can:
+```bash
+magemaker --deploy .magemaker_config/your-endpoint.yaml
+```
+This enables CI/CD or Infrastructure-as-Code style repeatability.
+
+## Tips & Tricks
+• Use the search box to filter by **task** (e.g. `text-generation`) or **framework** (`huggingface`, `tensorflow`).  
+• If you need GPUs, pick an instance suffix like `ml.g5.xlarge`; Magemaker warns if quotas are insufficient.  
+• Endpoints incur cost while running – remember to delete unused endpoints from the main menu.
+
+## Troubleshooting
+• `QuotaExceeded` – submit a SageMaker service-quota increase in AWS Console.  
+• `Model asset not found` – the JumpStart package may not be available in your region. Try `us-east-1`.
+
+---
