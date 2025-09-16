@@ -1,0 +1,33 @@
+---
+title: Magemaker CLI Reference
+---
+
+## Overview
+Run `magemaker --help` to see the built-in help. This page collects all public flags in one place and notes any deprecations.
+
+| Flag | Description | Example |
+|------|-------------|---------|
+| `--cloud` | Configure or open the interactive menu for a cloud. Accepts `aws`, `gcp`, `azure`, `all`. | `magemaker --cloud aws` |
+| `--deploy <path>` | Deploy using a YAML config. | `magemaker --deploy .magemaker_config/bert.yaml` |
+| `--train <path>` | Fine-tune using a YAML training config (AWS only). | `magemaker --train .magemaker_config/train-bert.yaml` |
+| `--version` | Print Magemaker version. | `magemaker --version` |
+
+### Deprecated Flags
+| Flag | Replacement |
+|------|-------------|
+| `--query` | Use the interactive *Query a Model Endpoint* menu or call the endpoint with SDK/REST. |
+
+<Warning>
+Deprecated flags may be removed in the next minor release.
+</Warning>
+
+## Exit Codes
+| Code | Meaning |
+|------|---------|
+| `0` | Success |
+| `1` | User error (bad YAML, missing env vars, etc.) |
+| `2` | Cloud provider error (quota, auth) |
+| `>2` | Unexpected exception – please file a bug |
+
+## Environment Variables
+See the [Environment](/configuration/Environment) page for a full list.
