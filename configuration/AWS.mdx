@@ -4,15 +4,15 @@ title: AWS
 
 ### AWS CLI
 
-<Note>To install Azure SDK on MacOS, you need to have the latest OS and you need to use Rosetta terminal. Also, make sure you have the latest version of Xcode tools installed.</Note>
+<Note>To install the AWS CLI on macOS ≥ 13.6.6 running on Apple Silicon you *must* use a Rosetta terminal. Verify by running `arch` – it should print `i386` for a Rosetta session. Make sure you have the latest version of Xcode Command-Line Tools installed.</Note>
 
-Follow this guide to install the latest AWS CLI
+Follow the official guide to install the latest AWS CLI:
 
 https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
 
+Once the CLI is installed and working, continue with the steps below.
 
-Once you have the CLI installed and working, follow these steps
-
+---
 
 ### AWS Account
 
@@ -22,61 +22,104 @@ Register for an [AWS account](https://aws.amazon.com/) and sign-in to the [conso
 </Step>
 
 <Step title="Navigate to IAM">
-From the console, use the Search bar to find and select IAM (***do not use IAM Identity Center***, which is confusingly similar but a totally different system).
+From the console, use the search bar to find and select **IAM** (*do **not** use IAM Identity Center, which is different*).
 
-![Enter image alt description](../Images/muJ_Image_1.png)
+![IAM Search](../Images/muJ_Image_1.png)
 
-You should see the following screen after clicking IAM.
+After clicking **IAM** you should see a screen similar to this:
 
-![Enter image alt description](../Images/ldC_Image_2.png)
+![IAM Home](../Images/ldC_Image_2.png)
 </Step>
 
 <Step title="Create or Select User">
-1. Select `Users` in the side panel
-   
-![Enter image alt description](../Images/QX4_Image_3.png)
+1. Select **Users** in the side-panel  
+   ![Users](../Images/QX4_Image_3.png)
 
-2. Create a user if you don't already have one
-
-![Enter image alt description](../Images/ly3_Image_4.png)
+2. Create a user if you don't already have one  
+   ![Create User](../Images/ly3_Image_4.png)
 </Step>
 
 <Step title="Add Required Permissions">
-1. Click on "Add permissions"
-   
-![Enter image alt description](../Images/E7x_Image_5.png)
+1. Click **Add permissions**  
+   ![Add Permissions](../Images/E7x_Image_5.png)
 
-2. Select "Attach policies directly". Under permission policies, search for and tick the boxes for:
-   - `AmazonSagemakerFullAccess`
+2. Choose **Attach policies directly** and tick the following policies:
+   - `AmazonSageMakerFullAccess`
    - `IAMFullAccess`
    - `ServiceQuotasFullAccess`
 
-Then click Next.
+   Then click **Next**.
 
-![Enter image alt description](../Images/01X_Image_6.png)
+![Policies](../Images/01X_Image_6.png)
 
-The final list should look like the following:
+The selected policies should look like this:
 
-![Enter image alt description](../Images/Dfp_Image_7.png)
+![Policies List](../Images/Dfp_Image_7.png)
 
-Click "Create user" on the following screen.
+Click **Create user** to finish.
 </Step>
 
 <Step title="Generate Access Keys">
-1. Click the name of the user you've just created (or one that already exists)
-2. Go to "Security Credentials" tab
-3. Scroll down to "Access Keys" section
-4. Click "Create access key"
-5. Select Command Line Interface then click next
+1. Click the name of the user you just created (or an existing user).  
+2. Go to the **Security credentials** tab.  
+3. Scroll to the **Access keys** section and click **Create access key**.  
+4. Select **Command Line Interface** and click **Next**.  
 
-![Enter image alt description](../Images/BPP_Image_8.png)
+![Create Access Key](../Images/BPP_Image_8.png)
 
-Enter a description (this is optional, can leave blank). Then click next.
+Add an optional description, then **Next**.
 
-![Enter image alt description](../Images/gMD_Image_9.png)
+![Key Description](../Images/gMD_Image_9.png)
 
-**Store BOTH the Access Key and the Secret access key for the next step. Once you've saved both keys, click Done.**
+**Save BOTH the Access Key ID and the Secret Access Key** – you will not be able to see the secret again after closing the dialog.
 
-![Enter image alt description](../Images/Gjw_Image_10.png)
+![Save Keys](../Images/Gjw_Image_10.png)
+</Step>
+
+<Step title="Create a SageMaker Execution Role (SAGEMAKER_ROLE)">
+Magemaker requires an execution role so that SageMaker can access Amazon S3 and other services on your behalf. You have two options:
+
+**Option A – Automatic (recommended)**
+```bash
+# Clone the repo or download the script first
+bash magemaker/scripts/setup_role.sh
+```
+The script creates a role called `MagemakerExecutionRole` with the necessary trust relationship and policies (`AmazonSageMakerFullAccess`, `AmazonS3FullAccess`). Copy the generated **Role ARN** printed by the script.
+
+**Option B – Manual**
+1. In **IAM → Roles** click **Create role**.
+2. Select **SageMaker** as the trusted entity type.
+3. Attach the policies:  
+   - `AmazonSageMakerFullAccess`  
+   - `AmazonS3FullAccess`
+4. Name the role (e.g. `MagemakerExecutionRole`) and create it.
+5. Copy the role's **ARN** for the next step.
+</Step>
+
+<Step title="Populate .env">
+Magemaker stores credentials in a local `.env` file. Create (or update) `.env` in your project root:
+
+```bash
+AWS_ACCESS_KEY_ID="<your-access-key-id>"
+AWS_SECRET_ACCESS_KEY="<your-secret-access-key>"
+AWS_DEFAULT_REGION="us-east-1"        # or your preferred region
+SAGEMAKER_ROLE="arn:aws:iam::<acct>:role/MagemakerExecutionRole"
+
+# Optional – required for gated Hugging Face models like Llama 3
+HUGGING_FACE_HUB_KEY="<your-hf-token>"
+```
+
+<Warning>Never commit your `.env` file to version control!</Warning>
 </Step>
 </Steps>
+
+---
+
+## Next Step – Verify Configuration
+Run the following command to verify everything works:
+
+```bash
+magemaker --cloud aws
+```
+
+The first run will test your credentials, create any missing resources, and confirm the role. After that, you are ready to deploy models.
