@@ -5,9 +5,8 @@ description: Configure Magemaker for your cloud provider
 
 
 <Note>
-  For Macs, maxOS >= 13.6.6 is required. Apply Silicon devices (M1) must use Rosetta terminal. You can verify, your terminals architecture by running `arch`. It should print `i386` for Rosetta terminal.
+  For Macs, macOS ≥ 13.6.6 is required. Apple-Silicon devices (M-series) must run Magemaker from a Rosetta terminal. You can verify your terminal’s architecture with `arch`; it should print `i386` when running under Rosetta.
 </Note>
-
 
 Install via pip:
 
@@ -29,7 +28,7 @@ Once you have your AWS credentials, you can configure Magemaker by running:
 magemaker --cloud aws
 ```
 
-It will prompt you for aws credentials and set up the necessary configurations.
+It will prompt you for AWS credentials and set up the necessary configurations.
 
 
 ### GCP (Vertex AI) Configuration
@@ -38,7 +37,7 @@ It will prompt you for aws credentials and set up the necessary configurations.
   [GCP Setup Guide](/configuration/GCP)
 
 
-once you have your GCP credentials, you can configure Magemaker by running:
+Once you have your GCP credentials, you can configure Magemaker by running:
 
 ```bash
 magemaker --cloud gcp
@@ -47,7 +46,7 @@ magemaker --cloud gcp
 ### Azure Configuration
 
 - Follow this detailed guide for setting up Azure credentials:
-  [GCP Setup Guide](/configuration/Azure)
+  [Azure Setup Guide](/configuration/Azure)
 
 
 Once you have your Azure credentials, you can configure Magemaker by running:
@@ -67,33 +66,41 @@ magemaker --cloud all
 
 
 ### Required Config File
-By default, Magemaker will look for a `.env` file in your project root with the following variables based on which cloud provider(s) you plan to use:
-
+A `.env` file is automatically created when you first run `magemaker --cloud <provider>`. Magemaker will look for this file in your project root and consume the following variables (by provider):
 
 ```bash
-# AWS Configuration
+# ------------------ AWS ------------------
 AWS_ACCESS_KEY_ID="your-access-key"      # Required for AWS
-AWS_SECRET_ACCESS_KEY="your-secret-key"   # Required for AWS
+AWS_SECRET_ACCESS_KEY="your-secret-key"  # Required for AWS
 SAGEMAKER_ROLE="arn:aws:iam::..."        # Required for AWS
+AWS_REGION_NAME="us-east-1"              # Optional: override the default region
 
-# GCP Configuration
+# ------------------ GCP ------------------
 PROJECT_ID="your-project-id"             # Required for GCP
 GCLOUD_REGION="us-central1"              # Required for GCP
 
-# Azure Configuration
+# ----------------- Azure -----------------
 AZURE_SUBSCRIPTION_ID="your-sub-id"      # Required for Azure
 AZURE_RESOURCE_GROUP="ml-resources"      # Required for Azure
 AZURE_WORKSPACE_NAME="ml-workspace"      # Required for Azure
 AZURE_REGION="eastus"                    # Required for Azure
 
-# Optional configurations
-HUGGING_FACE_HUB_KEY="your-hf-token"    # Required for gated HF models like llama
+# -------------- Hugging Face -------------
+HUGGING_FACE_HUB_KEY="your-hf-token"     # Required for gated HF models like Llama
+
+# -------------- Magemaker ----------------
+CONFIG_DIR=".magemaker_config"           # Optional: custom path for YAML configs
+
+# ---------- OpenAI-Compatible Proxy ------
+SERVER_HOST="0.0.0.0"                   # Optional: FastAPI host (default 0.0.0.0)
+SERVER_PORT="8000"                      # Optional: FastAPI port (default 8000)
+OPENAI_API_KEY="sk-..."                 # Required if you plan to use the proxy
 ```
 
-<Warning>Never commit your .env file to version control!</Warning>
+<Warning>Never commit your `.env` file to version control!</Warning>
 
 <Note>
-   For gated models like llama-3.1 from Meta, you might have to accept terms of use for model on hugging face and adding Hugging face token to the environment are necessary for deployment to go through.
+   For gated models like Meta Llama 3, you must first accept the model’s terms of use on Hugging Face and set `HUGGING_FACE_HUB_KEY` in your environment for deployment to succeed.
 </Note>
 
 {/* ## Verification
@@ -119,10 +126,9 @@ magemaker verify
 
 3. **Security**
 
-   - Follow principle of least privilege
+   - Follow the principle of least privilege
    - Use service accounts where possible
    - Enable audit logging
-
 
 
 ## Troubleshooting
@@ -142,7 +148,7 @@ Common configuration issues:
    - Confirm project ID
 
 3. **Azure Issues**
-   - Check resource provider registration status:
+   - Check resource-provider registration status:
      ```bash
      az provider show -n Microsoft.MachineLearningServices
      az provider show -n Microsoft.ContainerRegistry
