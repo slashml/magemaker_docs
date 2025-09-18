@@ -1,0 +1,117 @@
+---
+title: OpenAI-Compatible Proxy
+description: Use Magemaker endpoints with the OpenAI SDK via the built-in FastAPI server.
+---
+
+## Introduction
+Magemaker ships with a lightweight FastAPI server (`server.py`) that allows you to interact with your **SageMaker** endpoints through an **OpenAI-compatible** REST interface.  This means you can replace:
+
+```python
+import openai
+openai.api_key = "sk-…"
+openai.ChatCompletion.create(
+  model="gpt-4o",
+  messages=[{"role": "user", "content": "Hello!"}]
+)
+```
+
+with **zero code changes** other than pointing the SDK to your local Magemaker proxy.
+
+---
+## Starting the Server
+
+```bash
+# Activate your virtual-env first
+uvicorn server:app --host 0.0.0.0 --port 8000
+```
+
+Alternatively, run the file directly:
+
+```bash
+python server.py  # binds to 0.0.0.0:8000 by default
+```
+
+> The server automatically infers `AWS_REGION_NAME` from your `.env` or the active boto3 session.
+
+---
+## Available Routes
+
+| Method | Path | Description |
+| ------ | ---- | ----------- |
+| GET    | `/endpoint/{name}` | Retrieve metadata for a SageMaker endpoint |
+| POST   | `/endpoint/{name}/query` | Invoke the endpoint with a Magemaker `Query` payload |
+| POST   | `/chat/completions` | OpenAI-style chat completion using the first matching endpoint |
+
+### `/chat/completions` Schema
+Request:
+```jsonc
+{
+  "model": "meta-llama/Meta-Llama-3-8B-Instruct", // HF model id
+  "messages": [
+    {"role": "user", "content": "Tell me a joke."}
+  ]
+}
+```
+
+Response (truncated):
+```jsonc
+{
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "Why did the…"
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "created": 1717690370,
+  "model": "sagemaker/llama3-endpoint",
+  "object": "chat.completion"
+}
+```
+
+---
+## SDK Configuration
+
+```python
+import openai
+
+openai.api_key = "dummy"  # Any non-empty string works
+openai.base_url = "http://localhost:8000"  # Point to the proxy
+
+response = openai.ChatCompletion.create(
+  model="meta-llama/Meta-Llama-3-8B-Instruct",
+  messages=[{"role": "user", "content": "Hello!"}],
+)
+print(response.choices[0].message.content)
+```
+
+<Note>
+The proxy dynamically selects the **first** SageMaker endpoint that hosts the requested `model`.  Deploying multiple versions of the same model will always use the earliest endpoint in the list.
+</Note>
+
+---
+## Environment Variables
+See the [Environment Variables](/configuration/Environment) reference for a complete list.  The proxy specifically relies on:
+
+- `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION_NAME`  
+- **Optional** `OPENAI_API_KEY` (dummy value) and `OPENAI_BASE_URL` if you want to avoid passing them programmatically.
+
+---
+## Production Tips
+
+1. **Reverse Proxy** – Place Nginx or an ALB in front of the FastAPI server for TLS termination.
+2. **Auth** – The reference implementation has **no authentication**.  Add JWT or an API-key middleware before running in production.
+3. **Scaling** – Run multiple Uvicorn workers behind Gunicorn to handle concurrent requests.
+4. **Timeouts** – Large language models can take >30s to respond; adjust client/server timeouts accordingly.
+
+---
+## Troubleshooting
+
+| Symptom | Possible Cause |
+| ------- | -------------- |
+| `NotDeployedException` | No SageMaker endpoint was found for the requested model id. Deploy the model first. |
+| 404 on `/v1/chat/completions` | You are pointing the OpenAI SDK to `/v1/...`. Use `/chat/completions` or configure `api_path=""`. |
+| CORS errors in browser | Add `CORSMiddleware` to `server.py` or terminate through a proxy that injects CORS headers. |
