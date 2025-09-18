@@ -36,6 +36,30 @@ This is recommended for:
 - Infrastructure as Code (IaC)
 - Team collaborations
 
+### Programmatic Access (OpenAI-Compatible Proxy)
+
+After deployment you can _optionally_ spin up the lightweight FastAPI server included in Magemaker (`server.py`).  
+The server exposes **OpenAI-compatible** routes so that any tool that speaks the OpenAI API can talk to your private SageMaker / Vertex / Azure endpoint.
+
+Start the server:
+
+```bash
+python -m magemaker.server  # or simply: python server.py
+```
+
+Key routes:
+
+| Verb | Route | Description |
+|------|-------|-------------|
+| GET  | `/endpoint/{endpoint_name}`           | Returns endpoint metadata |
+| POST | `/endpoint/{endpoint_name}/query`     | Query an existing endpoint with the request body defined by `Query` |
+| POST | `/chat/completions`                   | OpenAI-style chat completion that automatically selects an endpoint for the requested model |
+
+Full schema details and code samples are available in the new [API Reference](/concepts/api-reference) page.
+
+> **Tip**
+> Combine the proxy with tools like LangChain or the OpenAI Python SDK to minimise code changes when moving from OpenAI to your own infrastructure.
+
 ## Multi-Cloud Deployment
 
 Magemaker supports deployment to AWS SageMaker, GCP Vertex AI, and Azure ML. Here's how to deploy the same model (facebook/opt-125m) to different cloud providers:
@@ -202,9 +226,8 @@ Choose your instance type based on your model's requirements:
 4. Set up monitoring and alerting for your endpoints
 
 <Warning>
-Make sure you setup budget monitory and alerts to avoid unexpected charges.
+Make sure you set up budget monitoring and alerts to avoid unexpected charges.
 </Warning>
-
 
 ## Troubleshooting Deployments
 
@@ -225,4 +248,4 @@ Common issues and their solutions:
    - Verify model ID and version
    - Check instance memory requirements
    - Validate Hugging Face token if required
-   - Endpoing deployed but deployment failed. Check the logs, and do report this to us if you see this issue.
+   - Endpoint deployed but deployment failed. Check the logs, and do report this to us if you see this issue.
