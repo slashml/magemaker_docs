@@ -2,81 +2,134 @@
 title: AWS
 ---
 
-### AWS CLI
+## Overview
+This guide walks you through the exact AWS prerequisites Magemaker needs **before** you can deploy a model to SageMaker.
 
-<Note>To install Azure SDK on MacOS, you need to have the latest OS and you need to use Rosetta terminal. Also, make sure you have the latest version of Xcode tools installed.</Note>
+<Note>
+Running `magemaker --cloud aws` will set **everything** up for you automatically (create an IAM role, write a `.env` file, verify the AWS CLI, etc.).
+You only need to perform the manual steps below if you want to understand or replicate what the CLI does under the hood.
+</Note>
 
-Follow this guide to install the latest AWS CLI
+---
+### 1 – Install / Verify AWS CLI
 
+• macOS & Apple Silicon: install via Homebrew and make sure you are **using a Rosetta terminal** (`arch` should print `i386`).  
+• Windows / Linux: follow the official docs.
+
+```bash
+# macOS
+brew update && brew install awscli
+# verify
+aws --version
+```
+
+Full install instructions:  
 https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
 
+---
+### 2 – Create an AWS Account (if you don’t have one)
 
-Once you have the CLI installed and working, follow these steps
+1. Go to [aws.amazon.com](https://aws.amazon.com/) and sign up.  
+2. Log in to the [AWS Console](https://console.aws.amazon.com/).
 
-
-### AWS Account
+---
+### 3 – Generate an IAM User & Access Keys
 
 <Steps>
-<Step title="Create AWS Account">
-Register for an [AWS account](https://aws.amazon.com/) and sign-in to the [console](https://console.aws.amazon.com/).
-</Step>
-
 <Step title="Navigate to IAM">
-From the console, use the Search bar to find and select IAM (***do not use IAM Identity Center***, which is confusingly similar but a totally different system).
-
-![Enter image alt description](../Images/muJ_Image_1.png)
-
-You should see the following screen after clicking IAM.
-
-![Enter image alt description](../Images/ldC_Image_2.png)
+Search for **IAM** in the console (⚠️ *do **NOT** select “IAM Identity Center”*).
 </Step>
 
 <Step title="Create or Select User">
-1. Select `Users` in the side panel
-   
-![Enter image alt description](../Images/QX4_Image_3.png)
-
-2. Create a user if you don't already have one
-
-![Enter image alt description](../Images/ly3_Image_4.png)
+1. Click **Users** in the sidebar.  
+2. Create a new user (or pick an existing one).
 </Step>
 
-<Step title="Add Required Permissions">
-1. Click on "Add permissions"
-   
-![Enter image alt description](../Images/E7x_Image_5.png)
-
-2. Select "Attach policies directly". Under permission policies, search for and tick the boxes for:
-   - `AmazonSagemakerFullAccess`
-   - `IAMFullAccess`
-   - `ServiceQuotasFullAccess`
-
-Then click Next.
-
-![Enter image alt description](../Images/01X_Image_6.png)
-
-The final list should look like the following:
-
-![Enter image alt description](../Images/Dfp_Image_7.png)
-
-Click "Create user" on the following screen.
+<Step title="Attach Policies">
+Attach **all three** policies:
+- `AmazonSageMakerFullAccess`
+- `IAMFullAccess`
+- `ServiceQuotasFullAccess`
 </Step>
 
 <Step title="Generate Access Keys">
-1. Click the name of the user you've just created (or one that already exists)
-2. Go to "Security Credentials" tab
-3. Scroll down to "Access Keys" section
-4. Click "Create access key"
-5. Select Command Line Interface then click next
-
-![Enter image alt description](../Images/BPP_Image_8.png)
-
-Enter a description (this is optional, can leave blank). Then click next.
-
-![Enter image alt description](../Images/gMD_Image_9.png)
-
-**Store BOTH the Access Key and the Secret access key for the next step. Once you've saved both keys, click Done.**
-
-![Enter image alt description](../Images/Gjw_Image_10.png)
+1. In the user details, open **Security credentials**.  
+2. Under **Access keys**, click **Create access key** → **Command Line Interface**.
 </Step>
 </Steps>
+
+Store the *Access key ID* **and** *Secret access key* in a safe place—you will paste them into the Magemaker prompt shortly.
+
+---
+### 4 – (Optional) Understand the Automatic Role Setup
+
+When you run `magemaker --cloud aws` the CLI executes
+`magemaker/scripts/setup_role.sh` which:
+
+1. Creates an IAM role called **SageMakerRole** with the following trust policy:
+   ```json
+   {
+     "Version": "2012-10-17",
+     "Statement": [{
+       "Effect": "Allow",
+       "Principal": {
+         "Service": "sagemaker.amazonaws.com"
+       },
+       "Action": "sts:AssumeRole"
+     }]
+   }
+   ```
+2. Attaches the managed policy `AmazonSageMakerFullAccess`.
+3. Writes the resulting role ARN to `.env` as `SAGEMAKER_ROLE`.
+
+If you prefer to run the script yourself:
+
+```bash
+bash magemaker/scripts/setup_role.sh
+```
+
+<Warning>
+The script requires a configured AWS CLI profile with **admin-level** permissions, otherwise role creation will fail.
+</Warning>
+
+---
+### 5 – Configure Magemaker
+
+Run the interactive setup:
+
+```bash
+magemaker --cloud aws
+```
+
+You will be prompted for:
+1. **AWS Access key ID**
+2. **AWS Secret access key**
+3. **AWS Region** (default `us-east-1`)
+4. (Optional) **Hugging Face token** for gated models (e.g. Llama 3)
+
+Magemaker will create/append to a `.env` file with the following variables:
+
+```bash
+AWS_ACCESS_KEY_ID="..."
+AWS_SECRET_ACCESS_KEY="..."
+SAGEMAKER_ROLE="arn:aws:iam::<account>:role/SageMakerRole"
+AWS_DEFAULT_REGION="us-east-1"
+HUGGING_FACE_HUB_KEY="..." # optional
+```
+
+<Warning>Never commit your `.env` file to version control!</Warning>
+
+---
+### 6 – Verify Quotas
+Even with the correct IAM role you might hit **instance-quota** limits when deploying large models.
+
+1. Open the AWS Console → **Service Quotas**.  
+2. Filter for **Amazon SageMaker**.  
+3. Check the *Instance* rows (e.g. `ml.g5.12xlarge`).  
+4. Request an increase if necessary.
+
+---
+### 7 – Next Steps
+• Proceed to the [Quick Start](/quick-start) guide to deploy your first model.  
+• Need fine-tuning? Read the [Fine-tuning](/concepts/fine-tuning) docs.  
+• Prefer IaC? Use YAML deployments as shown in the [Deployment](/concepts/deployment) section.
