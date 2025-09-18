@@ -1,38 +1,97 @@
 ---
 title: GCP 
+description: Configure Magemaker for Google Cloud Platform
 ---
+
+<Note>
+  Magemaker supports deploying Hugging Face models to Google Cloud Vertex AI. Before proceeding make sure you are on macOS >= 13.6.6 (Rosetta terminal for Apple Silicon) or an equivalent Linux/Windows environment and have Python 3.11 installed.
+</Note>
+
+## Overview
+These steps will get your Google Cloud account ready, install the Cloud SDK, enable Vertex AI and configure Magemaker so it can deploy and manage endpoints on your behalf.
+
 <Steps>
-<Step title="Create Google Cloud Account">
-Visit [Google Cloud Console](https://cloud.google.com/?hl=en) to create your account.
+
+<Step title="Create a Google Cloud Account">
+Visit the [Google Cloud Console](https://cloud.google.com/?hl=en) to create an account.
 </Step>
 
-<Step title="Create a new project">
-	Once you have created your account, create a new project. If this is your first time the default project is "My First Project". You can create a new project by clicking this button and then selecting "New Project".
+<Step title="Create (or select) a Project">
+Once signed-in, create a new project (or select an existing one). If this is your first time, the default project is **“My First Project”**. Click the project drop-down in the top-left corner then select **“New Project”**.
 
-	![Enter image alt description](../Images/google_new_project.png)
-
+![Create Project](../Images/google_new_project.png)
 </Step>
 
 <Step title="Install Google Cloud SDK">
-1. Follow the installation guide at [Google Cloud SDK Installation Documentation](https://cloud.google.com/sdk/docs/install-sdk)
-2. Initialize the SDK by running:
-   ```bash
-   gcloud init
-   ```
+1. Follow the official installation guide: [Google Cloud SDK Installation Documentation](https://cloud.google.com/sdk/docs/install-sdk)
+2. Initialise the SDK:
+
+```bash
+gcloud init
+```
+
+During initialisation you will:
+- Authenticate in a browser window
+- Select the project you just created
+- Choose a default region/zone (you can change this later)
+
+Finally, verify application-default credentials:
+
+```bash
+gcloud auth application-default login
+```
 </Step>
 
-3. During initialization:
-   - Create login credentials when prompted
-   - Create a new project or select an existing one
-   To make sure the initialization worked, run:
-   ```bash
-   gcloud auth application-default login
-   ```
-
 <Step title="Enable Vertex AI API">
-Navigate to the APIs & Services on the dashboard and enable the Vertex AI API for your project.
+In the Google Cloud Console navigate to **APIs & Services → Library**, search for **Vertex AI API** and click **Enable**.
 
-![Enter image alt description](../Images/QrB_Image_11.png)
+![Enable Vertex AI](../Images/QrB_Image_11.png)
+</Step>
+
+<Step title="(Optional) Grant Additional IAM Permissions">
+Magemaker uses your Application-Default Credentials. If you prefer using a Service Account make sure it has (at minimum):
+- `roles/aiplatform.admin`
+- `roles/storage.admin` (for model artefacts)
+- `roles/iam.serviceAccountUser`
+
+Attach the Service Account to your local ADC file or set `GOOGLE_APPLICATION_CREDENTIALS` to the JSON key path.
+</Step>
+
+<Step title="Run Magemaker Cloud Setup">
+Now that the SDK is configured, let Magemaker create the necessary `.env` file:
+
+```bash
+magemaker --cloud gcp
+```
+
+You will be prompted for:
+- **Project ID** (e.g. `my-vertex-project`)
+- **Default Region** (e.g. `us-central1`)
+
+Magemaker writes these values to `.env` so the library modules (e.g. `magemaker/gcp/create_model.py`) can access them at runtime.
+
+```bash
+# .env (created/updated by Magemaker)
+PROJECT_ID="my-vertex-project"
+GCLOUD_REGION="us-central1"
+```
+</Step>
+
+<Step title="Request GPU Quota (if needed)">
+Deploying larger models (e.g. Llama 3) requires GPUs. If you see quota errors when deploying, open **IAM & Admin → Quotas**, filter by **Vertex AI / Accelerators** and request an increase for the GPU type (e.g. NVIDIA _T4_, _L4_ or _A100_) in your chosen region.
 </Step>
 
 </Steps>
+
+## Verification
+After completing the steps above you can validate the configuration by listing existing (or empty) Vertex AI endpoints:
+
+```bash
+python -c "from magemaker.gcp.resources import list_vertex_ai_endpoints; print(list_vertex_ai_endpoints())"
+```
+
+If no error is raised, you are ready to deploy!
+
+<Warning>
+Remember to delete endpoints you’re no longer using to avoid unnecessary charges. You can do this from the Magemaker dropdown or via `magemaker.gcp.delete_model`.
+</Warning>
