@@ -3,18 +3,15 @@ title: Installation
 description: Configure Magemaker for your cloud provider
 ---
 
-
 <Note>
-  For Macs, maxOS >= 13.6.6 is required. Apply Silicon devices (M1) must use Rosetta terminal. You can verify, your terminals architecture by running `arch`. It should print `i386` for Rosetta terminal.
+  For Macs, maxOS &ge; 13.6.6 is required. Apple&nbsp;Silicon devices (M-series) must use a Rosetta terminal. You can verify your terminal architecture by running <code>arch</code>; it should print <code>i386</code> for Rosetta.
 </Note>
-
 
 Install via pip:
 
 ```sh
 pip install magemaker
 ```
-
 
 ## Cloud Account Setup
 
@@ -23,22 +20,20 @@ pip install magemaker
 - Follow this detailed guide for setting up AWS credentials:
   [AWS Setup Guide](/configuration/AWS)
 
-Once you have your AWS credentials, you can configure Magemaker by running:
+Once you have your AWS credentials, configure Magemaker by running:
 
 ```bash
 magemaker --cloud aws
 ```
 
-It will prompt you for aws credentials and set up the necessary configurations.
-
+This generates a `.env` file (or updates an existing one) with the required keys and verifies your SageMaker-execution role.
 
 ### GCP (Vertex AI) Configuration
 
 - Follow this detailed guide for setting up GCP credentials:
   [GCP Setup Guide](/configuration/GCP)
 
-
-once you have your GCP credentials, you can configure Magemaker by running:
+After obtaining your GCP credentials, run:
 
 ```bash
 magemaker --cloud gcp
@@ -47,112 +42,99 @@ magemaker --cloud gcp
 ### Azure Configuration
 
 - Follow this detailed guide for setting up Azure credentials:
-  [GCP Setup Guide](/configuration/Azure)
+  [Azure Setup Guide](/configuration/Azure)
 
-
-Once you have your Azure credentials, you can configure Magemaker by running:
+Then run:
 
 ```bash
 magemaker --cloud azure
 ```
 
+### All Three Cloud Providers
 
-### All three cloud providers
-
-If you have configured all three cloud providers, you can verify your configuration by running:
+If you plan to use every provider, you can initialise them all in one go:
 
 ```bash
 magemaker --cloud all
 ```
 
+---
 
-### Required Config File
-By default, Magemaker will look for a `.env` file in your project root with the following variables based on which cloud provider(s) you plan to use:
+## Environment Variables
 
+Magemaker stores cloud-specific credentials, regions, and optional settings in a `.env` file at your project root.
+
+For a complete, always-up-to-date list, see the dedicated
+[Environment Variables](/configuration/Environment) page.
+Below is a condensed cheat-sheet of the most common keys:
 
 ```bash
-# AWS Configuration
-AWS_ACCESS_KEY_ID="your-access-key"      # Required for AWS
-AWS_SECRET_ACCESS_KEY="your-secret-key"   # Required for AWS
-SAGEMAKER_ROLE="arn:aws:iam::..."        # Required for AWS
+# AWS
+AWS_ACCESS_KEY_ID="..."
+AWS_SECRET_ACCESS_KEY="..."
+SAGEMAKER_ROLE="arn:aws:iam::..."
+AWS_REGION_NAME="us-east-1"   # Optional, overrides default region
 
-# GCP Configuration
-PROJECT_ID="your-project-id"             # Required for GCP
-GCLOUD_REGION="us-central1"              # Required for GCP
+# GCP
+PROJECT_ID="your-project-id"
+GCLOUD_REGION="us-central1"
 
-# Azure Configuration
-AZURE_SUBSCRIPTION_ID="your-sub-id"      # Required for Azure
-AZURE_RESOURCE_GROUP="ml-resources"      # Required for Azure
-AZURE_WORKSPACE_NAME="ml-workspace"      # Required for Azure
-AZURE_REGION="eastus"                    # Required for Azure
+# Azure
+AZURE_SUBSCRIPTION_ID="..."
+AZURE_RESOURCE_GROUP="ml-resources"
+AZURE_WORKSPACE_NAME="ml-workspace"
+AZURE_REGION="eastus"
 
-# Optional configurations
-HUGGING_FACE_HUB_KEY="your-hf-token"    # Required for gated HF models like llama
+# Hugging Face (required for gated models like Llama-3)
+HUGGING_FACE_HUB_KEY="hf_..."
+
+# Optional — OpenAI-compatible proxy (server.py)
+API_HOST="0.0.0.0"
+API_PORT="8000"
+OPENAI_API_KEY="test-key"   # Any non-empty string for local calls
+OPENAI_BASE_URL="http://localhost:8000/v1"
 ```
 
-<Warning>Never commit your .env file to version control!</Warning>
+<Warning>Never commit your <code>.env</code> file to version control!</Warning>
 
 <Note>
-   For gated models like llama-3.1 from Meta, you might have to accept terms of use for model on hugging face and adding Hugging face token to the environment are necessary for deployment to go through.
+  For gated models like Meta&nbsp;Llama-3 you must (1) accept the model’s terms on Hugging&nbsp;Face and (2) set <code>HUGGING_FACE_HUB_KEY</code> in your environment.
 </Note>
 
-{/* ## Verification
-
-To verify your configuration:
-
-```bash
-magemaker verify
-``` */}
+---
 
 ## Best Practices
 
 1. **Resource Management**
    - Monitor quota limits
-   - Clean up unused resources
+   - Clean up unused endpoints
    - Set up cost alerts
 
 2. **Environment Management**
-
-   - Use separate configurations for dev/prod
-   - Regularly rotate access keys
-   - Use environment-specific roles
+   - Separate dev / prod credentials
+   - Rotate access keys regularly
+   - Use cloud-specific service accounts where possible
 
 3. **Security**
+   - Follow the principle of least privilege
+   - Restrict IAM roles to required services only
+   - Enable audit logging on your cloud accounts
 
-   - Follow principle of least privilege
-   - Use service accounts where possible
-   - Enable audit logging
-
-
+---
 
 ## Troubleshooting
 
-Common configuration issues:
+Common configuration issues and how to resolve them.
 
-1. **AWS Issues**
+1. **AWS**
+   - Verify IAM role permissions
+   - Check SageMaker quota limits and region settings
+   - Ensure your execution role has the correct trust relationship
 
-   - Check IAM role permissions
-   - Verify SageMaker quota
-   - Confirm region settings
+2. **GCP**
+   - Confirm Vertex AI API is enabled
+   - Validate service-account permissions and default application credentials
 
-2. **GCP Issues**
-
-   - Verify service account permissions
-   - Check Vertex AI API enablement
-   - Confirm project ID
-
-3. **Azure Issues**
-   - Check resource provider registration status:
-     ```bash
-     az provider show -n Microsoft.MachineLearningServices
-     az provider show -n Microsoft.ContainerRegistry
-     az provider show -n Microsoft.KeyVault
-     az provider show -n Microsoft.Storage
-     az provider show -n Microsoft.Insights
-     az provider show -n Microsoft.ContainerService
-     az provider show -n Microsoft.PolicyInsights
-     az provider show -n Microsoft.Cdn
-     ```
-   - Verify workspace access
-   - Confirm subscription status
-   - Ensure all required providers are registered
+3. **Azure**
+   - Verify required resource providers are registered (see Azure guide)
+   - Check workspace access and quota availability
