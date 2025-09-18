@@ -3,108 +3,117 @@ title: Deploying Llama 3 to SageMaker
 ---
 
 ## Introduction
-This tutorial guides you through deploying Llama 3 to AWS SageMaker using Magemaker and querying it using the interactive dropdown menu. Ensure you have followed the [installation](installation) steps before proceeding.
+This tutorial guides you through deploying **Llama 3 (8B Instruct)** to AWS SageMaker using Magemaker and querying it via the interactive dropdown menu. Make sure you have completed the [installation](installation) steps and have accepted the model’s terms of use on Hugging Face.
 
-## Step 1: Setting Up Magemaker for AWS
+## Step 1: Configure Magemaker for AWS
 
-Run the following command to configure Magemaker for AWS SageMaker deployment:
+Run the following command to initialise Magemaker for AWS SageMaker deployment:
 
 ```sh
 magemaker --cloud aws
 ```
 
-This initializes Magemaker with the necessary configurations for deploying models to SageMaker.
+This will:
+1. Prompt you for your AWS access key, secret and preferred region (defaults to `us-east-1`).
+2. Generate a `.env` file with the required variables (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION_NAME`, `SAGEMAKER_ROLE`, etc.).
+3. Optionally let you add your `HUGGING_FACE_HUB_KEY` which is **required** for gated models like Llama 3.
 
-## Step 2: YAML-based Deployment
+<Warning>
+You must ensure your AWS account has sufficient SageMaker quota for the instance type and GPU count you intend to use. See the <a href="/configuration/AWS">AWS configuration guide</a> for details on requesting quota increases.
+</Warning>
 
-For reproducible deployments, use YAML configuration:
+## Step 2: YAML-based Deployment (Recommended)
+
+For reproducible deployments and CI/CD pipelines, use a YAML configuration file:
 
 ```sh
-magemaker --deploy .magemaker_config/your-model.yaml
+magemaker --deploy .magemaker_config/llama3-8b.yaml
 ```
 
-Example YAML for AWS deployment:
+A minimal example for Llama 3 8B on SageMaker looks like this:
 
 ```yaml
+# .magemaker_config/llama3-8b.yaml
+
 deployment: !Deployment
   destination: aws
-  endpoint_name: llama3-endpoint
+  endpoint_name: llama3-8b-endpoint        # any unique name
   instance_count: 1
-  instance_type: ml.g5.2xlarge
-  num_gpus: 1
-  quantization: null
+  instance_type: ml.g5.12xlarge            # required for 8B model
+  num_gpus: 4                              # g5.12xlarge has 4× A10G GPUs
+  quantization: null                       # optional, e.g. "bitsandbytes" to save memory
 
 models:
   - !Model
     id: meta-llama/Meta-Llama-3-8B-Instruct
-    location: null
-    predict: null
     source: huggingface
     task: text-generation
-    version: null
+    # You can optionally add a predict block to set default generation params
+    # predict:
+    #   temperature: 0.7
+    #   max_new_tokens: 200
 ```
 
 <Note>
-   For gated models like llama from Meta, you have to accept terms of use for model on hugging face and adding Hugging face token to the environment are necessary for deployment to go through.
+If you supply `quantization: bitsandbytes`, Magemaker will deploy the model with 8-bit quantisation, reducing GPU memory requirements and cost at the expense of some accuracy.
 </Note>
 
+## Step 3: Deploy the Model
 
-<Warning> 
-You may need to request a quota increase for specific machine types and GPUs in the region where you plan to deploy the model. Check your AWS quotas before proceeding. 
-</Warning>
+Execute the deployment command:
 
-## Step 3: Querying the Deployed Model
+```sh
+magemaker --deploy .magemaker_config/llama3-8b.yaml
+```
 
-Once the deployment is complete, note down the endpoint id.
+Magemaker will:
+1. Package the model and environment.
+2. Create an ECR image (if necessary).
+3. Provision the SageMaker endpoint.
 
-You can use the interactive dropdown menu to quickly query the model.
+Deployment can take **10–20 minutes** for large models—watch the terminal progress bar or check the SageMaker console.
 
-### Querying Models
+## Step 4: Query the Deployed Model
 
-From the dropdown, select `Query a Model Endpoint` to see the list of model endpoints. Press space to select the endpoint you want to query. Enter your query in the text box and press enter to get the response.
+After the endpoint status changes to **InService**, you can query it via the interactive CLI or programmatically.
 
-![Query Endpoints](../Images/query-1.png)
+### Interactive Query (CLI)
 
-Or you can use the following code:
-```python 
+1. Run `magemaker --cloud aws` again.
+2. Choose **“Query a Model Endpoint”**.
+3. Select your `llama3-8b-endpoint`.
+4. Enter your prompt and press <kbd>Enter</kbd>.
+
+### Programmatic Query (Python)
+
+```python
 from sagemaker.huggingface.model import HuggingFacePredictor
 import sagemaker
 
-def query_huggingface_model(endpoint_name: str, query: str):
-    # Initialize a SageMaker session
+
+def query_llama3(endpoint_name: str, prompt: str):
     sagemaker_session = sagemaker.Session()
-    
-    # Create a HuggingFace predictor
     predictor = HuggingFacePredictor(
         endpoint_name=endpoint_name,
         sagemaker_session=sagemaker_session
     )
-    
-    # Prepare the input
-    input_data = {
-        "inputs": query
-    }
-    
-    try:
-        # Make prediction
-        result = predictor.predict(input_data)
-        print(result)
-        return result
-    except Exception as e:
-        print(f"Error making prediction: {str(e)}")
-        raise e
 
-# Example usage
+    response = predictor.predict({
+        "inputs": prompt,
+        "parameters": {
+            "max_new_tokens": 200,
+            "temperature": 0.7,
+            "top_p": 0.9
+        }
+    })
+    print(response)
+    return response
+
+
 if __name__ == "__main__":
-    # Replace with your actual endpoint name
-    ENDPOINT_NAME = "your-deployed-endpoint"
-    
-    # Your test question
-    question = "what are you?"
-    
-    # Make prediction
-    response = query_huggingface_model(ENDPOINT_NAME, question)
+    ENDPOINT = "llama3-8b-endpoint"  # change to your endpoint
+    query_llama3(ENDPOINT, "Explain the theory of relativity in simple terms.")
 ```
-## Conclusion
-You have successfully deployed and queried Llama 3 on AWS SageMaker using Magemaker's interactive dropdown menu. For any questions or feedback, feel free to contact us at [support@slashml.com](mailto:support@slashml.com).
 
+## Conclusion
+You have successfully deployed and queried Llama 3 8B on AWS SageMaker using Magemaker. For issues or feedback, reach out at [support@slashml.com](mailto:support@slashml.com).
