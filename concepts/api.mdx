@@ -1,0 +1,132 @@
+---
+title: REST & OpenAI-Compatible API
+description: Programmatically query your deployed models via REST or the OpenAI Chat Completion API
+---
+
+Magemaker ships with a lightweight FastAPI server (`server.py`) that lets you:
+
+1. Inspect deployed SageMaker endpoints
+2. Send structured `Query` objects to an endpoint
+3. Use an **OpenAI-compatible `/chat/completions`** route powered by [LiteLLM](https://github.com/BerriAI/litellm)
+
+This page documents the available routes, expected request/response formats, and sample usage.
+
+## Running the Server
+
+```bash
+python server.py  # defaults to 0.0.0.0:8000
+```
+
+The server automatically reads AWS region information from the active Magemaker session and expects a populated `.env` with your cloud credentials (see [Environment Variables](/configuration/Environment)).
+
+<Note>
+  The server currently supports **AWS SageMaker** back-ends. GCP & Azure support are on the roadmap.
+</Note>
+
+## Routes
+
+### 1. `GET /endpoint/{endpoint_name}`
+Returns the raw SageMaker endpoint description.
+
+```bash
+curl http://localhost:8000/endpoint/my-bert-endpoint | jq
+```
+
+Response (truncated):
+```json
+{
+  "EndpointName": "my-bert-endpoint",
+  "EndpointConfigName": "my-bert-endpoint-config",
+  "ProductionVariants": [...],
+  "CreationTime": "2024-05-30T16:22:11Z",
+  ...
+}
+```
+
+### 2. `POST /endpoint/{endpoint_name}/query`
+Send a structured `Query` (same schema used by the CLI) to the endpoint.
+
+Request body example:
+```json
+{
+  "inputs": "What are LLMs?",
+  "parameters": {
+    "max_new_tokens": 100,
+    "temperature": 0.7
+  }
+}
+```
+
+Successful response mirrors the Hugging Face inference API result:
+```json
+{
+  "generated_text": "Large Language Models (LLMs) are …"
+}
+```
+
+### 3. `POST /chat/completions`
+OpenAI-style chat completions powered by LiteLLM. This allows you to drop-in replace the OpenAI SDK in existing apps.
+
+Request body example:
+```json
+{
+  "model": "meta-llama/Meta-Llama-3-8B-Instruct",
+  "messages": [
+    {"role": "user", "content": "Explain RLHF in one paragraph."}
+  ]
+}
+```
+
+Under the hood the server:
+1. Looks up SageMaker endpoints that serve `model`.
+2. Proxies the chat request through LiteLLM using the first matching endpoint (`sagemaker/{endpoint_name}`).
+
+Response matches the OpenAI schema:
+```json
+{
+  "id": "chatcmpl-abc123",
+  "object": "chat.completion",
+  "created": 1717086490,
+  "model": "sagemaker/llama3-endpoint",
+  "choices": [
+    {
+      "index": 0,
+      "message": {"role": "assistant", "content": "Reinforcement Learning from Human Feedback (RLHF) …"},
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {"prompt_tokens": 15, "completion_tokens": 85, "total_tokens": 100}
+}
+```
+
+<Warning>
+  If no SageMaker endpoint is found for the requested `model`, the server raises `NotDeployedException` (HTTP 500).
+</Warning>
+
+## Authentication & Environment Variables
+
+No additional auth headers are required; the server uses the credentials already configured via `magemaker --cloud aws` and stored in `.env`.
+
+```bash
+AWS_ACCESS_KEY_ID=...
+AWS_SECRET_ACCESS_KEY=...
+SAGEMAKER_ROLE=...
+```
+
+## Example Python Client
+
+```python
+import requests
+
+url = "http://localhost:8000/chat/completions"
+req = {
+    "model": "meta-llama/Meta-Llama-3-8B-Instruct",
+    "messages": [{"role": "user", "content": "Tell me a dad joke."}]
+}
+print(requests.post(url, json=req).json())
+```
+
+## Roadmap
+- [ ] Support GCP & Azure endpoints
+- [ ] Token-based authentication / rate limiting
+- [ ] Streaming responses (`stream=true`)

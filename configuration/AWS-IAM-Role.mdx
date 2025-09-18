@@ -1,0 +1,49 @@
+---
+title: AWS IAM Role Details
+---
+
+# SageMaker Execution Role Explained
+
+This page dives deeper into the **SageMakerRole** that Magemaker automatically creates via `scripts/setup_role.sh`.
+
+## Why do we need a dedicated role?
+SageMaker endpoints assume an IAM role at **runtime** to:
+1. Pull model artifacts from S3.  
+2. Create/attach network interfaces.  
+3. Write logs to CloudWatch.
+
+## Role Creation Logic
+```bash
+# executed by magemaker --cloud aws
+env ROLE_NAME=SageMakerRole
+aws iam create-role \
+  --role-name "$ROLE_NAME" \
+  --assume-role-policy-document file://assume-role.json
+aws iam attach-role-policy \
+  --role-name "$ROLE_NAME" \
+  --policy-arn arn:aws:iam::aws:policy/AmazonSageMakerFullAccess
+```
+
+The ARN is then exported to `.env` under `SAGEMAKER_ROLE` so that all subsequent CLI calls (deploy, query, delete) know which role to pass to the SageMaker SDK.
+
+## Customising the Role
+If you already have a locked-down organisation you can:
+1. **Rename** the role—set `ROLE_NAME=<your-name>` before executing the script.  
+2. **Restrict** permissions—start from `AmazonSageMakerFullAccess`, then remove services you don’t use (e.g. Training, Pipelines).
+
+Update your `.env` accordingly.
+
+```bash
+SAGEMAKER_ROLE="arn:aws:iam::<acct>:role/YourCustomRole"
+```
+
+## Verification
+Run the quick check below after creating or modifying the role:
+
+```bash
+aws iam simulate-principal-policy \
+  --policy-source-arn "$SAGEMAKER_ROLE" \
+  --action-names sagemaker:CreateEndpoint
+```
+
+`EvaluationDecision": "allowed"` means you’re good to go.

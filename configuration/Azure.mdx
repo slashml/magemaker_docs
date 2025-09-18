@@ -5,80 +5,134 @@ description: Configure Magemaker for your cloud providers
 
 ### Azure CLI
 
-<Note>To install Azure SDK on MacOS, you need to have the latest OS and you need to use Rosetta terminal. Also, make sure you have the latest version of Xcode tools installed.</Note>
+<Note>To install Azure SDK on macOS you need the latest OS **and** you must use a Rosetta terminal on Apple-silicon devices. Verify you are in a Rosetta shell by running `arch` – it should output `i386`.</Note>
 
-
-To install the latest Azure CLI, run:
+Install the Azure CLI with Homebrew:
 
 ```bash
 brew update && brew install azure-cli
 ```
 
-Alternatively, follow this official guide from Azure
-- [https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-macos](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-macos)
+Alternatively follow the official guide:
+- https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-macos
 
-Once you have installed azure CLI, follow these steps
+Once the CLI is installed, continue with the steps below.
 
+---
 
-### Azure Account
-Step 1: Create azure cloud account
-
-- [https://azure.microsoft.com/en-ca](null)
-
+## Azure Account & Workspace Setup
 
 <Steps>
   <Step title="Login to Azure">
+    Authenticate with your Azure account:
     ```bash
     az login
     ```
   </Step>
+
   <Step title="Select Subscription">
+    If you have multiple subscriptions, choose the one you want Magemaker to use:
     ```bash
     az account set --subscription <subscription-id>
     ```
   </Step>
-  <Step title="Create Resource Group">
 
-	From the terminal
+  <Step title="Create Resource Group">
+    From the terminal:
     ```bash
     az group create --name <resource-group> --location <region>
     ```
 
-	From the Azure Portal
-	![Enter image alt description](../Images/XzN_Image_12.png)
-
+    Or through the Azure Portal:
+    ![Create Resource Group](../Images/XzN_Image_12.png)
   </Step>
-  <Step title="Create ML Workspace">
-    From the terminal
+
+  <Step title="Create Azure ML Workspace">
+    From the terminal:
     ```bash
     az ml workspace create -n <workspace-name> -g <resource-group>
     ```
 
-From the Azure portal
-1. Search for `Azure Machine Learning` in the search bar.
-	![Azure ML Creation](../Images/AzureML.png)
-
-2. Inside the `Azure Machine Learning` portal. Click on Create, and select `New Workspce` from the drop down
-	![workspace creation](../Images/workspace_creation.png)
-
+    From the Azure Portal:
+    1. Search for **Azure Machine Learning** in the search bar.  
+       ![Azure ML Creation](../Images/AzureML.png)
+    2. Click **Create ➜ New Workspace**.  
+       ![Workspace creation](../Images/workspace_creation.png)
   </Step>
-  <Step>
-	```bash
-	# Register all required providers: THIS STEP IS IMPORTANT
-	az provider register --namespace Microsoft.MachineLearningServices
-	az provider register --namespace Microsoft.ContainerRegistry
-	az provider register --namespace Microsoft.KeyVault
-	az provider register --namespace Microsoft.Storage
-	az provider register --namespace Microsoft.Insights
-	az provider register --namespace Microsoft.ContainerService
-	az provider register --namespace Microsoft.PolicyInsights
-	az provider register --namespace Microsoft.Cdn
-   ```
 
-   <Note>
-     Registration can take up to 10 minutes. Check status with: ```bash az
-     provider show -n Microsoft.MachineLearningServices ```
-   </Note>
+  <Step title="Register Required Resource Providers">
+    **This step is mandatory – deployments will fail if providers are not registered.**
+    ```bash
+    az provider register --namespace Microsoft.MachineLearningServices
+    az provider register --namespace Microsoft.ContainerRegistry
+    az provider register --namespace Microsoft.KeyVault
+    az provider register --namespace Microsoft.Storage
+    az provider register --namespace Microsoft.Insights
+    az provider register --namespace Microsoft.ContainerService
+    az provider register --namespace Microsoft.PolicyInsights
+    az provider register --namespace Microsoft.Cdn
+    ```
 
+    <Note>Registration may take up to 10 minutes. Check status with:
+    ```bash
+    az provider show -n Microsoft.MachineLearningServices
+    ```</Note>
   </Step>
 </Steps>
+
+---
+
+## Configure Magemaker
+
+Run the following command once your workspace is ready:
+
+```bash
+magemaker --cloud azure
+```
+
+Magemaker will:
+1. Validate your Azure CLI authentication.
+2. Prompt for – or auto-detect – Subscription ID, Resource Group, Workspace Name, and Region.
+3. Create a `.env` file in your project root with the required variables.
+
+### Required Environment Variables
+
+Magemaker (and the underlying Azure SDK) reads the following from `.env`:
+
+```bash
+AZURE_SUBSCRIPTION_ID="<subscription-id>"
+AZURE_RESOURCE_GROUP="<resource-group>"
+AZURE_WORKSPACE_NAME="<workspace-name>"
+AZURE_REGION="<region>"          # e.g. eastus
+
+# Optional – needed for gated Hugging Face models like Llama-3
+HUGGING_FACE_HUB_KEY="<hf-token>"
+```
+
+<Warning>Never commit your `.env` file to version control!</Warning>
+
+---
+
+## Quota & Instance Selection
+
+Before deploying large models (e.g. Llama 3) ensure you have quota for the desired GPU SKU in the chosen region. Request increases via **Subscriptions ➜ Quotas ➜ Provider: Machine Learning** in the Azure Portal.
+
+Typical instance types:
+- **Standard_DS3_v2** – CPU-only, suitable for small text models.
+- **Standard_NC6s_v3** – 1× V100 GPU.
+- **Standard_NC24ads_A100_v4** – 4× A100 GPUs, recommended for >7 B parameter models.
+
+---
+
+## Next Steps
+
+With configuration complete you can:
+
+- Deploy a model:
+  ```bash
+  magemaker --deploy .magemaker_config/your-model.yaml
+  ```
+- List or delete endpoints, or query them, via the interactive menu (`magemaker --cloud azure`).
+- Review the [Quick Start](/quick-start) for YAML examples.
+
+<Note>The model IDs for Azure differ from Hugging Face. Use the ID shown in the Azure **Model Catalog** card.</Note>

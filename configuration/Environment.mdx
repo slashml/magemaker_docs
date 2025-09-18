@@ -2,29 +2,91 @@
 title: Environment Variables
 ---
 
-### Required Config File
-A `.env` file is automatically created when you run `magemaker --cloud <cloud-provider>`. This file contains the necessary environment variables for your cloud provider(s).
-
-By default, Magemaker will look for a `.env` file in your project root with the following variables based on which cloud provider(s) you plan to use:
+### Overview
+Magemaker relies on a small set of *well-known* environment variables that are read at runtime by the CLI **and** by the optional FastAPI proxy (`server.py`).  
+These variables are usually written automatically to a `.env` file the first time you run
 
 ```bash
-# AWS Configuration
-AWS_ACCESS_KEY_ID="your-access-key"      # Required for AWS
-AWS_SECRET_ACCESS_KEY="your-secret-key"   # Required for AWS
-SAGEMAKER_ROLE="arn:aws:iam::..."        # Required for AWS
-
-# GCP Configuration
-PROJECT_ID="your-project-id"             # Required for GCP
-GCLOUD_REGION="us-central1"              # Required for GCP
-
-# Azure Configuration
-AZURE_SUBSCRIPTION_ID="your-sub-id"      # Required for Azure
-AZURE_RESOURCE_GROUP="ml-resources"      # Required for Azure
-AZURE_WORKSPACE_NAME="ml-workspace"      # Required for Azure
-AZURE_REGION="eastus"                    # Required for Azure
-
-# Optional configurations
-HUGGING_FACE_HUB_KEY="your-hf-token"    # Required for gated HF models like llama
+magemaker --cloud <aws|gcp|azure|all>
 ```
 
-<Warning>Never commit your .env file to version control!</Warning>
+You may edit the file manually if you need to rotate keys or change regions.  
+Make sure the file lives in the same working directory where you run Magemaker, or export the absolute path through the `ENV_PATH` variable (advanced use-case).
+
+<Warning>Never commit your `.env` file to version control!</Warning>
+
+---
+## Required Variables by Cloud Provider
+
+```bash
+# ────────────────── AWS ──────────────────
+AWS_ACCESS_KEY_ID="your-access-key"      # Required for AWS operations
+AWS_SECRET_ACCESS_KEY="your-secret-key"  # Required for AWS operations
+SAGEMAKER_ROLE="arn:aws:iam::123456789012:role/MagemakerSageMakerRole" # IAM role ARN
+AWS_REGION_NAME="us-east-1"              # *Auto-populated* but you can override
+
+# ────────────────── GCP ──────────────────
+PROJECT_ID="your-project-id"              # Required for GCP Vertex AI
+GCLOUD_REGION="us-central1"              # GCP region hosting Vertex AI endpoints
+
+# ────────────────── Azure ──────────────────
+AZURE_SUBSCRIPTION_ID="your-subscription"  # Azure Subscription GUID
+AZURE_RESOURCE_GROUP="ml-resources"        # Resource group that hosts ML workspace
+AZURE_WORKSPACE_NAME="ml-workspace"        # Name of the Azure ML workspace
+AZURE_REGION="eastus"                      # Region where resources are created
+
+# ────────────────── Hugging Face ──────────────────
+HUGGING_FACE_HUB_KEY="your-hf-token"      # Needed for gated models (e.g. Llama 3)
+```
+
+---
+## Variables Used by the FastAPI Proxy (`server.py`)
+The proxy exposes OpenAI-compatible routes (`/chat/completions`, etc.) so you can drop-in replace the OpenAI SDK.
+
+```bash
+# ────────────────── Proxy Settings ──────────────────
+API_HOST="0.0.0.0"        # Bind address for FastAPI (default: 0.0.0.0)
+API_PORT="8000"          # Port the server listens on (default: 8000)
+
+# ────────────────── OpenAI SDK Compatibility ──────────────────
+OPENAI_API_KEY="dummy"   # The OpenAI client mandates a key value; any string works.
+OPENAI_BASE_URL="http://localhost:8000" # Point your OpenAI SDK to the proxy
+```
+
+<Note>
+Only `OPENAI_API_KEY` and `OPENAI_BASE_URL` are needed if you interact with Magemaker programmatically through the OpenAI SDK.  The key itself is **not** checked by Magemaker—it just satisfies the client-side validation performed by the SDK.
+</Note>
+
+---
+## Advanced / Optional Variables
+
+```bash
+# Directory that contains YAML configs; defaults to .magemaker_config
+CONFIG_DIR="/absolute/path/to/configs"
+
+# Explicit path to the .env file if it is **not** in the working directory
+ENV_PATH="/absolute/path/to/.env"
+```
+
+---
+## Loading Order
+Magemaker uses the following precedence when resolving variables:
+
+1. Explicitly exported shell variables (`export AWS_ACCESS_KEY_ID=…`)
+2. Values in `.env` (loaded via `python-dotenv`)
+3. Hard-coded fallbacks inside the codebase
+
+---
+## Quick Checklist
+
+<Steps>
+  <Step title="After first \`magemaker --cloud …\` run">
+    Verify new keys have been written to `.env`.
+  </Step>
+  <Step title="Before committing code">
+    Ensure `.env` is listed in `.gitignore`.
+  </Step>
+  <Step title="When switching accounts">
+    Delete or rename the existing `.env` and rerun the configuration wizard.
+  </Step>
+</Steps>

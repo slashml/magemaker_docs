@@ -1,43 +1,64 @@
 ---
 title: About
-description: Deploy open source AI models to AWS, GCP, and Azure in minutes
+description: Deploy open-source AI models to AWS, GCP, and Azure in minutes
 "og:title": "Magemaker"
 ---
 
 ## About Magemaker
 
-Magemaker is a Python tool that simplifies the process of deploying open source AI models to your preferred cloud provider. Instead of spending hours digging through documentation, Magemaker lets you deploy Hugging Face models directly to AWS SageMaker, Google Cloud Vertex AI, or Azure Machine Learning.
+Magemaker is a Python tool that makes it **push-button simple** to deploy open-source AI models to your preferred cloud provider. Instead of spending hours digging through cloud docs, you can spin up Hugging Face models directly on:
 
-## What we're working on next
+- **AWS SageMaker**
+- **Google Cloud Vertex AI**
+- **Azure Machine Learning**
 
-- More robust error handling for various edge cases
-- Verbose logging
-- Enabling / disabling autoscaling
-- Enhanced multi-cloud support features
+### Key Features
 
-Do submit your feature requests at https://magemaker.featurebase.app/
+<CardGroup>
+  <Card title="Interactive CLI" icon="terminal">
+    Guided, menu-driven deployments – perfect for first-time users.
+  </Card>
+  <Card title="YAML-based IaC" icon="file-code">
+    Declarative configs for repeatable, CI-friendly deployments.
+  </Card>
+  <Card title="Fine-tuning" icon="wand-magic-sparkles">
+    Train and tune models with a single YAML file.
+  </Card>
+  <Card title="Multi-Cloud" icon="cloud">
+    One tool, three clouds. Mix-and-match providers as needed.
+  </Card>
+  <Card title="OpenAI-Compatible API" icon="plug">
+    Serve any deployed model behind an `/chat/completions` endpoint that works with the official *openai* Python SDK.
+  </Card>
+</CardGroup>
 
-## Known issues
+### What We're Working on Next
 
-- Querying within Magemaker currently only works with text-based models
-- Deleting a model is not instant, it may show up briefly after deletion
-- Deploying the same model within the same minute will break
-- Hugging-face models on Azure have different Ids than their Hugging-face counterparts. Follow the steps specified in the quick-start guide to find the relevant models
-- For Azure deploying models other than Hugging-face is not supported yet. 
-- Python3.13 is not supported because of an open-issue by Azure. https://github.com/Azure/azure-sdk-for-python/issues/37600
+- More robust error handling for edge cases
+- Verbose / structured logging
+- On-demand autoscaling controls
+- Additional multi-cloud utilities
+- Expanded model-type support (vision, audio, multimodal)
 
+Have a feature request? Let us know at [magemaker.featurebase.app](https://magemaker.featurebase.app/).
 
-If there is anything we missed, do point them out at https://magemaker.featurebase.app/
+### Known Issues
 
+1. Querying currently supports **text-based** models only.
+2. Endpoint deletion is asynchronous – an endpoint may appear for several minutes after deletion is requested.
+3. Deploying the **same endpoint name** within the same minute can fail (name collision).
+4. Hugging Face model **IDs differ on Azure** – follow the [Quick Start](/quick-start) guide to obtain the correct ID.
+5. Azure supports **Hugging Face models only** at the moment.
+6. Python 3.13 is not yet supported due to an [open Azure SDK issue](https://github.com/Azure/azure-sdk-for-python/issues/37600).
 
-## License
+If we missed something, please report it on [Featurebase](https://magemaker.featurebase.app/).
+
+### License
 
 Distributed under the Apache 2.0 License. See `LICENSE` for more information.
 
-## Contact
+### Contact
 
-You can reach us, faizan & jneid, at [faizan|jneid@slashml.com](mailto:support@slashml.com).
+Questions or feedback? Reach out to **Faizan & Jneid** at [support@slashml.com](mailto:support@slashml.com).
 
-You can give feedback at https://magemaker.featurebase.app/
-
-We'd love to hear from you! We're excited to learn how we can make this more valuable for the community and welcome any and all feedback and suggestions.
+We’d love to hear from you – community feedback drives our roadmap!

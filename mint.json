@@ -38,9 +38,13 @@
     "mode": "auto"
   },
   "navigation": [
-    { 
+    {
       "group": "Getting Started",
-      "pages": ["about", "installation", "quick-start"]
+      "pages": [
+        "about",
+        "installation",
+        "quick-start"
+      ]
     },
     {
       "group": "Tutorials",
@@ -54,6 +58,7 @@
       "group": "Configurations",
       "pages": [
         "configuration/AWS",
+        "configuration/AWS-IAM-Role",
         "configuration/Azure",
         "configuration/GCP",
         "configuration/Environment"
@@ -66,6 +71,13 @@
         "concepts/models",
         "concepts/contributing"
       ]
+    },
+    {
+      "group": "API Reference",
+      "pages": [
+        "concepts/api-reference",
+        "concepts/openai-proxy"
+      ]
     }
   ],
   "footerSocials": {
@@ -77,15 +89,31 @@
       {
         "title": "Documentation",
         "links": [
-          { "label": "Getting Started", "url": "/" },
-          { "label": "Contributing", "url": "/contributing" }
+          {
+            "label": "Getting Started",
+            "url": "/"
+          },
+          {
+            "label": "Contributing",
+            "url": "/contributing"
+          },
+          {
+            "label": "API Reference",
+            "url": "/concepts/api-reference"
+          }
         ]
       },
       {
         "title": "Resources",
         "links": [
-          { "label": "GitHub", "url": "https://github.com/slashml/magemaker" },
-          { "label": "Support", "url": "mailto:support@slashml.com" }
+          {
+            "label": "GitHub",
+            "url": "https://github.com/slashml/magemaker"
+          },
+          {
+            "label": "Support",
+            "url": "mailto:support@slashml.com"
+          }
         ]
       }
     ]
