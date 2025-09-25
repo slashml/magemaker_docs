@@ -1,0 +1,89 @@
+---
+title: Searching SageMaker JumpStart Models
+description: How to discover and deploy AWS JumpStart models with Magemaker
+---
+
+## Overview
+
+AWS SageMaker JumpStart ships hundreds of pre-built, fine-tuned models (text, vision, audio, tabular) that can be deployed in one click. Magemaker exposes these models directly in the CLI so you can:
+
+1. **Search** by framework (TensorFlow, PyTorch, Hugging Face, etc.)
+2. **Preview** model IDs & recommended instance types
+3. **Generate** a ready-to-use YAML file for reproducible deployments
+
+<Info>
+JumpStart support is **AWS-only** for now. The rest of the Magemaker workflow (YAML deployment, endpoint management, querying) is identical to Hugging Face models.
+</Info>
+
+---
+
+## Interactive Search Workflow
+
+```bash
+magemaker --cloud aws
+```
+
+1. Choose **“Deploy a Model”** ➜ **“SageMaker JumpStart”**.
+2. Pick a framework (Hugging Face, TensorFlow, PyTorch, etc.).
+3. Use arrow keys to browse or start typing to filter.
+4. Press **Enter** to select a model and follow the prompts.
+
+![JumpStart Search](../Images/jumpstart-search.png)
+
+At the end of the wizard a file like `.magemaker_config/jumpstart-inception-v3.yaml` is created so you can redeploy the exact same model via CI/CD:
+
+```bash
+magemaker --deploy .magemaker_config/jumpstart-inception-v3.yaml
+```
+
+---
+
+## YAML Schema
+
+JumpStart models use the same `!Model` schema but with `source: sagemaker` and an **AWS-provided model ID**:
+
+```yaml
+models:
+- !Model
+  id: tensorflow-ic-imagenet-inception-v3-classification-4  # ← JumpStart ID
+  source: sagemaker
+
+deployment: !Deployment
+  destination: aws
+  endpoint_name: inception-v3-demo
+  instance_type: ml.g4dn.xlarge
+```
+
+<Note>
+Need GPUs? JumpStart docs list the minimum compatible instance for each model. If deployment fails with `CapacityError`, try a larger GPU instance or a different region.
+</Note>
+
+---
+
+## Programmatic Access
+
+If you are building your own UI on top of Magemaker you can import the utility directly:
+
+```python
+from magemaker.sagemaker.search_jumpstart_models import search_sagemaker_jumpstart_model
+
+models = search_sagemaker_jumpstart_model()
+print(models[:5])  # preview first five IDs
+```
+
+---
+
+## Common Errors & Fixes
+
+| Error | Cause | Fix |
+|-------|-------|-----|
+| `Model not found` | Wrong ID copied | Copy the **Model ID** (not the display name) from JumpStart docs.
+| `CapacityError` | Instance type unavailable in region | Switch regions or request a quota increase.
+| `ClientError: ValidationException` | Instance too small | Use the **recommended** instance class shown in JumpStart UI.
+
+---
+
+## Next Steps
+
+• [Model Deployment Guide](/concepts/deployment) – deep-dive into YAML options<br/>
+• [Supported Models](/concepts/models) – full compatibility matrix
