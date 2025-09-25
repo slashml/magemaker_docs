@@ -47,7 +47,7 @@ magemaker --cloud gcp
 ### Azure Configuration
 
 - Follow this detailed guide for setting up Azure credentials:
-  [GCP Setup Guide](/configuration/Azure)
+  [Azure Setup Guide](/configuration/Azure)
 
 
 Once you have your Azure credentials, you can configure Magemaker by running:
@@ -75,10 +75,12 @@ By default, Magemaker will look for a `.env` file in your project root with the 
 AWS_ACCESS_KEY_ID="your-access-key"      # Required for AWS
 AWS_SECRET_ACCESS_KEY="your-secret-key"   # Required for AWS
 SAGEMAKER_ROLE="arn:aws:iam::..."        # Required for AWS
+AWS_REGION_NAME="us-east-1"              # Optional: override default AWS region
 
 # GCP Configuration
 PROJECT_ID="your-project-id"             # Required for GCP
 GCLOUD_REGION="us-central1"              # Required for GCP
+GOOGLE_APPLICATION_CREDENTIALS="/path/to/creds.json" # Optional: service-account json key
 
 # Azure Configuration
 AZURE_SUBSCRIPTION_ID="your-sub-id"      # Required for Azure
@@ -86,8 +88,10 @@ AZURE_RESOURCE_GROUP="ml-resources"      # Required for Azure
 AZURE_WORKSPACE_NAME="ml-workspace"      # Required for Azure
 AZURE_REGION="eastus"                    # Required for Azure
 
-# Optional configurations
-HUGGING_FACE_HUB_KEY="your-hf-token"    # Required for gated HF models like llama
+# Optional Magemaker configurations
+HUGGING_FACE_HUB_KEY="your-hf-token"     # Required for gated HF models like llama
+CONFIG_DIR=".magemaker_config"           # Optional: change default config directory
+PROXY_SERVER_PORT="8000"                 # Optional: port for the OpenAI-compatible proxy server
 ```
 
 <Warning>Never commit your .env file to version control!</Warning>

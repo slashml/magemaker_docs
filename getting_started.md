@@ -16,7 +16,7 @@ To get a local copy up and running follow these simple steps.
 
 ### Prerequisites
 
-* Python 3.11 (3.13 is not supported because of azure)
+* Python 3.11+ (3.12 is not supported)
 * Cloud Configuration
     * An account to your preferred cloud provider, AWS, GCP and Azure.
         * Each cloud requires slightly different accesses, Magemaker will guide you through getting the necessary credentials to the selected cloud provider
@@ -132,18 +132,18 @@ models:
 
 #### Fine-tuning a model using a yaml file
 
-You can also fine-tune a model using a yaml file, by using the `train` option in the command and passing path to the yaml file
+Fine-tuning is currently supported **only on AWS SageMaker**. You can fine-tune a model using a YAML file by passing the `train` option:
 
-`
+```
 magemaker --train .magemaker_config/train-bert.yaml
-`
+```
 
-Here is an example yaml file for fine-tuning a hugging-face model:
+Example YAML for fine-tuning a Hugging Face model on SageMaker:
 
 ```yaml
 training: !Training
-  destination: aws  # or gcp, azure
-  instance_type: ml.p3.2xlarge  # varies by cloud provider
+  destination: aws  # Fine-tuning currently supports AWS only
+  instance_type: ml.p3.2xlarge
   instance_count: 1
   training_input_path: s3://your-bucket/data.csv
   hyperparameters: !Hyperparameters
@@ -151,6 +151,10 @@ training: !Training
     per_device_train_batch_size: 32
     learning_rate: 2e-5
 
+models:
+- !Model
+  id: google-bert/bert-base-uncased
+  source: huggingface
 ```
 
 
@@ -176,7 +180,6 @@ If you’re using the `ml.m5.xlarge` instance type, here are some small Hugging 
 
 <br>
 <br>
-
 
 
 ## Deactivating Models

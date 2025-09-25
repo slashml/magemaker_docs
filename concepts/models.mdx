@@ -3,203 +3,152 @@ title: Models
 description: Guide to supported models and their requirements
 ---
 
-## Supported Models
+## Supported Model Sources
+
+Magemaker can deploy models from two primary sources today:
+
+<CardGroup>
+  <Card title="Hugging Face" icon="face-smile" href="https://huggingface.co/models">
+    The full public Hugging Face Hub (text, vision, audio, & multimodal models).
+  </Card>
+  <Card title="AWS SageMaker JumpStart" icon="aws" href="https://docs.aws.amazon.com/sagemaker/latest/dg/studio-jumpstart.html">
+    Pre-built & Marketplace models that ship with SageMaker (BERT, Stable Diffusion, Llama-2, etc.).
+  </Card>
+</CardGroup>
 
 <Note>
-Currently, Magemaker supports deployment of Hugging Face models only. Support for cloud provider marketplace models is coming soon!
+GCP Model Garden and Azure ML Model Catalog support is **under active development**. Follow the progress or up-vote the request on our
+<a href="https://magemaker.featurebase.app/">Featurebase board</a>.
 </Note>
 
 ### Hugging Face Models
 
 <CardGroup>
   <Card title="Text Generation" icon="pen-to-square" href="https://huggingface.co/models?pipeline_tag=text-generation">
-    - LLaMA
-    - BERT
-    - GPT-2
-    - T5
+    • LLaMA 2 / 3<br/>
+    • GPT-2 / GPT-J<br/>
+    • T5 / FLAN-T5
   </Card>
   
-  <Card title="Feature Extraction" icon="vector-square" href="https://huggingface.co/models?pipeline_tag=feature-extraction">
-    - Sentence Transformers
-    - CLIP
-    - DPR
+  <Card title="Embeddings & Feature Extraction" icon="vector-square" href="https://huggingface.co/models?pipeline_tag=feature-extraction">
+    • Sentence-Transformers<br/>
+    • CLIP<br/>
+    • DPR / Contriever
   </Card>
 </CardGroup>
 
-### Future Support
+### SageMaker JumpStart Models  (New!)
 
-We plan to add support for the following model sources:
+You can now deploy any JumpStart model by selecting **“SageMaker JumpStart → Search Models”** in the interactive CLI or by specifying `source: sagemaker` in a YAML file.
 
-<CardGroup>
-  <Card title="AWS SageMaker" icon="aws">
-    Models from AWS Marketplace and SageMaker built-in algorithms
-  </Card>
-  
-  <Card title="GCP Vertex AI" icon="google">
-    Models from Vertex AI Model Garden and Foundation Models
-  </Card>
-  
-  <Card title="Azure ML" icon="microsoft">
-    Models from Azure ML Model Catalog and Azure OpenAI
-  </Card>
-</CardGroup>
-## Model Requirements
+```yaml
+models:
+- !Model
+  id: tensorflow-ic-imagenet-inception-v3-classification-4 # JumpStart model ID
+  source: sagemaker
 
-### Instance Type Recommendations by Cloud Provider
+deployment: !Deployment
+  destination: aws
+  endpoint_name: inception-v3-demo
+  instance_type: ml.g4dn.xlarge
+```
 
-#### AWS SageMaker
-1. **Small Models** (ml.m5.xlarge)
-   ```yaml
-   instance_type: ml.m5.xlarge
-   ```
-2. **Medium Models** (ml.g4dn.xlarge)
-   ```yaml
-   instance_type: ml.g4dn.xlarge
-   ```
-3. **Large Models** (ml.g5.12xlarge)
-   ```yaml
-   instance_type: ml.g5.12xlarge
-   num_gpus: 4
-   ```
+See the dedicated page ➜ [JumpStart Model Search](/concepts/jumpstart-models) for a full walkthrough.
 
-#### GCP Vertex AI
-1. **Small Models** (n1-standard-4)
-   ```yaml
-   machine_type: n1-standard-4
-   ```
-2. **Medium Models** (n1-standard-8 + GPU)
-   ```yaml
-   machine_type: n1-standard-8
-   accelerator_type: NVIDIA_TESLA_T4
-   accelerator_count: 1
-   ```
-3. **Large Models** (a2-highgpu-1g)
-   ```yaml
-   machine_type: a2-highgpu-1g
-   ```
+---
 
-#### Azure ML
-1. **Small Models** (Standard_DS3_v2)
-   ```yaml
-   instance_type: Standard_DS3_v2
-   ```
-2. **Medium Models** (Standard_NC6s_v3)
-   ```yaml
-   instance_type: Standard_NC6s_v3
-   ```
-3. **Large Models** (Standard_ND40rs_v2)
-   ```yaml
-   instance_type: Standard_ND40rs_v2
-   ```
+## Instance-Type Recommendations
+
+### AWS SageMaker
+1. **Small Models** – `ml.m5.xlarge`
+2. **GPU Text/Embeddings** – `ml.g4dn.xlarge`
+3. **Large LLMs (8 B+)** – `ml.g5.12xlarge` (`num_gpus: 4`)
+
+### GCP Vertex AI *(Hugging Face only today)*
+1. **CPU Only** – `n1-standard-4`
+2. **Small GPU** – `n1-standard-8 + NVIDIA_TESLA_T4`
+3. **Large GPU** – `a2-highgpu-1g`
+
+### Azure ML *(Hugging Face only today)*
+1. `Standard_DS3_v2`
+2. `Standard_NC6s_v3`
+3. `Standard_ND40rs_v2`
+
+---
 
 ## Example Deployments
 
-### Example Hugging Face Model Deployment
-
-Deploy the same Hugging Face model to different cloud providers:
-
-AWS SageMaker:
+### Deploy a Hugging Face Model to GCP
 ```yaml
 models:
 - !Model
   id: facebook/opt-125m
   source: huggingface
-deployment: !Deployment
-  destination: aws
-```
 
-GCP Vertex AI:
-```yaml
-models:
-- !Model
-  id: facebook/opt-125m
-  source: huggingface
 deployment: !Deployment
   destination: gcp
+  endpoint_name: opt-125m-demo
 ```
 
-Azure ML:
+### Deploy a JumpStart Model to AWS
 ```yaml
 models:
 - !Model
-  id: facebook-opt-125m
+  id: pytorch-inference-stable-diffusion-2-1-base
+  source: sagemaker
+
+deployment: !Deployment
+  destination: aws
+  instance_type: ml.g4dn.xlarge
+```
+
+### Deploy a Hugging Face Model to Azure
+```yaml
+models:
+- !Model
+  id: facebook-opt-125m   # Use Azure-specific model IDs!
   source: huggingface
+
 deployment: !Deployment
   destination: azure
+  instance_type: Standard_DS3_v2
 ```
 
-<Note>
-  The model ids for Azure are different from AWS and GCP. Make sure to use the one provided by Azure in the Azure Model Catalog. 
+<Warning>
+Azure model IDs differ from Hugging Face IDs. Use the **Model Catalog** in Azure ML Studio to copy the correct ID.
+</Warning>
 
-  To find the relevnt model id, follow the following steps
-  <Steps>
-    <Step title="Go to your workpsace studio">
-      Find the workpsace in the Azure portal and click on the studio url provided. Click on the `Model Catalog` on the left side bar
-    	![Azure ML Creation](../Images/workspace-studio.png)
-    </Step>
+---
 
-      <Step title="Select Hugging Face in the Collections List">
-      Select Hugging-Face from the collections list. The id of the model card is the id you need to use in the yaml file
-    	![Azure ML Creation](../Images/hugging-face.png)
-    </Step>
-
-  </Steps>
-</Note>
-
-
-## Model Configuration
-
-### Basic Parameters
+## Model Schema Reference
 
 ```yaml
 models:
 - !Model
-  id: your-model-id
-  source: huggingface|sagemaker # we don't support vertex and azure specific models yet
-  revision: latest  # Optional: specify model version
-```
-
-### Advanced Parameters
-
-```yaml
-models:
-- !Model
-  id: your-model-id
-  source: huggingface
-  predict:
+  id: your-model-id            # Required
+  source: huggingface|sagemaker # Required
+  revision: latest              # Optional – model version / git SHA
+  predict:                      # Optional – generation parameters
     temperature: 0.7
     top_p: 0.9
-    top_k: 50
-    max_new_tokens: 500
-    do_sample: true
+    max_new_tokens: 256
 ```
 
+---
+
 ## Best Practices
+1. Benchmark cost vs latency across clouds before committing.
+2. Start small (`ml.m5.xlarge`, `n1-standard-4`, `Standard_DS3_v2`) then scale up.
+3. Always shut down endpoints when not in use to avoid surprises.
 
-1. **Model Selection**
-   - Compare pricing across cloud providers
-   - Consider data residency requirements
-   - Test latency from different regions
+---
 
-3. **Cost Management**
-   - Compare instance pricing
-   - Make sure you set up the relevant alerting
+## Troubleshooting Checklist
 
-## Troubleshooting
+1. **Quota / Capacity Errors** – request a quota increase or switch regions.
+2. **Model Load Failure** – verify model ID + revision; ensure enough RAM/GPU.
+3. **Auth Errors** – check cloud credentials & Hugging Face access tokens.
 
-Common model-related issues:
-
-1. **Cloud-Specific Issues**
-   - Check quota limits
-   - Verify regional availability
-   - Review cloud-specific logs
-
-2. **Performance Issues**
-   - Compare cross-cloud latencies
-   - Check network connectivity
-   - Monitor resource utilization
-
-3. **Authentication Issues**
-   - Verify cloud credentials
-   - Check model access permissions
-   - Validate API keys
+<Note>
+Stuck? Reach us on Discord or open a GitHub issue – we’re happy to help.
+</Note>

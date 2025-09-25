@@ -5,7 +5,7 @@ description: Guide to fine-tuning models with Magemaker
 
 ## Fine-tuning Overview
 
-Fine-tuning allows you to adapt pre-trained models to your specific use case. Magemaker simplifies this process through YAML configuration.
+Fine-tuning allows you to adapt pre-trained models to your specific use case.  **At the moment, Magemaker supports fine-tuning _only on AWS SageMaker_** – GCP and Azure support are on the roadmap.
 
 ### Basic Command
 
@@ -13,13 +13,17 @@ Fine-tuning allows you to adapt pre-trained models to your specific use case. Ma
 magemaker --train .magemaker_config/train-config.yaml
 ```
 
+<Warning>
+  The `destination` field must be set to `aws` for now.  Attempts to use `gcp` or `azure` will raise a validation error.
+</Warning>
+
 ## Configuration
 
 ### Basic Training Configuration
 
 ```yaml
 training: !Training
-  destination: aws
+  destination: aws            # currently only "aws" is supported
   instance_type: ml.p3.2xlarge
   instance_count: 1
   training_input_path: s3://your-bucket/training-data.csv
@@ -31,6 +35,8 @@ models:
 ```
 
 ### Advanced Configuration
+
+The `Training` schema accepts an optional `hyperparameters` block. Any key/value pairs you specify here will be forwarded directly to the Hugging Face training script that Magemaker launches inside SageMaker.
 
 ```yaml
 training: !Training
@@ -49,20 +55,24 @@ training: !Training
     save_steps: 1000
 ```
 
+<Note>
+If you omit the `hyperparameters` block, Magemaker will attempt to infer sensible defaults based on the model type (see `magemaker/sagemaker/fine_tune_model.py#get_hyperparameters_for_model`).
+</Note>
+
 ## Data Preparation
 
 ### Supported Formats
 
 <CardGroup>
   <Card title="CSV Format" icon="file-csv">
-    - Simple tabular data
-    - Easy to prepare
+    - Simple tabular data<br />
+    - Easy to prepare<br />
     - Good for classification tasks
   </Card>
   
   <Card title="JSON Lines" icon="file-code">
-    - Flexible data format
-    - Good for complex inputs
+    - Flexible data format<br />
+    - Good for complex inputs<br />
     - Supports nested structures
   </Card>
 </CardGroup>
@@ -77,24 +87,22 @@ training: !Training
     Use AWS CLI or console to upload data
   </Step>
   <Step title="Configure Path">
-    Specify S3 path in training configuration
+    Specify the S3 URI in `training_input_path`
   </Step>
 </Steps>
 
 ## Instance Selection
 
-### Training Instance Types
-
-Choose based on:
-- Dataset size
-- Model size
-- Training time requirements
-- Cost constraints
+Choosing the right training instance affects both cost and training time.
 
 Popular choices:
-- ml.p3.2xlarge (1 GPU)
-- ml.p3.8xlarge (4 GPUs)
-- ml.p3.16xlarge (8 GPUs)
+- **ml.p3.2xlarge** (1 × NVIDIA V100 GPU)
+- **ml.p3.8xlarge** (4 × NVIDIA V100 GPUs)
+- **ml.p3.16xlarge** (8 × NVIDIA V100 GPUs)
+
+<Warning>
+You may need a quota increase for the larger `p3` instance families. Check your AWS Service Quotas before launching a job.
+</Warning>
 
 ## Hyperparameter Tuning
 
@@ -124,7 +132,15 @@ hyperparameters: !Hyperparameters
 
 ### CloudWatch Metrics
 
-Available metrics:
+When the training job starts, Magemaker streams logs to Amazon CloudWatch. Key metrics include:
 - Loss
 - Learning rate
 - GPU utilization
+
+You can access these metrics in the SageMaker console under **Training jobs → Metrics**.
+
+---
+
+### Cleaning Up
+
+Training jobs automatically shut down when they finish, but the output model artefacts remain in the S3 bucket that SageMaker created for you. Delete them if you no longer need the checkpoint files to avoid storage charges.

@@ -38,9 +38,13 @@
     "mode": "auto"
   },
   "navigation": [
-    { 
+    {
       "group": "Getting Started",
-      "pages": ["about", "installation", "quick-start"]
+      "pages": [
+        "about",
+        "installation",
+        "quick-start"
+      ]
     },
     {
       "group": "Tutorials",
@@ -64,6 +68,8 @@
       "pages": [
         "concepts/deployment",
         "concepts/models",
+        "concepts/jumpstart-models",
+        "concepts/openai-proxy",
         "concepts/contributing"
       ]
     }
@@ -77,15 +83,27 @@
       {
         "title": "Documentation",
         "links": [
-          { "label": "Getting Started", "url": "/" },
-          { "label": "Contributing", "url": "/contributing" }
+          {
+            "label": "Getting Started",
+            "url": "/"
+          },
+          {
+            "label": "Contributing",
+            "url": "/contributing"
+          }
         ]
       },
       {
         "title": "Resources",
         "links": [
-          { "label": "GitHub", "url": "https://github.com/slashml/magemaker" },
-          { "label": "Support", "url": "mailto:support@slashml.com" }
+          {
+            "label": "GitHub",
+            "url": "https://github.com/slashml/magemaker"
+          },
+          {
+            "label": "Support",
+            "url": "mailto:support@slashml.com"
+          }
         ]
       }
     ]

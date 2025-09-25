@@ -1,38 +1,91 @@
 ---
 title: GCP 
+description: Configure Magemaker for Google Cloud Platform
 ---
+
+<Note>
+  Before proceeding, make sure you have followed the general <Link href="/installation">installation</Link> guide and have Python 3.11+ installed.
+</Note>
+
 <Steps>
-<Step title="Create Google Cloud Account">
-Visit [Google Cloud Console](https://cloud.google.com/?hl=en) to create your account.
-</Step>
+  <Step title="Create Google Cloud Account">
+    Visit the <Link href="https://cloud.google.com/?hl=en">Google Cloud Console</Link> to create your account.
+  </Step>
 
-<Step title="Create a new project">
-	Once you have created your account, create a new project. If this is your first time the default project is "My First Project". You can create a new project by clicking this button and then selecting "New Project".
+  <Step title="Create a New Project">
+    Once signed in, create a new project. If this is your first time, the default project is "My First Project". Click this dropdown and select <Icon icon="plus" /> <b>New Project</b>.
 
-	![Enter image alt description](../Images/google_new_project.png)
+    ![Create GCP Project](../Images/google_new_project.png)
+  </Step>
 
-</Step>
+  <Step title="Install Google Cloud SDK (gcloud)">
+    1. Follow the official <Link href="https://cloud.google.com/sdk/docs/install-sdk">Google Cloud SDK installation guide</Link> for your OS.<br />
+    2. Initialize the SDK and set the default project:
 
-<Step title="Install Google Cloud SDK">
-1. Follow the installation guide at [Google Cloud SDK Installation Documentation](https://cloud.google.com/sdk/docs/install-sdk)
-2. Initialize the SDK by running:
-   ```bash
-   gcloud init
-   ```
-</Step>
+    ```bash
+    gcloud init
+    ```
 
-3. During initialization:
-   - Create login credentials when prompted
-   - Create a new project or select an existing one
-   To make sure the initialization worked, run:
-   ```bash
-   gcloud auth application-default login
-   ```
+    3. Verify Application-Default credentials (ADC):
 
-<Step title="Enable Vertex AI API">
-Navigate to the APIs & Services on the dashboard and enable the Vertex AI API for your project.
+    ```bash
+    gcloud auth application-default login
+    ```
 
-![Enter image alt description](../Images/QrB_Image_11.png)
-</Step>
+    This creates/refreshes an OAuth token that Magemaker will use via ADC when interacting with Vertex AI.
+  </Step>
 
+  <Step title="Enable Vertex AI API">
+    In the Google Cloud Console, navigate to <b>APIs & Services → Library</b> and enable the <b>Vertex AI API</b> for your project.
+
+    ![Enable Vertex AI](../Images/QrB_Image_11.png)
+  </Step>
+
+  <Step title="(Optional) Service Account Key File">
+    If you prefer using a Service Account instead of ADC:
+
+    1. Create a Service Account with the roles <code>Vertex AI Admin</code> and <code>Storage Admin</code> (or least-privilege variants).
+    2. Generate a JSON key file.
+    3. Point the <code>GOOGLE_APPLICATION_CREDENTIALS</code> environment variable to that file:
+
+    ```bash
+    export GOOGLE_APPLICATION_CREDENTIALS="/path/to/key.json"
+    ```
+  </Step>
+
+  <Step title="Configure Magemaker for GCP">
+    Run the setup command to generate a <code>.env</code> file and store required variables:
+
+    ```bash
+    magemaker --cloud gcp
+    ```
+
+    You will be prompted for:
+    - <b>PROJECT_ID</b> – your GCP project ID
+    - <b>GCLOUD_REGION</b> – default Vertex AI region (e.g., <code>us-central1</code>)
+
+    The resulting <code>.env</code> should contain at least:
+
+    ```bash
+    PROJECT_ID="your-project-id"
+    GCLOUD_REGION="us-central1"
+    # Optional – used when supplying a Service Account key file
+    GOOGLE_APPLICATION_CREDENTIALS="/absolute/path/to/key.json"
+    ```
+
+    <Warning>Never commit your <code>.env</code> file to version control!</Warning>
+  </Step>
+
+  <Step title="Test the Configuration">
+    List currently deployed Vertex AI endpoints to verify connectivity:
+
+    ```bash
+    magemaker --cloud gcp   # open interactive menu
+    # Choose "Show Active Models" → you should see an empty list or existing endpoints
+    ```
+  </Step>
 </Steps>
+
+<Warning>
+  You may need to request a quota increase for specific machine types and GPUs in the region where you plan to deploy large models. Do this in <b>IAM &amp; Admin → Quotas</b>.
+</Warning>
