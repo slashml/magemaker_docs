@@ -45,6 +45,41 @@ We're excited that you're interested in contributing to Magemaker! This document
   </Step>
 </Steps>
 
+### Running the Local API Server (OpenAI-Compatible Proxy)
+
+The repository includes `server.py`, a FastAPI implementation that exposes an OpenAI-compatible `/v1/chat/completions` endpoint.
+
+```bash
+# From the project root
+uvicorn server:app --reload
+```
+
+Environment variables required for the proxy live in `.env` (created by Magemaker on first run). At minimum you need:
+
+```bash
+AWS_ACCESS_KEY_ID=...
+AWS_SECRET_ACCESS_KEY=...
+# Optional
+HUGGING_FACE_HUB_KEY=...
+```
+
+You can now hit `http://localhost:8000/v1/chat/completions` with any OpenAI SDK that supports a custom base-url.
+
+<Note>
+  Detailed usage, parameters, and troubleshooting are documented in <Link href="/concepts/openai-proxy">OpenAI Proxy</Link>.
+</Note>
+
+### Previewing Documentation
+
+We use [Mintlify](https://mintlify.com) for the docs site. Install the CLI to preview docs locally:
+
+```bash
+npm i -g mintlify
+mintlify dev
+```
+
+Edits to `.mdx` or `.md` files will hot-reload in the browser.
+
 ## Development Guidelines
 
 ### Code Style
@@ -72,13 +107,16 @@ Run tests locally:
 pytest tests/
 ```
 
+If you add or modify the FastAPI proxy, include unit tests under `tests/` to cover the new behaviour.
+
 ### Documentation
 
 When adding new features, please update the relevant documentation:
 
-1. Update the README.md if needed
+1. Update `README.md` if needed
 2. Add/update docstrings for new functions/classes
-3. Create/update relevant .mdx files in the docs directory
+3. Create/update relevant `.mdx` files in the docs directory
+4. If you introduce a brand-new component (e.g., a new cloud provider module), also create a dedicated docs page following the structure in `concepts/` or `tutorials/`
 
 ## Pull Request Process
 
