@@ -36,9 +36,12 @@ This is recommended for:
 - Infrastructure as Code (IaC)
 - Team collaborations
 
+> **Tip**  
+> All examples below use the `!Deployment` and `!Model` tags that Magemaker registers with PyYAML. If you copy an example make sure those tags are present.
+
 ## Multi-Cloud Deployment
 
-Magemaker supports deployment to AWS SageMaker, GCP Vertex AI, and Azure ML. Here's how to deploy the same model (facebook/opt-125m) to different cloud providers:
+Magemaker supports deployment to AWS SageMaker, GCP Vertex AI, and Azure ML. Here's how to deploy the same model (`facebook/opt-125m`) to different cloud providers.
 
 ### AWS (SageMaker)
 
@@ -62,7 +65,7 @@ deployment: !Deployment
   destination: gcp
   endpoint_name: opt-125m-gcp
   instance_count: 1
-  machine_type: n1-standard-4
+  instance_type: n1-standard-4  # previously `machine_type`
   accelerator_type: NVIDIA_TESLA_T4
   accelerator_count: 1
 
@@ -83,7 +86,7 @@ deployment: !Deployment
 
 models:
   - !Model
-    id: facebook-opt-125m
+    id: facebook--opt-125m  # note the double hyphen in Azure IDs
     source: huggingface
 ```
 
@@ -112,7 +115,8 @@ deployment: !Deployment
   endpoint_name: test-llama3-8b
   instance_count: 1
   instance_type: ml.g5.12xlarge
-  num_gpus: 4
+  num_gpus: 4          # optional, only for GPU instances
+  quantization: null   # optional: bitsandbytes | awq | null
 
 models:
   - !Model
@@ -125,6 +129,10 @@ models:
       max_new_tokens: 250
 ```
 
+<Note>
+Both `num_gpus` and `quantization` are optional. Use them when deploying very large models that need multi-GPU inference or quantised weights.
+</Note>
+
 ## Cloud-Specific Instance Types
 
 ### AWS SageMaker Types
@@ -133,39 +141,38 @@ Choose your instance type based on your model's requirements:
 
 <CardGroup>
   <Card title="ml.m5.xlarge" icon="server">
-    Good for smaller models like BERT-base
-    - 4 vCPU
-    - 16 GB Memory
-    - Available in free tier
+    Good for smaller models like BERT-base  
+    • 4 vCPU  
+    • 16 GB Memory  
+    • Available in free tier
   </Card>
 
   <Card title="ml.g5.12xlarge" icon="server">
-    Required for larger models like LLaMA
-    - 48 vCPU
-    - 192 GB Memory
-    - 4 NVIDIA A10G GPUs
+    Required for larger models like LLaMA-3-8B  
+    • 48 vCPU  
+    • 192 GB Memory  
+    • 4 NVIDIA A10G GPUs
   </Card>
 </CardGroup>
 
 <Warning>
-  Remember to deactivate unused endpoints to avoid unnecessary charges!
+Remember to deactivate unused endpoints to avoid unnecessary charges!
 </Warning>
 
 ### GCP Vertex AI Types
 
 <CardGroup>
   <Card title="n1-standard-4" icon="server">
-    Good for smaller models
-    - 4 vCPU
-    - 15 GB Memory
-    - Cost-effective option
+    Good for smaller models  
+    • 4 vCPU  
+    • 15 GB Memory
   </Card>
 
   <Card title="a2-highgpu-1g" icon="server">
-    For larger models
-    - 12 vCPU
-    - 85 GB Memory
-    - 1 NVIDIA A100 GPU
+    For larger models  
+    • 12 vCPU  
+    • 85 GB Memory  
+    • 1 NVIDIA A100 GPU
   </Card>
 </CardGroup>
 
@@ -173,56 +180,46 @@ Choose your instance type based on your model's requirements:
 
 <CardGroup>
   <Card title="Standard_DS3_v2" icon="server">
-    Good for smaller models
-    - 4 vCPU
-    - 14 GB Memory
-    - Balanced performance
+    Good for smaller models  
+    • 4 vCPU  
+    • 14 GB Memory
   </Card>
 
   <Card title="Standard_NC6s_v3" icon="server">
-    For GPU workloads
-    - 6 vCPU
-    - 112 GB Memory
-    - 1 NVIDIA V100 GPU
+    For GPU workloads  
+    • 6 vCPU  
+    • 112 GB Memory  
+    • 1 NVIDIA V100 GPU
   </Card>
 </CardGroup>
 
 ## Deployment Best Practices
 
 1. Use meaningful endpoint names that include:
-
    - Model name/version
    - Environment (dev/staging/prod)
    - Team identifier
-
 2. Start with smaller instance types and scale up as needed
-
 3. Always version your YAML configurations
-
 4. Set up monitoring and alerting for your endpoints
 
 <Warning>
-Make sure you setup budget monitory and alerts to avoid unexpected charges.
+Make sure you set up budget monitoring and alerts to avoid unexpected charges.
 </Warning>
-
 
 ## Troubleshooting Deployments
 
 Common issues and their solutions:
 
-1. **Deployment Timeout**
-
-   - Check instance quota limits
-   - Verify network connectivity
-
-2. **Instance Not Available**
-
-   - Try a different region
-   - Request quota increase
-   - Use an alternative instance type
-
-3. **Model Loading Failure**
-   - Verify model ID and version
-   - Check instance memory requirements
-   - Validate Hugging Face token if required
-   - Endpoing deployed but deployment failed. Check the logs, and do report this to us if you see this issue.
+1. **Deployment Timeout**  
+   • Check instance quota limits  
+   • Verify network connectivity
+2. **Instance Not Available**  
+   • Try a different region  
+   • Request quota increase  
+   • Use an alternative instance type
+3. **Model Loading Failure**  
+   • Verify model ID and version  
+   • Check instance memory requirements  
+   • Validate Hugging Face token if required  
+   • Endpoint deployed but model failed to load—check logs and report the issue if it persists.
