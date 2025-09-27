@@ -38,16 +38,21 @@
     "mode": "auto"
   },
   "navigation": [
-    { 
+    {
       "group": "Getting Started",
-      "pages": ["about", "installation", "quick-start"]
+      "pages": [
+        "about",
+        "installation",
+        "quick-start"
+      ]
     },
     {
       "group": "Tutorials",
       "pages": [
         "tutorials/deploying-llama-3-to-aws",
         "tutorials/deploying-llama-3-to-gcp",
-        "tutorials/deploying-llama-3-to-azure"
+        "tutorials/deploying-llama-3-to-azure",
+        "tutorials/openai-compatible-proxy"
       ]
     },
     {
@@ -77,15 +82,27 @@
       {
         "title": "Documentation",
         "links": [
-          { "label": "Getting Started", "url": "/" },
-          { "label": "Contributing", "url": "/contributing" }
+          {
+            "label": "Getting Started",
+            "url": "/"
+          },
+          {
+            "label": "Contributing",
+            "url": "/contributing"
+          }
         ]
       },
       {
         "title": "Resources",
         "links": [
-          { "label": "GitHub", "url": "https://github.com/slashml/magemaker" },
-          { "label": "Support", "url": "mailto:support@slashml.com" }
+          {
+            "label": "GitHub",
+            "url": "https://github.com/slashml/magemaker"
+          },
+          {
+            "label": "Support",
+            "url": "mailto:support@slashml.com"
+          }
         ]
       }
     ]
