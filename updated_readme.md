@@ -1,13 +1,12 @@
-
 <a name="readme-top"></a>
 
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <h3 align="center">Magemaker v0.1, by SlashML</h3>
+  <h3 align="center">Magemaker by SlashML</h3>
 
   <p align="center">
-    Deploy open source AI models to AWS in minutes.
+    Deploy open-source AI models to AWS, GCP, and Azure in minutes.
     <br />
   </p>
 </div>
@@ -19,7 +18,7 @@
   <summary>Table of Contents</summary>
   <ol>
     <li>
-      <a href="#about-model-manager">About Magemaker</a>
+      <a href="#about-magemaker">About Magemaker</a>
     </li>
     <li>
       <a href="#getting-started">Getting Started</a>
@@ -28,9 +27,10 @@
         <li><a href="#installation">Installation</a></li>
       </ul>
     </li>
-    <li><a href="#using-model-manager">Using Magemaker</a></li>
-    <li><a href="#what-were-working-on-next">What we're working on next</a></li>
-    <li><a href="#known-issues">Known issues</a></li>
+    <li><a href="#using-magemaker">Using Magemaker</a></li>
+    <li><a href="#advanced-features">Advanced Features</a></li>
+    <li><a href="#roadmap">Roadmap</a></li>
+    <li><a href="#known-issues">Known Issues</a></li>
     <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
     <li><a href="#contact">Contact</a></li>
@@ -39,93 +39,80 @@
 
 <!-- ABOUT THE PROJECT -->
 ## About Magemaker
-Magemaker is a Python tool that simplifies the process of deploying an open source AI model to your own cloud. Instead of spending hours digging through documentation to figure out how to get AWS working, Magemaker lets you deploy open source AI models directly from the command line.
 
-Choose a model from Hugging Face or SageMaker, and Magemaker will spin up a SageMaker instance with a ready-to-query endpoint in minutes.
+Magemaker is a Python CLI and SDK that lets you deploy Hugging Face (and SageMaker JumpStart) models to **AWS SageMaker, Google Cloud Vertex AI, or Azure Machine Learning** with a single command or YAML file. Skip hours of provider-specific setup—Magemaker provisions infrastructure, uploads your model, and returns a ready-to-query endpoint in minutes.
 
-<!-- GETTING STARTED -->
-<br>
+---
 
 ## Getting Started
 
-Magemaker works with AWS. Azure and GCP support are coming soon!
-
-To get a local copy up and running follow these simple steps.
+Magemaker supports **all three major cloud providers**. You can configure one, two, or all three at any time.
 
 ### Prerequisites
 
-* Python
-* An AWS account
-* Quota for AWS SageMaker instances (by default, you get 2 instances of ml.m5.xlarge for free)
-* Certain Hugging Face models (e.g. Llama2) require an access token ([hf docs](https://huggingface.co/docs/hub/en/models-gated#access-gated-models-as-a-user))
+* Python 3.11+ (Python 3.12 is currently unsupported; Python 3.13 unsupported for Azure, see Azure SDK issue)
+* At least one cloud account:
+  * AWS account + AWS CLI (for SageMaker)
+  * GCP project + Google Cloud SDK (for Vertex AI)
+  * Azure subscription + Azure CLI (for Azure ML)
+* Sufficient quotas for the instance types/GPU types you plan to use
+* (Optional) Hugging Face token for gated models such as Llama 3
 
-### Configuration
+### Installation
 
-**Step 1: Set up AWS and SageMaker**
-
-To get started, you’ll need an AWS account which you can create at https://aws.amazon.com/. Then you’ll need to create access keys for SageMaker.
-
-We wrote up the steps in [Google Doc](https://docs.google.com/document/d/1NvA6uZmppsYzaOdkcgNTRl7Nb4LbpP9Koc4H_t5xNSg/edit?tab=t.0#heading=h.farbxuv3zrzm) as well. 
-
-
-
-### Installing the package
-
-**Step 1**
-
-```sh
+```bash
 pip install magemaker
 ```
 
-**Step 2: Running magemaker**
+### First-Time Configuration
 
-Run it by simply doing the following:
+Run the CLI with your desired provider—Magemaker will guide you through credential setup and generate a `.env` file automatically:
 
-```sh
-magemaker
+```bash
+# Configure one provider
+magemaker --cloud aws       # or gcp | azure
+
+# Or configure everything at once
+magemaker --cloud all
 ```
 
-If this is your first time running this command. It will configure the AWS client so you’re ready to start deploying models. You’ll be prompted to enter your Access Key and Secret here. You can also specify your AWS region. The default is us-east-1. You only need to change this if your SageMaker instance quota is in a different region.
+The generated `.env` contains keys such as `AWS_ACCESS_KEY_ID`, `PROJECT_ID`, `AZURE_SUBSCRIPTION_ID`, etc. **Never commit this file to version control.**
 
-Once configured, it will create a `.env` file and save the credentials there. You can also add your Hugging Face Hub Token to this file if you have one. 
+If you have a Hugging Face token add it here as well:
 
-```sh
-HUGGING_FACE_HUB_KEY="KeyValueHere"
+```dotenv
+HUGGING_FACE_HUB_KEY="hf_..."
 ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
-
-<!-- USAGE -->
-<br>
+---
 
 ## Using Magemaker
 
-### Deploying models from dropdown
+### Interactive Menu
 
-When you run `magemaker` comamnd it will give you an interactive menu to deploy models. You can choose from a dropdown of models to deploy.
-
-#### Deploying Hugging Face models
-If you're deploying with Hugging Face, copy/paste the full model name from Hugging Face. For example, `google-bert/bert-base-uncased`. Note that you’ll need larger, more expensive instance types in order to run bigger models. It takes anywhere from 2 minutes (for smaller models) to 10+ minutes (for large models) to spin up the instance with your model. 
-
-#### Deploying Sagemaker models
-If you are deploying a Sagemaker model, select a framework and search from a model. If you a deploying a custom model, provide either a valid S3 path or a local path (and the tool will automatically upload it for you). Once deployed, we will generate a YAML file with the deployment and model in the `CONFIG_DIR=.magemaker_config` folder. You can modify the path to this folder by setting the `CONFIG_DIR` environment variable. 
-
-#### Deploy using a yaml file
-We recommend deploying through a yaml file for reproducability and IAC. From the cli, you can deploy a model without going through all the menus. You can even integrate us with your Github Actions to deploy on PR merge. Deploy via YAML files simply by passing the `--deploy` option with local path like so:
-
-```
-magemaker --deploy .magemaker_config/bert-base-uncased.yaml
+```bash
+magemaker --cloud [aws|gcp|azure|all]
 ```
 
-Following is a sample yaml file for deploying a model the same google bert model mentioned above:
+The interactive menu lets you:
+* Deploy new endpoints
+* List active endpoints
+* Query or delete endpoints
+
+### YAML-Driven Deployment (CI/CD Friendly)
+
+```bash
+magemaker --deploy .magemaker_config/bert-uncased.yaml
+```
+
+Example AWS deployment file:
 
 ```yaml
 deployment: !Deployment
   destination: aws
-  # Endpoint name matches model_id for querying atm.
-  endpoint_name: test-bert-uncased
+  endpoint_name: bert-uncased-aws
   instance_count: 1
   instance_type: ml.m5.xlarge
 
@@ -135,122 +122,96 @@ models:
   source: huggingface
 ```
 
-Following is a yaml file for deploying a llama model from HF:
+GCP example:
+
 ```yaml
 deployment: !Deployment
-  destination: aws
-  endpoint_name: test-llama2-7b
-  instance_count: 1
-  instance_type: ml.g5.12xlarge
-  num_gpus: 4
-  # quantization: bitsandbytes
+  destination: gcp
+  endpoint_name: bert-uncased-gcp
+  instance_type: n1-standard-8
+  accelerator_type: NVIDIA_TESLA_T4
+  accelerator_count: 1
 
 models:
 - !Model
-  id: meta-llama/Meta-Llama-3-8B-Instruct
+  id: google-bert/bert-base-uncased
   source: huggingface
-  predict:
-    temperature: 0.9
-    top_p: 0.9
-    top_k: 20
-    max_new_tokens: 250
 ```
 
-#### Fine-tuning a model using a yaml file
-
-You can also fine-tune a model using a yaml file, by using the `train` option in the command and passing path to the yaml file
-
-`
-magemaker --train .magemaker_config/train-bert.yaml
-`
-
-Here is an example yaml file for fine-tuning a hugging-face model:
+Azure example:
 
 ```yaml
-training: !Training
-  destination: aws
-  instance_type: ml.p3.2xlarge
+deployment: !Deployment
+  destination: azure
+  endpoint_name: bert-uncased-azure
   instance_count: 1
-  training_input_path: s3://jumpstart-cache-prod-us-east-1/training-datasets/tc/data.csv
-  hyperparameters: !Hyperparameters
-    epochs: 1
-    per_device_train_batch_size: 32
-    learning_rate: 0.01
+  instance_type: Standard_DS3_v2
 
 models:
 - !Model
-  id: meta-textgeneration-llama-3-8b-instruct
+  id: google-bert-bert-base-uncased   # Azure IDs differ—check Azure Model Catalog
   source: huggingface
 ```
 
+### Fine-Tuning
 
-<br>
-<br>
+```bash
+magemaker --train .magemaker_config/train-bert.yaml
+```
+(See docs/fine-tuning for full YAML schema.)
 
-If you’re using the `ml.m5.xlarge` instance type, here are some small Hugging Face models that work great:
-<br>
-<br>
+### Cleaning Up
 
-**Model: [google-bert/bert-base-uncased](https://huggingface.co/google-bert/bert-base-uncased)**
+Endpoints accrue cloud charges until deleted. Use the interactive menu or:
 
-- **Type:** Fill Mask: tries to complete your sentence like Madlibs
-- **Query format:** text string with `[MASK]` somewhere in it that you wish for the transformer to fill
-- 
-<br>
-<br>
-
-**Model: [sentence-transformers/all-MiniLM-L6-v2](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2)**
-
-- **Type:** Feature extraction: turns text into a 384d vector embedding for semantic search / clustering
-- **Query format:** "*type out a sentence like this one.*"
-
-<br>
-<br>
-
-
-### Deactivating models
-
-Any model endpoints you spin up will run continuously unless you deactivate them! Make sure to delete endpoints you’re no longer using so you don’t keep getting charged for your SageMaker instance.
-
+```bash
+magemaker --cloud aws   # select "Delete a Model Endpoint"
+```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+---
 
-<!-- ROADMAP -->
-<br>
+## Advanced Features
 
-## What we're working on next
-- [ ]  More robust error handling for various edge cases
-- [ ]  Verbose logging
-- [ ]  Enabling / disabling autoscaling
-- [ ]  Deployment to Azure and GCP
+* **Multi-Cloud YAML** – Deploy the same model to multiple clouds from one config
+* **SageMaker JumpStart Support** – Use `source: sagemaker` to deploy marketplace models
+* **OpenAI-Compatible Proxy** – Run `python server.py` to expose any SageMaker endpoint via the OpenAI chat/completions API (see docs/tutorials/openai-compatible-proxy)
+* **Config Directory Override** – Set `CONFIG_DIR` env var to change where Magemaker writes YAMLs
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+---
 
+## Roadmap
 
-<!-- ISSUES -->
-<br>
+- [ ] Enhanced error handling and verbose logging
+- [ ] Autoscaling enable/disable flags
+- [ ] Additional quantization options
+- [ ] Expanded fine-tuning support on GCP & Azure
 
-## Known issues
-- [ ]  Querying within Magemaker currently only works with text-based model - doesn’t work with multimodal, image generation, etc.
-- [ ]  Deleting a model is not instant, it may show up briefly after it was queued for deletion
-- [ ]  Deploying the same model within the same minute will break
+---
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+## Known Issues
 
+- Query utility currently supports text-based models only
+- Deleting an endpoint may take a few minutes to propagate
+- Deploying the exact same model within one minute can fail due to name collisions
 
-<!-- LICENSE -->
-<br>
+---
+
+## Contributing
+
+We love contributions! See the [CONTRIBUTING.md](CONTRIBUTING.md) guide for details.
+
+---
 
 ## License
 
-Distributed under the Apache 2.0 License. See `LICENSE` for more information.
+Distributed under the Apache 2.0 License. See `LICENSE` for details.
 
-<!-- CONTACT -->
-<br>
+---
 
 ## Contact
 
-You can reach us, faizan & jneid, at [support@slashml.com](mailto:support@slashml.com). 
+Questions or feedback? [support@slashml.com](mailto:support@slashml.com) or join our [Discord](https://discord.gg/SBQsD63d).
 
-We’d love to hear from you! We’re excited to learn how we can make this more valuable for the community and welcome any and all feedback and suggestions.
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
