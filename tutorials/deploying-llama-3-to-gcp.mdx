@@ -3,144 +3,125 @@ title: Deploying Llama 3 to GCP
 ---
 
 ## Introduction
-This tutorial guides you through deploying Llama 3 to Google Cloud Platform (GCP) Vertex AI using Magemaker and querying it using the interactive dropdown menu. Ensure you have followed the [installation](installation) steps before proceeding. 
+This tutorial guides you through deploying **Llama-3** to Google Cloud Platform (GCP) **Vertex AI** using Magemaker, and then querying it with either the interactive dropdown menu or a short Python helper. Make sure you’ve completed the [installation](installation) steps and configured GCP with `magemaker --cloud gcp` before starting.
 
-<Note> 
-You may need to request a quota increase for specific machine types and GPUs in the region where you plan to deploy the model. Check your GCP quotas before proceeding. 
+<Note>
+You may need to request a **quota increase** for specific machine types and GPUs in the region where you plan to deploy the model. Check your GCP quotas before proceeding.
 </Note>
 
-## Step 1: Setting Up Magemaker for GCP
+---
 
-Run the following command to configure Magemaker for GCP Vertex AI deployment:
+## Step 1 · Configure Magemaker for GCP
+Run the following command to set up Magemaker for Vertex AI:
 
-```sh
+```bash
 magemaker --cloud gcp
 ```
 
-This initializes Magemaker with the necessary configurations for deploying models to Vertex AI.
+This command will:
+1. Verify that the **gcloud** CLI is installed and initialised.
+2. Prompt you for your **Project ID** and preferred **region** (`GCLOUD_REGION`).
+3. Create/append a `.env` file with the required keys:
+   ```bash
+   PROJECT_ID="your-project-id"
+   GCLOUD_REGION="us-central1"  # or another region of your choice
+   ```
 
-## Step 2: YAML-based Deployment
+Once this step succeeds you are ready to deploy models.
 
-For reproducible deployments, use YAML configuration:
+---
 
-```sh
-magemaker --deploy .magemaker_config/your-model.yaml
+## Step 2 · YAML-based Deployment (recommended)
+For reproducible deployments and CI/CD pipelines use a YAML configuration:
+
+```bash
+magemaker --deploy .magemaker_config/llama3-gcp.yaml
 ```
 
-Example YAML for GCP deployment:
+Example YAML for deploying **Llama-3 8B-Instruct** to Vertex AI:
 
 ```yaml
 deployment: !Deployment
   destination: gcp
   endpoint_name: llama3-endpoint
-  accelerator_count: 1
-  instance_type: n1-standard-8
-  accelerator_type: NVIDIA_T4
-  num_gpus: 1
-  quantization: null
+  instance_type: n1-standard-8        # CPU host machine
+  accelerator_type: NVIDIA_T4         # GPU accelerator
+  accelerator_count: 1                # number of GPUs
+  # Optional auto-scaling settings (supported by Magemaker >= 0.3.0)
+  min_replica_count: 1                # default = 1
+  max_replica_count: 3                # default = 1 (no scaling)
 
 models:
   - !Model
     id: meta-llama/Meta-Llama-3-8B-Instruct
-    location: null
-    predict: null
     source: huggingface
-    task: text-generation
-    version: null
+    task: text-generation              # helps pre-configure the container
 ```
+
 <Note>
-   For gated models like llama from Meta, you have to accept terms of use for model on hugging face and adding Hugging face token to the environment are necessary for deployment to go through.
+For **gated models** (e.g. Llama-3) you must ① accept the model licence on Hugging Face and ② add your `HUGGING_FACE_HUB_KEY` to `.env` so Vertex AI can download the weights.
 </Note>
 
+### Instance-Type Guidelines
+For Llama 3, typical configurations are:
+- **n1-standard-8 + NVIDIA_T4** → cost-effective for experimentation
+- **a2-highgpu-1g** (A100) → higher throughput / lower latency
 
-### Selecting an Appropriate Instance
-For Llama 3, a machine type such as `n1-standard-8` with an attached NVIDIA T4 GPU (`NVIDIA_T4`) is a suitable configuration for most use cases. Adjust the instance type and GPU based on your workload requirements.
+If you encounter quota errors, request additional **GPU quota** under **IAM & Admin → Quotas** in the Cloud Console.
 
-<Warning>
-If you encounter quota issues, submit a quota increase request in the GCP console under "IAM & Admin > Quotas" for the specific GPU type in your deployment region.
-</Warning>
+---
 
-## Step 3: Querying the Deployed Model
+## Step 3 · Query the Deployed Endpoint
+After deployment finishes, Vertex AI prints the **endpoint ID** (a numeric string). You can interactively query it from Magemaker’s dropdown *or* programmatically via Python.
 
-Once the deployment is complete, note down the endpoint id.
-
-You can use the interactive dropdown menu to quickly query the model.
-
-### Querying Models
-
-From the dropdown, select `Query a Model Endpoint` to see the list of model endpoints. Press space to select the endpoint you want to query. Enter your query in the text box and press enter to get the response.
+### Option A · Interactive CLI
+1. Run `magemaker --cloud gcp` again.
+2. Choose **“Query a Model Endpoint”**.
+3. Select the newly created `llama3-endpoint` and type your prompt.
 
 ![Query Endpoints](../Images/query-1.png)
 
-Or you can use the following code:
-```python 
-from google.cloud import aiplatform
-from google.protobuf import json_format
-from google.protobuf.struct_pb2 import Value
-import json
-from dotenv import dotenv_values
+### Option B · Python Helper
+Use the helper already shipped with Magemaker:
 
+```python
+from magemaker.gcp.query_endpoint import query_vertexai_endpoint_rest
 
-def query_vertexai_endpoint_rest(
-    endpoint_id: str,
-    input_text: str,
-    token_path: str = None
-):
-    import google.auth
-    import google.auth.transport.requests
-    import requests
+endpoint_id = "YOUR_ENDPOINT_ID"      # e.g. 1234567890123456789
+prompt = "What are you?"
 
-    # TODO: this will have to come from config files
-    project_id = dotenv_values('.env').get('PROJECT_ID')
-    location = dotenv_values('.env').get('GCLOUD_REGION')
-
-    
-    # Get credentials
-    if token_path:
-        credentials, project = google.auth.load_credentials_from_file(token_path)
-    else:
-        credentials, project = google.auth.default()
-    
-    # Refresh token
-    auth_req = google.auth.transport.requests.Request()
-    credentials.refresh(auth_req)
-    
-    # Prepare headers and URL
-    headers = {
-        "Authorization": f"Bearer {credentials.token}",
-        "Content-Type": "application/json"
-    }
-    
-    url = f"https://{location}-aiplatform.googleapis.com/v1/projects/{project_id}/locations/{location}/endpoints/{endpoint_id}:predict"
-    
-    # Prepare payload
-    payload = {
-        "instances": [
-            {
-                "inputs": input_text,
-                # TODO: this also needs to come from configs
-                "parameters": {
-                    "max_new_tokens": 100,
-                    "temperature": 0.7,
-                    "top_p": 0.95
-                }
-            }
-        ]
-    }
-    
-    # Make request
-    response = requests.post(url, headers=headers, json=payload)
-    print('Raw Response Content:', response.content.decode())
-
-    return response.json()
-
-endpoint_id="your-endpoint-id-here"
-
-input_text='What are you?"'
-resp = query_vertexai_endpoint_rest(endpoint_id=endpoint_id, input_text=input_text)
-print(resp)
+response = query_vertexai_endpoint_rest(endpoint_id=endpoint_id, input_text=prompt)
+print(response)
 ```
 
-## Conclusion
-You have successfully deployed and queried Llama 3 on GCP Vertex AI using Magemaker's interactive dropdown menu. For any questions or feedback, feel free to contact us at [support@slashml.com](mailto:support@slashml.com).
+Parameters:
+- `endpoint_id` – numeric ID from the deployment log or Vertex AI console.
+- `input_text` – your prompt.
+- `token_path` *(optional)* – path to a **service-account JSON key file** if you prefer not to rely on `gcloud auth login`.
 
+The helper automatically reads `PROJECT_ID` and `GCLOUD_REGION` from `.env`, obtains an access token, and calls the Vertex AI REST API for you.
+
+---
+
+## Cleanup
+Remember to shut down endpoints you no longer need:
+
+```bash
+magemaker --cloud gcp   # open interactive menu
+# ➜  Delete a Model Endpoint
+```
+
+Or directly from code:
+
+```python
+from magemaker.gcp.delete_model import delete_vertex_ai_model
+
+delete_vertex_ai_model(["llama3-endpoint"])
+```
+
+Stopping unused endpoints avoids unexpected charges.
+
+---
+
+## Conclusion
+You have successfully deployed and queried **Llama 3** on GCP Vertex AI using Magemaker. Need help or have feedback? Reach us at [support@slashml.com](mailto:support@slashml.com) or join our Discord. Happy building!

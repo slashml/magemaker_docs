@@ -4,12 +4,11 @@ title: AWS
 
 ### AWS CLI
 
-<Note>To install Azure SDK on MacOS, you need to have the latest OS and you need to use Rosetta terminal. Also, make sure you have the latest version of Xcode tools installed.</Note>
+<Note>For Apple Silicon (M1/M2) Macs the official AWS CLI v2 universal installer usually works out-of-the-box. If you run into issues, try installing the CLI through Homebrew or launch your terminal with Rosetta.</Note>
 
-Follow this guide to install the latest AWS CLI
+Follow this guide to install the latest AWS CLI:
 
 https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
-
 
 Once you have the CLI installed and working, follow these steps
 
@@ -47,11 +46,12 @@ You should see the following screen after clicking IAM.
 ![Enter image alt description](../Images/E7x_Image_5.png)
 
 2. Select "Attach policies directly". Under permission policies, search for and tick the boxes for:
-   - `AmazonSagemakerFullAccess`
+   - `AmazonSageMakerFullAccess`
+   - `AmazonS3FullAccess` <!-- Required for uploading model artifacts and training data -->
    - `IAMFullAccess`
    - `ServiceQuotasFullAccess`
 
-Then click Next.
+Then click **Next**.
 
 ![Enter image alt description](../Images/01X_Image_6.png)
 
@@ -59,19 +59,19 @@ The final list should look like the following:
 
 ![Enter image alt description](../Images/Dfp_Image_7.png)
 
-Click "Create user" on the following screen.
+Click **Create user** on the following screen.
 </Step>
 
 <Step title="Generate Access Keys">
 1. Click the name of the user you've just created (or one that already exists)
-2. Go to "Security Credentials" tab
-3. Scroll down to "Access Keys" section
-4. Click "Create access key"
-5. Select Command Line Interface then click next
+2. Go to **Security Credentials** tab
+3. Scroll down to **Access Keys** section
+4. Click **Create access key**
+5. Select **Command Line Interface** then click **Next**
 
 ![Enter image alt description](../Images/BPP_Image_8.png)
 
-Enter a description (this is optional, can leave blank). Then click next.
+Enter a description (optional) and click **Next**.
 
 ![Enter image alt description](../Images/gMD_Image_9.png)
 

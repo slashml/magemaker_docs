@@ -1,6 +1,7 @@
 ---
 title: GCP 
 ---
+
 <Steps>
 <Step title="Create Google Cloud Account">
 Visit [Google Cloud Console](https://cloud.google.com/?hl=en) to create your account.
@@ -35,4 +36,27 @@ Navigate to the APIs & Services on the dashboard and enable the Vertex AI API fo
 ![Enter image alt description](../Images/QrB_Image_11.png)
 </Step>
 
+<Step title="Configure Magemaker for GCP">
+Run the following command to let Magemaker set up the required environment variables and create a `.env` file for you:
+
+```bash
+magemaker --cloud gcp
+```
+
+This step will ask for:
+- `PROJECT_ID` – your GCP project ID
+- `GCLOUD_REGION` – region where you plan to deploy Vertex AI models (e.g. `us-central1`)
+
+These values will be written to `.env` so subsequent CLI commands and the Python SDK can locate them automatically.
+</Step>
+
+<Step title="(Optional) Service Account Key File">
+If you prefer to use a service-account key instead of `gcloud auth application-default login`, create a JSON key for your service account and export:
+
+```bash
+export GOOGLE_APPLICATION_CREDENTIALS=/path/to/your/key.json
+```
+
+Magemaker will pick up the credentials automatically when deploying or querying endpoints.
+</Step>
 </Steps>

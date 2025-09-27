@@ -5,13 +5,16 @@ description: Guide to fine-tuning models with Magemaker
 
 ## Fine-tuning Overview
 
-Fine-tuning allows you to adapt pre-trained models to your specific use case. Magemaker simplifies this process through YAML configuration.
+Fine-tuning allows you to adapt pre-trained models to your specific use-case.  
+Magemaker currently supports **AWS SageMaker** fine-tuning (support for GCP & Azure is on the roadmap).  
+The process is fully driven by a YAML configuration file and a single CLI command.
 
-### Basic Command
+> **Basic Command**
+> ```sh
+> magemaker --train .magemaker_config/train-config.yaml
+> ```
 
-```sh
-magemaker --train .magemaker_config/train-config.yaml
-```
+---
 
 ## Configuration
 
@@ -19,16 +22,23 @@ magemaker --train .magemaker_config/train-config.yaml
 
 ```yaml
 training: !Training
-  destination: aws
-  instance_type: ml.p3.2xlarge
+  destination: aws             # Only “aws” is supported today
+  instance_type: ml.p3.2xlarge  # GPU instance for training
   instance_count: 1
   training_input_path: s3://your-bucket/training-data.csv
 
 models:
 - !Model
-  id: your-model-id
+  id: your-model-id            # e.g. google-bert/bert-base-uncased
   source: huggingface
 ```
+
+• **destination** – cloud provider (must be `aws` for now)  
+• **training_input_path** – S3 URI pointing to your training dataset  
+• **instance_type / count** – SageMaker training cluster specs
+
+### Automatic Hyper-parameters (zero-config)
+If **`hyperparameters`** are omitted, Magemaker will generate sensible defaults based on the model **task** (e.g. text-classification, text-generation) using the logic in `magemaker/sagemaker/fine_tune_model.py`.  This is helpful for quick experiments.
 
 ### Advanced Configuration
 
@@ -49,70 +59,65 @@ training: !Training
     save_steps: 1000
 ```
 
+You can supply any Hugging Face training argument accepted by the Transformers library.  Values can be:
+
+• **Scalars** (as above)  
+• **Ranges / Lists** for SageMaker Hyperparameter Tuning Jobs *(coming soon)*
+
+---
+
 ## Data Preparation
 
 ### Supported Formats
 
 <CardGroup>
-  <Card title="CSV Format" icon="file-csv">
-    - Simple tabular data
-    - Easy to prepare
-    - Good for classification tasks
+  <Card title="CSV" icon="file-csv">
+    - Column-based datasets<br/>
+    - Good for classic NLP tasks
   </Card>
-  
   <Card title="JSON Lines" icon="file-code">
-    - Flexible data format
-    - Good for complex inputs
-    - Supports nested structures
+    - One JSON object per line<br/>
+    - Flexible structure for complex inputs
   </Card>
 </CardGroup>
 
-### Data Upload
+### Uploading Data
 
 <Steps>
   <Step title="Prepare Data">
-    Format your data according to model requirements
+    Clean & format according to the model task (e.g. columns `text,label` for classification).
   </Step>
   <Step title="Upload to S3">
-    Use AWS CLI or console to upload data
+    ```bash
+    aws s3 cp local_file.csv s3://your-bucket/training-data.csv
+    ```
   </Step>
-  <Step title="Configure Path">
-    Specify S3 path in training configuration
+  <Step title="Reference in YAML">
+    Point `training_input_path` to the S3 URI you just uploaded.
   </Step>
 </Steps>
 
+---
+
 ## Instance Selection
 
-### Training Instance Types
+Training can be expensive—choose wisely based on dataset & model size:
 
-Choose based on:
-- Dataset size
-- Model size
-- Training time requirements
-- Cost constraints
+• **ml.p3.2xlarge** – 1× V100 GPU (entry level)  
+• **ml.p3.8xlarge** – 4× V100 GPUs  
+• **ml.p3.16xlarge** – 8× V100 GPUs  
 
-Popular choices:
-- ml.p3.2xlarge (1 GPU)
-- ml.p3.8xlarge (4 GPUs)
-- ml.p3.16xlarge (8 GPUs)
+If you need A100 GPUs, use the p4 family (ensure you have service-quota approval).
 
-## Hyperparameter Tuning
+---
 
-### Basic Parameters
+## Hyperparameter Tuning (coming soon)
+
+Magemaker will expose SageMaker HPO jobs.  YAML will accept parameter ranges:
 
 ```yaml
 hyperparameters: !Hyperparameters
-  epochs: 3
-  learning_rate: 2e-5
-  batch_size: 32
-```
-
-### Advanced Tuning
-
-```yaml
-hyperparameters: !Hyperparameters
-  epochs: 3
-  learning_rate: 
+  learning_rate:
     min: 1e-5
     max: 1e-4
     scaling: log
@@ -120,11 +125,17 @@ hyperparameters: !Hyperparameters
     values: [16, 32, 64]
 ```
 
+Stay tuned for this feature in an upcoming release.
+
+---
+
 ## Monitoring Training
 
-### CloudWatch Metrics
+Once the job starts, you can:
 
-Available metrics:
-- Loss
-- Learning rate
-- GPU utilization
+1. Open the SageMaker console – Training Jobs –> **Logs**  
+2. View real-time metrics in **CloudWatch**: loss, lr, GPU utilisation
+
+<Note>
+  Training jobs run until completion even if the terminal session closes. Make sure to stop any jobs you no longer need to avoid unnecessary charges.
+</Note>

@@ -62,7 +62,7 @@ deployment: !Deployment
   destination: gcp
   endpoint_name: opt-125m-gcp
   instance_count: 1
-  machine_type: n1-standard-4
+  instance_type: n1-standard-4   # machine type
   accelerator_type: NVIDIA_TESLA_T4
   accelerator_count: 1
 
@@ -83,7 +83,7 @@ deployment: !Deployment
 
 models:
   - !Model
-    id: facebook-opt-125m
+    id: facebook-opt-125m   # Azure uses different model IDs
     source: huggingface
 ```
 
@@ -112,7 +112,8 @@ deployment: !Deployment
   endpoint_name: test-llama3-8b
   instance_count: 1
   instance_type: ml.g5.12xlarge
-  num_gpus: 4
+  num_gpus: 4            # Optional – override default GPU count
+  quantization: bitsandbytes   # Optional – 4/8-bit quantisation
 
 models:
   - !Model
@@ -202,9 +203,8 @@ Choose your instance type based on your model's requirements:
 4. Set up monitoring and alerting for your endpoints
 
 <Warning>
-Make sure you setup budget monitory and alerts to avoid unexpected charges.
+Make sure you set up budget monitoring and alerts to avoid unexpected charges.
 </Warning>
-
 
 ## Troubleshooting Deployments
 
@@ -225,4 +225,4 @@ Common issues and their solutions:
    - Verify model ID and version
    - Check instance memory requirements
    - Validate Hugging Face token if required
-   - Endpoing deployed but deployment failed. Check the logs, and do report this to us if you see this issue.
+   - Endpoint deployed but deployment failed. Check the logs and report the issue if it persists.

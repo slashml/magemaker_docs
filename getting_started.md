@@ -16,19 +16,19 @@ To get a local copy up and running follow these simple steps.
 
 ### Prerequisites
 
-* Python 3.11 (3.13 is not supported because of azure)
+* Python 3.11+ (Python 3.12 is currently not supported; Python 3.13 is not supported by Azure SDK)
 * Cloud Configuration
     * An account to your preferred cloud provider, AWS, GCP and Azure.
         * Each cloud requires slightly different accesses, Magemaker will guide you through getting the necessary credentials to the selected cloud provider
         * Here's a guide on how to configure AWS and get the credentials [Google Doc](https://docs.google.com/document/d/1NvA6uZmppsYzaOdkcgNTRl7Nb4LbpP9Koc4H_t5xNSg/edit?tab=t.0#heading=h.farbxuv3zrzm)
     * Quota approval for instances you require for the AI model 
-        * By default, you get some free instances, example with AWS you are pre-approved for 2 ml.m5.xlarge instances with 16gb of RAM each
+        * By default, you get some free instances, example with AWS you are pre-approved for 2 `ml.m5.xlarge` instances with 16 GB of RAM each
 
     * An installation and configuration of your selected cloud CLI tool(s)
         * Magemaker will prompt you to install the CLI of the selected cloud provider, if not installed already.
-        * Magemaker will prompt you to add the necesssary credentials.
+        * Magemaker will prompt you to add the necessary credentials.
 
-* Certain Hugging Face models (e.g. Llama2) require an access token ([hf docs](https://huggingface.co/docs/hub/en/models-gated#access-gated-models-as-a-user))
+* Certain Hugging Face models (e.g. Llama 2/3) require an access token ([HF docs](https://huggingface.co/docs/hub/en/models-gated#access-gated-models-as-a-user))
 
 
 ## Installation
@@ -45,9 +45,9 @@ To get a local copy up and running follow these simple steps.
    magemaker --cloud [aws|gcp|azure|all]
    ```
 
-   If this is your first time running this command, It will configure the selected cloud so you’re ready to start deploying models. 
+   If this is your first time running this command, it will configure the selected cloud so you’re ready to start deploying models. 
 
-   In the case of AWS, it’ll prompt you to enter your Access Key and Secret. You can also specify your AWS region. The default is us-east-1. You only need to change this if your SageMaker instance quota is in a different region.
+   In the case of AWS, it’ll prompt you to enter your Access Key and Secret. You can also specify your AWS region. The default is `us-east-1`. You only need to change this if your SageMaker instance quota is in a different region.
 
    Once configured, it will create a `.env` file and save the credentials there. You can also add your Hugging Face Hub Token to this file if you have one. 
 
@@ -176,7 +176,6 @@ If you’re using the `ml.m5.xlarge` instance type, here are some small Hugging 
 
 <br>
 <br>
-
 
 
 ## Deactivating Models

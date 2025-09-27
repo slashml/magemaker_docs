@@ -1,30 +1,37 @@
 ---
 title: Azure
-description: Configure Magemaker for your cloud providers
+description: Configure Magemaker for Azure Machine Learning
 ---
 
-### Azure CLI
+<Note>
+  • Python 3.13 is <strong>NOT</strong> supported by the Azure SDK at the moment (see
+  <a href="https://github.com/Azure/azure-sdk-for-python/issues/37600" target="_blank">open issue</a>).<br />
+  • Please use Python 3.11 or 3.12 with Magemaker on Azure.
+</Note>
 
-<Note>To install Azure SDK on MacOS, you need to have the latest OS and you need to use Rosetta terminal. Also, make sure you have the latest version of Xcode tools installed.</Note>
+## Azure CLI
 
+<Note>
+  Apple-Silicon (M-series) Macs must run the terminal under Rosetta when
+  interacting with the Azure CLI due to native dependency issues. Confirm the
+  architecture with `arch`; the output should be <code>i386</code> in a Rosetta
+  shell.
+</Note>
 
-To install the latest Azure CLI, run:
+1. Install (or upgrade) the Azure CLI:
+   ```bash
+   brew update && brew install azure-cli
+   ```
+   Alternatively, follow the official guide: <https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-macos>
 
-```bash
-brew update && brew install azure-cli
-```
+2. Install (or upgrade) the Azure ML CLI extension – **required** for Magemaker:
+   ```bash
+   az extension add --name ml -y   # or: az extension update --name ml
+   ```
 
-Alternatively, follow this official guide from Azure
-- [https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-macos](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-macos)
+---
 
-Once you have installed azure CLI, follow these steps
-
-
-### Azure Account
-Step 1: Create azure cloud account
-
-- [https://azure.microsoft.com/en-ca](null)
-
+## Azure Account & Workspace Setup
 
 <Steps>
   <Step title="Login to Azure">
@@ -32,53 +39,80 @@ Step 1: Create azure cloud account
     az login
     ```
   </Step>
+
   <Step title="Select Subscription">
     ```bash
     az account set --subscription <subscription-id>
     ```
   </Step>
+
   <Step title="Create Resource Group">
-
-	From the terminal
-    ```bash
-    az group create --name <resource-group> --location <region>
-    ```
-
-	From the Azure Portal
-	![Enter image alt description](../Images/XzN_Image_12.png)
-
+  From the terminal
+  ```bash
+  az group create --name <resource-group> --location <region>
+  ```
+  From the Azure Portal
+  ![Create RG](../Images/XzN_Image_12.png)
   </Step>
+
   <Step title="Create ML Workspace">
-    From the terminal
-    ```bash
-    az ml workspace create -n <workspace-name> -g <resource-group>
-    ```
-
-From the Azure portal
-1. Search for `Azure Machine Learning` in the search bar.
-	![Azure ML Creation](../Images/AzureML.png)
-
-2. Inside the `Azure Machine Learning` portal. Click on Create, and select `New Workspce` from the drop down
-	![workspace creation](../Images/workspace_creation.png)
-
+  From the terminal
+  ```bash
+  az ml workspace create -n <workspace-name> -g <resource-group>
+  ```
+  From the Azure Portal
+  1. Search for <code>Azure Machine Learning</code> in the search bar.
+  2. Click <strong>Create → New workspace</strong>.
+  ![Workspace](../Images/workspace_creation.png)
   </Step>
-  <Step>
-	```bash
-	# Register all required providers: THIS STEP IS IMPORTANT
-	az provider register --namespace Microsoft.MachineLearningServices
-	az provider register --namespace Microsoft.ContainerRegistry
-	az provider register --namespace Microsoft.KeyVault
-	az provider register --namespace Microsoft.Storage
-	az provider register --namespace Microsoft.Insights
-	az provider register --namespace Microsoft.ContainerService
-	az provider register --namespace Microsoft.PolicyInsights
-	az provider register --namespace Microsoft.Cdn
-   ```
 
-   <Note>
-     Registration can take up to 10 minutes. Check status with: ```bash az
-     provider show -n Microsoft.MachineLearningServices ```
-   </Note>
-
+  <Step title="Register Required Resource Providers (IMPORTANT)">
+  ```bash
+  az provider register --namespace Microsoft.MachineLearningServices
+  az provider register --namespace Microsoft.ContainerRegistry
+  az provider register --namespace Microsoft.KeyVault
+  az provider register --namespace Microsoft.Storage
+  az provider register --namespace Microsoft.Insights
+  az provider register --namespace Microsoft.ContainerService
+  az provider register --namespace Microsoft.PolicyInsights
+  az provider register --namespace Microsoft.Cdn
+  ```
+  <Note>Registration can take up to 10 minutes. Verify with:
+  <code>az provider show -n Microsoft.MachineLearningServices</code></Note>
   </Step>
 </Steps>
+
+---
+
+## Configure Magemaker
+
+Run the following command once the Azure CLI is configured:
+```bash
+magemaker --cloud azure
+```
+The command will:
+1. Validate your Azure credentials.
+2. Prompt for any missing values.
+3. Generate a <code>.env</code> file with the required environment variables.
+
+### Required Environment Variables
+The <code>.env</code> file must contain the following keys (generated automatically, but you can edit them later):
+```bash
+AZURE_SUBSCRIPTION_ID="<subscription-id>"
+AZURE_RESOURCE_GROUP="<resource-group>"
+AZURE_WORKSPACE_NAME="<workspace-name>"
+AZURE_REGION="<region>"          # e.g. eastus, westeurope
+
+# Optional – required only for gated Hugging Face models like Llama 3
+HUGGING_FACE_HUB_KEY="<your-hf-token>"
+```
+<Warning>Never commit your <code>.env</code> file to version control!</Warning>
+
+---
+
+## Next Steps
+
+• Deploy a model: see the [Quick Start](/quick-start) or the
+  [Llama 3 on Azure tutorial](/tutorials/deploying-llama-3-to-azure).<br />
+• Need to expose the endpoint through an OpenAI-compatible API? Check out the
+  upcoming <em>OpenAI Proxy</em> tutorial.
