@@ -2,29 +2,71 @@
 title: Environment Variables
 ---
 
-### Required Config File
-A `.env` file is automatically created when you run `magemaker --cloud <cloud-provider>`. This file contains the necessary environment variables for your cloud provider(s).
-
-By default, Magemaker will look for a `.env` file in your project root with the following variables based on which cloud provider(s) you plan to use:
+### Required `.env` File
+A `.env` file is automatically created the first time you run
 
 ```bash
-# AWS Configuration
-AWS_ACCESS_KEY_ID="your-access-key"      # Required for AWS
-AWS_SECRET_ACCESS_KEY="your-secret-key"   # Required for AWS
-SAGEMAKER_ROLE="arn:aws:iam::..."        # Required for AWS
-
-# GCP Configuration
-PROJECT_ID="your-project-id"             # Required for GCP
-GCLOUD_REGION="us-central1"              # Required for GCP
-
-# Azure Configuration
-AZURE_SUBSCRIPTION_ID="your-sub-id"      # Required for Azure
-AZURE_RESOURCE_GROUP="ml-resources"      # Required for Azure
-AZURE_WORKSPACE_NAME="ml-workspace"      # Required for Azure
-AZURE_REGION="eastus"                    # Required for Azure
-
-# Optional configurations
-HUGGING_FACE_HUB_KEY="your-hf-token"    # Required for gated HF models like llama
+magemaker --cloud <cloud-provider>
 ```
 
-<Warning>Never commit your .env file to version control!</Warning>
+This file stores the credentials and configuration Magemaker needs to talk to
+AWS, GCP, and/or Azure on your behalf.
+
+### Minimum Variables by Cloud Provider
+
+```bash
+# -----------------------
+# AWS Configuration
+# -----------------------
+AWS_ACCESS_KEY_ID="your-access-key"          # Required for AWS
+AWS_SECRET_ACCESS_KEY="your-secret-key"      # Required for AWS
+SAGEMAKER_ROLE="arn:aws:iam::..."            # Required for AWS
+AWS_REGION_NAME="us-east-1"                  # Optional – override default region
+
+# -----------------------
+# GCP Configuration
+# -----------------------
+PROJECT_ID="your-project-id"                 # Required for GCP
+GCLOUD_REGION="us-central1"                 # Required for GCP
+
+# -----------------------
+# Azure Configuration
+# -----------------------
+AZURE_SUBSCRIPTION_ID="your-sub-id"          # Required for Azure
+AZURE_RESOURCE_GROUP="ml-resources"          # Required for Azure
+AZURE_WORKSPACE_NAME="ml-workspace"          # Required for Azure
+AZURE_REGION="eastus"                        # Required for Azure
+
+# -----------------------
+# Optional / Advanced Settings
+# -----------------------
+HUGGING_FACE_HUB_KEY="your-hf-token"         # Needed for gated HF models (e.g. Llama-3)
+CONFIG_DIR=".magemaker_config"              # Where Magemaker stores YAML configs
+```
+
+<Warning>
+Never commit your `.env` file to version control! Use Git-ignore or a secrets
+manager.
+</Warning>
+
+### When Do I Need `AWS_REGION_NAME`?
+The new FastAPI proxy server (`server.py`) sets `AWS_REGION_NAME` automatically
+based on your current session.  If you run the proxy on a separate machine or
+inside a container where the automatic lookup fails, define the region
+explicitly:
+
+```bash
+export AWS_REGION_NAME="us-west-2"
+```
+
+### Custom Config Directory (`CONFIG_DIR`)
+By default Magemaker reads and writes YAML deployment files to
+`.magemaker_config/` in your project root.  Override this location if you want
+to keep configs elsewhere (e.g. inside `infra/` for IaC):
+
+```bash
+export CONFIG_DIR="infra/magemaker-config"
+```
+
+All CLI commands, the FastAPI proxy, and helper scripts will automatically pick
+up the new path.
