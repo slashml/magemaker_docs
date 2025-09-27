@@ -1,0 +1,121 @@
+---
+title: OpenAI-Compatible Proxy Server
+description: Serve your deployed endpoints behind an OpenAI-style REST interface
+---
+
+## Overview
+
+Magemaker ships with a lightweight FastAPI server (`server.py`) that allows you to expose any deployed endpoint (AWS, GCP or Azure) through an **OpenAI-compatible** REST interface.  
+This is handy when you want to:
+
+- Re-use existing tooling that expects the OpenAI API (LangChain, Llama-Index, etc.)
+- Avoid writing cloud-specific SDK calls in your application code
+- Run the server locally, in a container, or as a cloud function
+
+Once running, you can simply point your OpenAI client at `http://localhost:8000/v1/chat/completions` (or the host/port you specify) and interact with your private model as if it were the official OpenAI service.
+
+<Note>
+The proxy is **stateless**—every request is forwarded to the underlying cloud endpoint you specify.  Billing still happens on the cloud provider side.
+</Note>
+
+---
+
+## Quick Start
+
+1. Deploy a model with Magemaker (see the other tutorials for details) and copy the **endpoint name** that Magemaker prints when the deployment is finished.
+2. Ensure the relevant cloud credentials are available in your `.env` file (same file Magemaker uses).
+3. Start the proxy server:
+
+```bash
+# From repository root
+python server.py --endpoint YOUR_ENDPOINT_NAME --port 8000
+```
+
+The server boots with Uvicorn and begins listening on the specified port (default: `8000`).
+
+---
+
+## Making Requests
+
+Below is a minimal Python example using the official OpenAI client:
+
+```python
+import openai
+
+# Point the client to your local proxy
+openai.api_base = "http://localhost:8000/v1"
+openai.api_key = "not-needed-but-required-by-sdk"
+
+response = openai.ChatCompletion.create(
+    model="YOUR_ENDPOINT_NAME",  # This must match the endpoint you passed to the server
+    messages=[{"role": "user", "content": "Hello!"}]
+)
+
+print(response.choices[0].message.content)
+```
+
+Any SDK or tool that speaks the official OpenAI REST spec should work (LangChain, llama-cpp-python, etc.).
+
+---
+
+## Command-line Options
+
+```text
+python server.py --help
+
+--endpoint   Name of the deployed endpoint to proxy (required)
+--port       Port to bind the HTTP server (default: 8000)
+--host       Host interface (default: 0.0.0.0)
+```
+
+You can also set the endpoint via an environment variable:
+
+```bash
+export MAGEMAKER_ENDPOINT_NAME=YOUR_ENDPOINT_NAME
+python server.py
+```
+
+If neither the flag nor the environment variable is provided the server will raise an error at startup.
+
+---
+
+## How It Works
+
+1. The FastAPI route `/v1/chat/completions` (and `/v1/completions` for legacy clients) parses the incoming JSON payload.
+2. The request is converted into a `magemaker.schemas.Query` object.
+3. Based on the destination cloud provider (auto-detected from the endpoint name) the appropriate query helper is executed:
+   - AWS → `magemaker.sagemaker.query_endpoint`
+   - GCP → `magemaker.gcp.query_endpoint`
+   - Azure → `magemaker.azure.query_endpoint`
+4. The helper returns the raw model response, which the server then marshals into the OpenAI JSON schema before returning it to the caller.
+
+---
+
+## Deployment Tips
+
+- **Docker** – The server has no system dependencies beyond Python. A minimal Dockerfile would simply install `magemaker[server]` and run `python server.py`.
+- **Authentication** – Add a reverse proxy (e.g., Nginx, Cloud Run "auth" middleware, API Gateway) in front of the server if you need API keys or OAuth.
+- **Scaling** – Because the proxy is stateless you can run multiple replicas behind a load balancer as long as they share the same `.env` credentials.
+
+<Warning>
+Do **not** expose the proxy publicly without proper authentication—anyone with URL access can consume your cloud resources.
+</Warning>
+
+---
+
+## Troubleshooting
+
+1. **401 / Permission errors**  
+   Make sure the `.env` file used by the server contains valid cloud credentials.
+2. **Invalid model / endpoint**  
+   Confirm the `--endpoint` value matches exactly the name returned by Magemaker after deployment.
+3. **CORS errors**  
+   The FastAPI instance is started without CORS headers. If you are calling the proxy from a browser, enable `CORSMiddleware` in `server.py`.
+
+---
+
+## Next Steps
+
+- Integrate the proxy in your LangChain or Llama-Index pipelines.
+- Containerize and deploy to AWS ECS, Cloud Run, or Azure Container Apps.
+- Contribute!  If you need additional OpenAI endpoints (embeddings, images, etc.) open an issue or PR.
