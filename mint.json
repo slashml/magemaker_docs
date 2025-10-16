@@ -38,9 +38,13 @@
     "mode": "auto"
   },
   "navigation": [
-    { 
+    {
       "group": "Getting Started",
       "pages": ["about", "installation", "quick-start"]
+    },
+    {
+      "group": "Reference",
+      "pages": ["cli-reference"]
     },
     {
       "group": "Tutorials",
