@@ -1,0 +1,241 @@
+---
+title: CLI Reference
+description: Complete reference for Magemaker command-line options
+---
+
+## Overview
+
+Magemaker provides a comprehensive command-line interface (CLI) for deploying and managing machine learning models across AWS, GCP, and Azure. This page documents all available command-line options and their usage.
+
+## Basic Usage
+
+```sh
+magemaker [OPTIONS]
+```
+
+## Command-Line Options
+
+### Cloud Provider Configuration
+
+#### `--cloud`
+
+Configure and select your cloud provider for deployment.
+
+```sh
+magemaker --cloud [aws|gcp|azure|all]
+```
+
+**Arguments:**
+- `aws` - Configure and use AWS SageMaker
+- `gcp` - Configure and use Google Cloud Vertex AI
+- `azure` - Configure and use Azure Machine Learning
+- `all` - Configure all three cloud providers
+
+**Example:**
+```sh
+magemaker --cloud aws
+```
+
+### Deployment Options
+
+#### `--deploy`
+
+Deploy a model using a YAML configuration file.
+
+```sh
+magemaker --deploy <path-to-yaml-file>
+```
+
+**Arguments:**
+- `<path-to-yaml-file>` - Path to your YAML deployment configuration file
+
+**Example:**
+```sh
+magemaker --deploy .magemaker_config/bert-base-uncased.yaml
+```
+
+#### `--hf`
+
+Deploy a Hugging Face model directly from the command line.
+
+```sh
+magemaker --hf <model-id>
+```
+
+**Arguments:**
+- `<model-id>` - Hugging Face model identifier (e.g., `facebook/opt-125m`)
+
+**Example:**
+```sh
+magemaker --hf facebook/opt-125m
+```
+
+### Instance Configuration
+
+#### `--instance`
+
+Specify the EC2 instance type to deploy to (AWS SageMaker).
+
+```sh
+magemaker --instance <instance-type>
+```
+
+**Arguments:**
+- `<instance-type>` - AWS EC2 instance type (e.g., `ml.m5.xlarge`, `ml.g5.2xlarge`)
+
+**Example:**
+```sh
+magemaker --hf facebook/opt-125m --instance ml.m5.xlarge
+```
+
+**Common Instance Types:**
+- `ml.m5.xlarge` - General purpose, good for smaller models (4 vCPU, 16 GB RAM)
+- `ml.g5.2xlarge` - GPU instance, good for medium-sized models (8 vCPU, 32 GB RAM, 1 GPU)
+- `ml.g5.12xlarge` - High-performance GPU instance for large models (48 vCPU, 192 GB RAM, 4 GPUs)
+
+<Note>
+  The `--instance` flag is primarily used with AWS SageMaker deployments. For GCP and Azure, instance types are specified in the YAML configuration file.
+</Note>
+
+#### `--cpu`
+
+Specify the CPU type for your deployment.
+
+```sh
+magemaker --cpu <cpu-type>
+```
+
+**Arguments:**
+- `<cpu-type>` - The CPU architecture or type to use for deployment
+
+**Example:**
+```sh
+magemaker --hf facebook/opt-125m --cpu intel
+```
+
+<Note>
+  This flag allows you to specify CPU preferences for your deployment. Consult your cloud provider's documentation for available CPU types.
+</Note>
+
+### Training Options
+
+#### `--train`
+
+Fine-tune a model using a YAML training configuration file.
+
+```sh
+magemaker --train <path-to-yaml-file>
+```
+
+**Arguments:**
+- `<path-to-yaml-file>` - Path to your YAML training configuration file
+
+**Example:**
+```sh
+magemaker --train .magemaker_config/train-bert.yaml
+```
+
+### Version Information
+
+#### `--version`
+
+Display the current version of Magemaker and exit.
+
+```sh
+magemaker --version
+```
+
+**Example:**
+```sh
+$ magemaker --version
+magemaker 0.1.0
+```
+
+## Usage Examples
+
+### Interactive Deployment with Instance Type
+
+Deploy a model interactively with a specific instance type:
+
+```sh
+magemaker --cloud aws --hf facebook/opt-125m --instance ml.m5.xlarge
+```
+
+### Deployment with CPU Specification
+
+Deploy a model with a specific CPU type:
+
+```sh
+magemaker --cloud aws --hf google-bert/bert-base-uncased --cpu intel --instance ml.m5.xlarge
+```
+
+### YAML-based Deployment
+
+For more complex configurations, use YAML files:
+
+```sh
+magemaker --deploy .magemaker_config/llama3-aws.yaml
+```
+
+### Training a Model
+
+Fine-tune a model with custom training configuration:
+
+```sh
+magemaker --train .magemaker_config/train-config.yaml
+```
+
+## Combining Options
+
+Some command-line options can be combined for more specific deployments:
+
+```sh
+# Deploy a Hugging Face model with specific instance and CPU type
+magemaker --cloud aws --hf meta-llama/Meta-Llama-3-8B-Instruct --instance ml.g5.2xlarge --cpu intel
+
+# Train a model after configuring cloud provider
+magemaker --cloud gcp --train .magemaker_config/train-bert.yaml
+```
+
+## Best Practices
+
+1. **Use YAML Configuration**: For production deployments, use YAML configuration files instead of command-line flags. This ensures reproducibility and version control.
+
+2. **Specify Instance Types**: When deploying larger models, always specify appropriate instance types to avoid deployment failures due to insufficient resources.
+
+3. **CPU Type Selection**: Use the `--cpu` flag when you have specific CPU architecture requirements for your workload.
+
+4. **Test with Smaller Instances**: Start with smaller, less expensive instance types during development and testing.
+
+5. **Check Quotas**: Before deploying, verify that you have sufficient quota for the requested instance type in your cloud provider account.
+
+## Related Documentation
+
+- [Quick Start](/quick-start) - Get started with Magemaker
+- [Deployment Concepts](/concepts/deployment) - Learn about deployment methods
+- [AWS Configuration](/configuration/AWS) - Configure AWS SageMaker
+- [GCP Configuration](/configuration/GCP) - Configure Google Cloud Vertex AI
+- [Azure Configuration](/configuration/Azure) - Configure Azure ML
+
+## Troubleshooting
+
+### Invalid Instance Type
+
+If you receive an error about an invalid instance type, verify:
+- The instance type is available in your selected region
+- You have quota for the requested instance type
+- The instance type name is spelled correctly
+
+### CPU Type Not Recognized
+
+If the `--cpu` flag doesn't work as expected:
+- Check your cloud provider's documentation for supported CPU types
+- Ensure your cloud provider account has access to the specified CPU architecture
+- Try omitting the `--cpu` flag to use the default CPU type
+
+### Command Not Found
+
+If you receive a "command not found" error:
+- Ensure Magemaker is installed: `pip install magemaker`
+- Verify your Python environment is activated
+- Check that the installation directory is in your PATH
