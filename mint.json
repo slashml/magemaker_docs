@@ -38,7 +38,7 @@
     "mode": "auto"
   },
   "navigation": [
-    { 
+    {
       "group": "Getting Started",
       "pages": ["about", "installation", "quick-start"]
     },
@@ -66,6 +66,10 @@
         "concepts/models",
         "concepts/contributing"
       ]
+    },
+    {
+      "group": "Reference",
+      "pages": ["cli-reference"]
     }
   ],
   "footerSocials": {

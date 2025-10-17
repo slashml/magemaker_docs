@@ -21,6 +21,28 @@ This method is great for:
 - Exploring available models
 - Testing different configurations
 
+### Command-Line Deployment
+
+For quick deployments, you can use command-line flags to deploy Hugging Face models directly:
+
+```sh
+magemaker --hf facebook/opt-125m --instance ml.m5.xlarge --cpu intel
+```
+
+Available flags:
+- `--hf <model-id>`: Specify a Hugging Face model to deploy
+- `--instance <type>`: Set the instance type (e.g., `ml.m5.xlarge`, `n1-standard-4`)
+- `--cpu <type>`: Specify CPU type for optimized performance
+
+This method is ideal for:
+- Quick testing and experimentation
+- One-off deployments
+- Scripts and automation
+
+<Tip>
+  See the [CLI Reference](/cli-reference) for complete documentation of all command-line options.
+</Tip>
+
 ### YAML-based Deployment
 
 For reproducible deployments and CI/CD integration, use YAML configuration files:
