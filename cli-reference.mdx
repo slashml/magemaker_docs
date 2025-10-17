@@ -1,0 +1,239 @@
+---
+title: CLI Reference
+description: Complete reference for Magemaker command-line options
+---
+
+## Overview
+
+Magemaker provides a command-line interface for deploying and managing AI models across AWS, GCP, and Azure. This page documents all available CLI options.
+
+## Basic Usage
+
+```sh
+magemaker [OPTIONS]
+```
+
+## Command-Line Options
+
+### Cloud Configuration
+
+#### `--cloud [aws|gcp|azure|all]`
+
+Configure and initialize Magemaker for your cloud provider(s).
+
+```sh
+magemaker --cloud aws        # Configure AWS SageMaker
+magemaker --cloud gcp        # Configure GCP Vertex AI
+magemaker --cloud azure      # Configure Azure ML
+magemaker --cloud all        # Configure all providers
+```
+
+**Description**: Launches an interactive menu for configuring cloud credentials and deploying models. On first run, prompts for necessary credentials.
+
+**Use cases**:
+- Initial setup and configuration
+- Interactive model deployment
+- Querying deployed endpoints
+- Managing and deleting endpoints
+
+---
+
+### Deployment
+
+#### `--deploy <path>`
+
+Deploy a model using a YAML configuration file.
+
+```sh
+magemaker --deploy .magemaker_config/your-model.yaml
+```
+
+**Arguments**:
+- `<path>`: Path to YAML deployment configuration file
+
+**Description**: Deploy models using Infrastructure as Code approach. Recommended for production deployments and CI/CD pipelines.
+
+**Example YAML**:
+```yaml
+deployment: !Deployment
+  destination: aws
+  endpoint_name: my-model-endpoint
+  instance_count: 1
+  instance_type: ml.m5.xlarge
+
+models:
+  - !Model
+    id: google-bert/bert-base-uncased
+    source: huggingface
+```
+
+See [Deployment Guide](/concepts/deployment) for complete YAML reference.
+
+---
+
+#### `--hf <model-id>`
+
+Deploy a specific Hugging Face model directly from the command line.
+
+```sh
+magemaker --hf facebook/opt-125m --instance ml.m5.xlarge
+```
+
+**Arguments**:
+- `<model-id>`: Hugging Face model identifier (e.g., `facebook/opt-125m`)
+
+**Description**: Quick deployment of Hugging Face models without creating a YAML file. Can be combined with `--instance` and `--cpu` flags for custom configurations.
+
+---
+
+#### `--instance <type>`
+
+Specify the instance type for deployment.
+
+```sh
+magemaker --hf facebook/opt-125m --instance ml.g5.2xlarge
+```
+
+**Arguments**:
+- `<type>`: Cloud provider instance type
+  - **AWS**: `ml.m5.xlarge`, `ml.g5.2xlarge`, etc.
+  - **GCP**: `n1-standard-4`, `g2-standard-12`, etc.
+  - **Azure**: `Standard_DS3_v2`, `Standard_NC6s_v3`, etc.
+
+**Description**: Override default instance type for model deployment. Must be valid for the selected cloud provider.
+
+**Related**: See [Deployment Guide](/concepts/deployment#cloud-specific-instance-types) for available instance types.
+
+---
+
+#### `--cpu <type>`
+
+Specify the CPU type for deployment.
+
+```sh
+magemaker --hf facebook/opt-125m --cpu intel --instance ml.m5.xlarge
+```
+
+**Arguments**:
+- `<type>`: CPU architecture or type specification
+
+**Description**: Specify CPU type for deployments. Useful for optimizing performance or meeting specific compute requirements.
+
+<Note>
+This option was added in PR #89 to provide more granular control over deployment configurations.
+</Note>
+
+---
+
+### Training
+
+#### `--train <path>`
+
+Fine-tune a model using a training configuration file.
+
+```sh
+magemaker --train .magemaker_config/train-config.yaml
+```
+
+**Arguments**:
+- `<path>`: Path to YAML training configuration file
+
+**Description**: Fine-tune pre-trained models with your own data.
+
+**Example YAML**:
+```yaml
+training: !Training
+  destination: aws
+  instance_type: ml.p3.2xlarge
+  instance_count: 1
+  training_input_path: s3://your-bucket/data.csv
+  hyperparameters: !Hyperparameters
+    epochs: 3
+    per_device_train_batch_size: 32
+    learning_rate: 2e-5
+```
+
+See [Fine-tuning Guide](/concepts/fine-tuning) for more details.
+
+---
+
+### Utility Options
+
+#### `--version`
+
+Display the current version of Magemaker and exit.
+
+```sh
+magemaker --version
+```
+
+---
+
+## Common Usage Patterns
+
+### Quick Deployment
+
+Deploy a Hugging Face model with specific instance type:
+
+```sh
+magemaker --hf google-bert/bert-base-uncased --instance ml.m5.xlarge
+```
+
+### Production Deployment
+
+Use YAML configuration for reproducible deployments:
+
+```sh
+magemaker --deploy .magemaker_config/production-model.yaml
+```
+
+### Multi-Cloud Setup
+
+Configure all cloud providers at once:
+
+```sh
+magemaker --cloud all
+```
+
+### Fine-tuning
+
+Train a model with custom data:
+
+```sh
+magemaker --train .magemaker_config/train-bert.yaml
+```
+
+---
+
+## Combining Options
+
+Some flags can be combined for more specific deployments:
+
+```sh
+# Deploy Hugging Face model with custom instance and CPU type
+magemaker --hf facebook/opt-125m --instance ml.m5.xlarge --cpu intel
+
+# Note: --deploy cannot be combined with --hf as they are different deployment methods
+```
+
+---
+
+## Exit Codes
+
+- `0`: Success
+- `1`: General error
+- Other codes may indicate specific failures
+
+---
+
+## Environment Variables
+
+Magemaker reads configuration from a `.env` file. See [Environment Configuration](/configuration/Environment) for details.
+
+---
+
+## See Also
+
+- [Quick Start](/quick-start) - Get started with Magemaker
+- [Deployment Guide](/concepts/deployment) - Detailed deployment documentation
+- [Configuration Guides](/configuration/AWS) - Cloud-specific setup instructions
