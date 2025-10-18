@@ -5,8 +5,13 @@ description: Guide to supported models and their requirements
 
 ## Supported Models
 
+Magemaker currently supports two model sources for deployment:
+
+1. **Hugging Face Models** - Deploy any public or gated model from Hugging Face Hub
+2. **Custom Models** - Deploy your own fine-tuned models from S3 or local paths
+
 <Note>
-Currently, Magemaker supports deployment of Hugging Face models only. Support for cloud provider marketplace models is coming soon!
+AWS SageMaker JumpStart models are supported for **fine-tuning only**, not for direct deployment via Magemaker. Cloud provider marketplace models (GCP Vertex AI Model Garden, Azure ML Model Catalog) are not yet supported for deployment.
 </Note>
 
 ### Hugging Face Models
@@ -65,17 +70,19 @@ We plan to add support for the following model sources:
 #### GCP Vertex AI
 1. **Small Models** (n1-standard-4)
    ```yaml
-   machine_type: n1-standard-4
+   instance_type: n1-standard-4
    ```
 2. **Medium Models** (n1-standard-8 + GPU)
    ```yaml
-   machine_type: n1-standard-8
+   instance_type: n1-standard-8
    accelerator_type: NVIDIA_TESLA_T4
    accelerator_count: 1
    ```
-3. **Large Models** (a2-highgpu-1g)
+3. **Large Models** (g2-standard-12 + GPU)
    ```yaml
-   machine_type: a2-highgpu-1g
+   instance_type: g2-standard-12
+   accelerator_type: NVIDIA_L4
+   accelerator_count: 1
    ```
 
 #### Azure ML
@@ -155,8 +162,19 @@ deployment: !Deployment
 models:
 - !Model
   id: your-model-id
-  source: huggingface|sagemaker # we don't support vertex and azure specific models yet
-  revision: latest  # Optional: specify model version
+  source: huggingface  # or 'custom' for fine-tuned models
+```
+
+### Custom Model Parameters
+
+For deploying custom or fine-tuned models:
+
+```yaml
+models:
+- !Model
+  id: google-bert/bert-base-uncased  # base model that was fine-tuned
+  source: custom
+  location: s3://my-bucket/my-model/  # S3 URI or local path
 ```
 
 ### Advanced Parameters
