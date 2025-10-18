@@ -3,7 +3,11 @@ title: Deploying Llama 3 to GCP
 ---
 
 ## Introduction
-This tutorial guides you through deploying Llama 3 to Google Cloud Platform (GCP) Vertex AI using Magemaker and querying it using the interactive dropdown menu. Ensure you have followed the [installation](installation) steps before proceeding. 
+This tutorial guides you through deploying Llama 3 to Google Cloud Platform (GCP) Vertex AI using Magemaker. Ensure you have followed the [installation](installation) steps before proceeding.
+
+<Note>
+  **Important:** GCP deployments currently require YAML configuration files. Interactive dropdown deployment is only available for AWS.
+</Note> 
 
 <Note> 
 You may need to request a quota increase for specific machine types and GPUs in the region where you plan to deploy the model. Check your GCP quotas before proceeding. 
@@ -33,20 +37,15 @@ Example YAML for GCP deployment:
 deployment: !Deployment
   destination: gcp
   endpoint_name: llama3-endpoint
-  accelerator_count: 1
+  instance_count: 1
   instance_type: n1-standard-8
-  accelerator_type: NVIDIA_T4
-  num_gpus: 1
-  quantization: null
+  accelerator_type: NVIDIA_TESLA_T4
+  accelerator_count: 1
 
 models:
   - !Model
     id: meta-llama/Meta-Llama-3-8B-Instruct
-    location: null
-    predict: null
     source: huggingface
-    task: text-generation
-    version: null
 ```
 <Note>
    For gated models like llama from Meta, you have to accept terms of use for model on hugging face and adding Hugging face token to the environment are necessary for deployment to go through.
@@ -54,7 +53,7 @@ models:
 
 
 ### Selecting an Appropriate Instance
-For Llama 3, a machine type such as `n1-standard-8` with an attached NVIDIA T4 GPU (`NVIDIA_T4`) is a suitable configuration for most use cases. Adjust the instance type and GPU based on your workload requirements.
+For Llama 3, a machine type such as `n1-standard-8` with an attached NVIDIA T4 GPU (`NVIDIA_TESLA_T4`) is a suitable configuration for most use cases. For larger models or better performance, consider using `g2-standard-12` with `NVIDIA_L4` GPUs. Adjust the instance type and GPU based on your workload requirements.
 
 <Warning>
 If you encounter quota issues, submit a quota increase request in the GCP console under "IAM & Admin > Quotas" for the specific GPU type in your deployment region.
@@ -142,5 +141,5 @@ print(resp)
 ```
 
 ## Conclusion
-You have successfully deployed and queried Llama 3 on GCP Vertex AI using Magemaker's interactive dropdown menu. For any questions or feedback, feel free to contact us at [support@slashml.com](mailto:support@slashml.com).
+You have successfully deployed and queried Llama 3 on GCP Vertex AI using Magemaker. For any questions or feedback, feel free to contact us at [support@slashml.com](mailto:support@slashml.com).
 
