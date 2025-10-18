@@ -15,11 +15,15 @@ When you run the `magemaker --cloud [aws|gcp|azure|all]` command, you'll get an 
 magemaker --cloud [aws|gcp|azure|all]
 ```
 
+<Note>
+  **Important:** Interactive model deployment from the dropdown menu is currently only supported for AWS. For GCP and Azure deployments, you must use YAML configuration files.
+</Note>
+
 This method is great for:
 
-- First-time users
-- Exploring available models
-- Testing different configurations
+- First-time users (AWS only)
+- Exploring available models (AWS only)
+- Testing different configurations (AWS only)
 
 ### YAML-based Deployment
 
@@ -62,7 +66,7 @@ deployment: !Deployment
   destination: gcp
   endpoint_name: opt-125m-gcp
   instance_count: 1
-  machine_type: n1-standard-4
+  instance_type: n1-standard-4
   accelerator_type: NVIDIA_TESLA_T4
   accelerator_count: 1
 
@@ -104,7 +108,7 @@ models:
     source: huggingface
 ```
 
-### Advanced Configuration
+### Advanced Configuration with Prediction Parameters
 
 ```yaml
 deployment: !Deployment
@@ -123,6 +127,24 @@ models:
       top_p: 0.9
       top_k: 20
       max_new_tokens: 250
+```
+
+### Custom Model Deployment
+
+Deploy a fine-tuned or custom model from S3 or local path:
+
+```yaml
+deployment: !Deployment
+  destination: aws
+  endpoint_name: my-custom-model
+  instance_count: 1
+  instance_type: ml.m5.xlarge
+
+models:
+  - !Model
+    id: google-bert/bert-base-uncased
+    source: custom
+    location: s3://my-bucket/my-model/  # or local path
 ```
 
 ## Cloud-Specific Instance Types
