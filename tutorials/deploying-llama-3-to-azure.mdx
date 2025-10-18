@@ -3,7 +3,11 @@ title: Deploying Llama 3 to Azure
 ---
 
 ## Introduction
-This tutorial guides you through deploying Llama 3 to Azure ML platform using Magemaker and querying it using the interactive dropdown menu. Ensure you have followed the [installation](installation) steps before proceeding. 
+This tutorial guides you through deploying Llama 3 to Azure ML platform using Magemaker. Ensure you have followed the [installation](installation) steps before proceeding.
+
+<Note>
+  **Important:** Azure deployments currently require YAML configuration files. Interactive dropdown deployment is only available for AWS.
+</Note> 
 
 <Note> 
 You may need to request a quota increase for specific machine types and GPUs in the region where you plan to deploy the model. Check your Azure quotas before proceeding. 
@@ -40,16 +44,12 @@ deployment: !Deployment
   destination: azure
   endpoint_name: llama3-endpoint
   instance_count: 1
-  instance_type: Standard_NC24ads_A100_v4 
+  instance_type: Standard_NC24ads_A100_v4
 
 models:
   - !Model
-    id: meta-llama-meta-llama-3-8b-instruct
-    location: null
-    predict: null
+    id: meta-llama-Meta-Llama-3-8B-Instruct
     source: huggingface
-    task: text-generation
-    version: null
 ```
 
 <Note>
@@ -139,5 +139,5 @@ print(resp)
 ```
 
 ## Conclusion
-You have successfully deployed and queried Llama 3 on Azure using Magemaker's interactive dropdown menu. For any questions or feedback, feel free to contact us at [support@slashml.com](mailto:support@slashml.com).
+You have successfully deployed and queried Llama 3 on Azure using Magemaker. For any questions or feedback, feel free to contact us at [support@slashml.com](mailto:support@slashml.com).
 
