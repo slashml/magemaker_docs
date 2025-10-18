@@ -7,6 +7,14 @@ description: Guide to fine-tuning models with Magemaker
 
 Fine-tuning allows you to adapt pre-trained models to your specific use case. Magemaker simplifies this process through YAML configuration.
 
+<Warning>
+  **Important Limitations:**
+  - Fine-tuning is currently **only supported for AWS SageMaker JumpStart models**
+  - Hugging Face model fine-tuning is NOT yet implemented
+  - GCP and Azure fine-tuning are NOT yet supported
+  - Training data must be uploaded to S3
+</Warning>
+
 ### Basic Command
 
 ```sh
@@ -17,6 +25,8 @@ magemaker --train .magemaker_config/train-config.yaml
 
 ### Basic Training Configuration
 
+Example for AWS SageMaker JumpStart model:
+
 ```yaml
 training: !Training
   destination: aws
@@ -26,11 +36,12 @@ training: !Training
 
 models:
 - !Model
-  id: your-model-id
-  source: huggingface
+  id: tensorflow-tc-bert-en-uncased-L-12-H-768-A-12-2
+  version: 1.0.0
+  source: sagemaker
 ```
 
-### Advanced Configuration
+### Advanced Configuration with Hyperparameters
 
 ```yaml
 training: !Training
@@ -38,15 +49,17 @@ training: !Training
   instance_type: ml.p3.2xlarge
   instance_count: 1
   training_input_path: s3://your-bucket/data.csv
+  output_path: s3://your-bucket/model-output/
   hyperparameters: !Hyperparameters
     epochs: 3
     per_device_train_batch_size: 32
     learning_rate: 2e-5
-    weight_decay: 0.01
-    warmup_steps: 500
-    evaluation_strategy: "steps"
-    eval_steps: 500
-    save_steps: 1000
+
+models:
+- !Model
+  id: tensorflow-tc-bert-en-uncased-L-12-H-768-A-12-2
+  version: 1.0.0
+  source: sagemaker
 ```
 
 ## Data Preparation
@@ -107,18 +120,20 @@ hyperparameters: !Hyperparameters
   batch_size: 32
 ```
 
-### Advanced Tuning
+### Supported Hyperparameters
+
+The following hyperparameters are supported and will be merged with the model's default hyperparameters:
 
 ```yaml
 hyperparameters: !Hyperparameters
   epochs: 3
-  learning_rate: 
-    min: 1e-5
-    max: 1e-4
-    scaling: log
-  batch_size:
-    values: [16, 32, 64]
+  per_device_train_batch_size: 32
+  learning_rate: 2e-5
 ```
+
+<Note>
+  Any hyperparameters not specified will use the SageMaker JumpStart model's default values. Additional hyperparameters beyond those defined in the schema may not be supported.
+</Note>
 
 ## Monitoring Training
 
