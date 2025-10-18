@@ -8,8 +8,20 @@ description: Deploy open source AI models to AWS, GCP, and Azure in minutes
 
 Magemaker is a Python tool that simplifies the process of deploying open source AI models to your preferred cloud provider. Instead of spending hours digging through documentation, Magemaker lets you deploy Hugging Face models directly to AWS SageMaker, Google Cloud Vertex AI, or Azure Machine Learning.
 
+## Current Features
+
+- **Multi-Cloud Deployment**: Deploy to AWS SageMaker, GCP Vertex AI, and Azure ML
+- **Hugging Face Integration**: Deploy any public or gated Hugging Face model
+- **Custom Model Support**: Deploy fine-tuned models from S3 or local paths
+- **Fine-Tuning**: Train AWS SageMaker JumpStart models on your data
+- **Interactive CLI**: User-friendly dropdown menus for AWS deployments
+- **YAML Configuration**: Infrastructure as Code for reproducible deployments
+
 ## What we're working on next
 
+- Interactive deployment support for GCP and Azure
+- Hugging Face model fine-tuning
+- GCP and Azure fine-tuning support
 - More robust error handling for various edge cases
 - Verbose logging
 - Enabling / disabling autoscaling
@@ -17,14 +29,26 @@ Magemaker is a Python tool that simplifies the process of deploying open source 
 
 Do submit your feature requests at https://magemaker.featurebase.app/
 
-## Known issues
+## Known Issues and Limitations
 
+### Platform Support
+- Python 3.13 is not supported due to an Azure SDK compatibility issue: https://github.com/Azure/azure-sdk-for-python/issues/37600
+- Python 3.11 or 3.12 is required
+
+### Deployment Limitations
+- Interactive model deployment from dropdown menu is only available for AWS (GCP and Azure require YAML files)
 - Querying within Magemaker currently only works with text-based models
 - Deleting a model is not instant, it may show up briefly after deletion
-- Deploying the same model within the same minute will break
-- Hugging-face models on Azure have different Ids than their Hugging-face counterparts. Follow the steps specified in the quick-start guide to find the relevant models
-- For Azure deploying models other than Hugging-face is not supported yet. 
-- Python3.13 is not supported because of an open-issue by Azure. https://github.com/Azure/azure-sdk-for-python/issues/37600
+- Deploying the same model within the same minute will cause conflicts
+
+### Azure-Specific Issues
+- Hugging Face models on Azure have different IDs than their Hugging Face counterparts (follow the steps in the quick-start guide to find model IDs)
+- Only Hugging Face models are supported for Azure deployments
+
+### Fine-Tuning Limitations
+- Fine-tuning is only supported for AWS SageMaker JumpStart models
+- Hugging Face model fine-tuning is not yet implemented
+- GCP and Azure fine-tuning are not yet supported
 
 
 If there is anything we missed, do point them out at https://magemaker.featurebase.app/
