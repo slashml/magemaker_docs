@@ -64,6 +64,7 @@
       "pages": [
         "concepts/deployment",
         "concepts/models",
+        "concepts/fine-tuning",
         "concepts/contributing"
       ]
     }
