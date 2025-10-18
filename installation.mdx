@@ -3,11 +3,24 @@ title: Installation
 description: Configure Magemaker for your cloud provider
 ---
 
+## Prerequisites
+
+- Python 3.11 or 3.12 (Python 3.13 is NOT supported due to Azure SDK compatibility issues)
+- Cloud provider account(s):
+  - AWS for SageMaker
+  - GCP for Vertex AI
+  - Azure for Azure ML
+- Cloud CLI tools (recommended):
+  - AWS CLI (optional for AWS)
+  - Google Cloud SDK for GCP
+  - Azure CLI for Azure
+- Hugging Face account (for gated models like Llama)
 
 <Note>
-  For Macs, maxOS >= 13.6.6 is required. Apply Silicon devices (M1) must use Rosetta terminal. You can verify, your terminals architecture by running `arch`. It should print `i386` for Rosetta terminal.
+  For Macs, maxOS >= 13.6.6 is required. Apple Silicon devices (M1) must use Rosetta terminal. You can verify your terminal's architecture by running `arch`. It should print `i386` for Rosetta terminal.
 </Note>
 
+## Installation
 
 Install via pip:
 
@@ -47,7 +60,7 @@ magemaker --cloud gcp
 ### Azure Configuration
 
 - Follow this detailed guide for setting up Azure credentials:
-  [GCP Setup Guide](/configuration/Azure)
+  [Azure Setup Guide](/configuration/Azure)
 
 
 Once you have your Azure credentials, you can configure Magemaker by running:
