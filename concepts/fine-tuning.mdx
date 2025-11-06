@@ -5,6 +5,10 @@ description: Guide to fine-tuning models with Magemaker
 
 ## Fine-tuning Overview
 
+<Note>
+Fine-tuning is currently only available for **AWS SageMaker**. Support for GCP and Azure is coming soon.
+</Note>
+
 Fine-tuning allows you to adapt pre-trained models to your specific use case. Magemaker simplifies this process through YAML configuration.
 
 ### Basic Command
@@ -26,9 +30,14 @@ training: !Training
 
 models:
 - !Model
-  id: your-model-id
-  source: huggingface
+  id: tensorflow-tc-bert-en-uncased-L-12-H-768-A-12-2
+  version: 1.0.0
+  source: sagemaker
 ```
+
+<Note>
+Currently, fine-tuning only supports **SageMaker JumpStart models** (source: `sagemaker`). Support for Hugging Face models is not yet implemented.
+</Note>
 
 ### Advanced Configuration
 
@@ -38,15 +47,17 @@ training: !Training
   instance_type: ml.p3.2xlarge
   instance_count: 1
   training_input_path: s3://your-bucket/data.csv
+  output_path: s3://your-bucket/output
   hyperparameters: !Hyperparameters
     epochs: 3
     per_device_train_batch_size: 32
     learning_rate: 2e-5
-    weight_decay: 0.01
-    warmup_steps: 500
-    evaluation_strategy: "steps"
-    eval_steps: 500
-    save_steps: 1000
+
+models:
+- !Model
+  id: tensorflow-tc-bert-en-uncased-L-12-H-768-A-12-2
+  version: 1.0.0
+  source: sagemaker
 ```
 
 ## Data Preparation
@@ -98,27 +109,20 @@ Popular choices:
 
 ## Hyperparameter Tuning
 
-### Basic Parameters
+### Supported Hyperparameters
+
+The following hyperparameters can be configured (all optional):
 
 ```yaml
 hyperparameters: !Hyperparameters
   epochs: 3
+  per_device_train_batch_size: 32
   learning_rate: 2e-5
-  batch_size: 32
 ```
 
-### Advanced Tuning
-
-```yaml
-hyperparameters: !Hyperparameters
-  epochs: 3
-  learning_rate: 
-    min: 1e-5
-    max: 1e-4
-    scaling: log
-  batch_size:
-    values: [16, 32, 64]
-```
+<Note>
+These hyperparameters override the default values for the SageMaker JumpStart model. Any hyperparameter not specified will use the model's default value.
+</Note>
 
 ## Monitoring Training
 
