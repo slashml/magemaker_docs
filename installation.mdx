@@ -3,11 +3,16 @@ title: Installation
 description: Configure Magemaker for your cloud provider
 ---
 
+## Prerequisites
+
+- **Python 3.11+** is required
+- **Python 3.13 is not supported** due to compatibility issues with Azure SDK
 
 <Note>
-  For Macs, maxOS >= 13.6.6 is required. Apply Silicon devices (M1) must use Rosetta terminal. You can verify, your terminals architecture by running `arch`. It should print `i386` for Rosetta terminal.
+  For Macs, macOS >= 13.6.6 is required. Apple Silicon devices (M1/M2/M3) must use Rosetta terminal. You can verify your terminal's architecture by running `arch`. It should print `i386` for Rosetta terminal.
 </Note>
 
+## Installation
 
 Install via pip:
 
@@ -47,7 +52,7 @@ magemaker --cloud gcp
 ### Azure Configuration
 
 - Follow this detailed guide for setting up Azure credentials:
-  [GCP Setup Guide](/configuration/Azure)
+  [Azure Setup Guide](/configuration/Azure)
 
 
 Once you have your Azure credentials, you can configure Magemaker by running:
