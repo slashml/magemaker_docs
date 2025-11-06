@@ -54,20 +54,15 @@ Example YAML for AWS deployment:
 
 ```yaml
 deployment: !Deployment
-  destination: aws 
+  destination: aws
   endpoint_name: facebook-opt-test
   instance_count: 1
   instance_type: ml.m5.xlarge
-  num_gpus: null
-  quantization: null
+
 models:
   - !Model
     id: facebook/opt-125m
-    location: null
-    predict: null
     source: huggingface
-    task: text-generation
-    version: null
 ```
 
 For GCP Vertex AI:
@@ -76,20 +71,15 @@ For GCP Vertex AI:
 deployment: !Deployment
   destination: gcp
   endpoint_name: facebook-opt-test
-  accelerator_count: 1
+  instance_count: 1
   instance_type: g2-standard-12
   accelerator_type: NVIDIA_L4
-  num_gpus: null
-  quantization: null
+  accelerator_count: 1
 
 models:
   - !Model
     id: facebook/opt-125m
-    location: null
-    predict: null
     source: huggingface
-    task: null
-    version: null
 ```
 
 For Azure ML:
@@ -100,14 +90,11 @@ deployment: !Deployment
   endpoint_name: facebook-opt-test
   instance_count: 1
   instance_type: Standard_DS3_v2
+
 models:
   - !Model
     id: facebook--opt-125m
-    location: null
-    predict: null
     source: huggingface
-    task: text-generation
-    version: null
 ```
 <Note>
   The model ids for Azure are different from AWS and GCP. Make sure to use the one provided by Azure in the Azure Model Catalog. 
@@ -131,6 +118,10 @@ models:
 
 ### Model Fine-tuning
 
+<Note>
+Fine-tuning is currently only available for AWS SageMaker with SageMaker JumpStart models.
+</Note>
+
 Fine-tune models using the `train` command:
 
 ```sh
@@ -141,14 +132,21 @@ Example training configuration:
 
 ```yaml
 training: !Training
-  destination: aws # or gcp, azure
-  instance_type: ml.p3.2xlarge # varies by cloud provider
+  destination: aws
+  instance_type: ml.p3.2xlarge
   instance_count: 1
   training_input_path: s3://your-bucket/data.csv
+  output_path: s3://your-bucket/output
   hyperparameters: !Hyperparameters
     epochs: 3
     per_device_train_batch_size: 32
     learning_rate: 2e-5
+
+models:
+- !Model
+  id: tensorflow-tc-bert-en-uncased-L-12-H-768-A-12-2
+  version: 1.0.0
+  source: sagemaker
 ```
 {/* 
 ### Recommended Models

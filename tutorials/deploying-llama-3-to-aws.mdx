@@ -32,16 +32,11 @@ deployment: !Deployment
   instance_count: 1
   instance_type: ml.g5.2xlarge
   num_gpus: 1
-  quantization: null
 
 models:
   - !Model
     id: meta-llama/Meta-Llama-3-8B-Instruct
-    location: null
-    predict: null
     source: huggingface
-    task: text-generation
-    version: null
 ```
 
 <Note>

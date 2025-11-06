@@ -40,16 +40,12 @@ deployment: !Deployment
   destination: azure
   endpoint_name: llama3-endpoint
   instance_count: 1
-  instance_type: Standard_NC24ads_A100_v4 
+  instance_type: Standard_NC24ads_A100_v4
 
 models:
   - !Model
     id: meta-llama-meta-llama-3-8b-instruct
-    location: null
-    predict: null
     source: huggingface
-    task: text-generation
-    version: null
 ```
 
 <Note>

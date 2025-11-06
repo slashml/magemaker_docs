@@ -33,20 +33,15 @@ Example YAML for GCP deployment:
 deployment: !Deployment
   destination: gcp
   endpoint_name: llama3-endpoint
-  accelerator_count: 1
+  instance_count: 1
   instance_type: n1-standard-8
   accelerator_type: NVIDIA_T4
-  num_gpus: 1
-  quantization: null
+  accelerator_count: 1
 
 models:
   - !Model
     id: meta-llama/Meta-Llama-3-8B-Instruct
-    location: null
-    predict: null
     source: huggingface
-    task: text-generation
-    version: null
 ```
 <Note>
    For gated models like llama from Meta, you have to accept terms of use for model on hugging face and adding Hugging face token to the environment are necessary for deployment to go through.
