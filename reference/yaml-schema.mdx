@@ -1,0 +1,297 @@
+---
+title: YAML Configuration Reference
+description: Complete reference for Magemaker YAML configuration files
+---
+
+## Overview
+
+Magemaker uses YAML configuration files for reproducible model deployments and training jobs. This page documents all available configuration options.
+
+## Deployment Configuration
+
+### Deployment Schema
+
+```yaml
+deployment: !Deployment
+  destination: aws|gcp|azure          # Required: Target cloud provider
+  instance_type: string               # Required: Machine/instance type
+  instance_count: integer             # Optional: Number of instances (default: 1)
+  endpoint_name: string               # Optional: Custom endpoint name
+  accelerator_type: string            # Optional: GPU type (GCP only)
+  accelerator_count: integer          # Optional: Number of GPUs (GCP only)
+  min_replica_count: integer          # Optional: Min replicas (GCP only)
+  max_replica_count: integer          # Optional: Max replicas (GCP only)
+  num_gpus: integer                   # Optional: Number of GPUs (AWS only)
+  quantization: string                # Optional: Quantization method (AWS only)
+```
+
+### Field Descriptions
+
+#### destination
+- **Type**: String (enum)
+- **Required**: Yes
+- **Values**: `aws`, `gcp`, `azure`
+- **Description**: The cloud provider where the model will be deployed
+
+#### instance_type
+- **Type**: String
+- **Required**: Yes
+- **Description**: The machine/instance type to use for deployment
+- **Examples**:
+  - AWS: `ml.m5.xlarge`, `ml.g5.12xlarge`
+  - GCP: `n1-standard-4`, `g2-standard-12`
+  - Azure: `Standard_DS3_v2`, `Standard_NC24ads_A100_v4`
+
+#### instance_count
+- **Type**: Integer
+- **Required**: No (default: 1)
+- **Description**: Number of instances to deploy
+
+#### endpoint_name
+- **Type**: String
+- **Required**: No
+- **Description**: Custom name for the endpoint. If not provided, a unique name will be generated automatically
+
+#### accelerator_type
+- **Type**: String
+- **Required**: No (GCP only)
+- **Description**: Type of GPU accelerator to attach
+- **Examples**: `NVIDIA_L4`, `NVIDIA_TESLA_T4`, `NVIDIA_A100_80GB`
+
+#### accelerator_count
+- **Type**: Integer
+- **Required**: No (GCP only)
+- **Description**: Number of GPU accelerators to attach
+
+#### min_replica_count / max_replica_count
+- **Type**: Integer
+- **Required**: No (GCP only)
+- **Description**: Minimum and maximum number of replicas for autoscaling
+
+#### num_gpus
+- **Type**: Integer
+- **Required**: No (AWS only)
+- **Description**: Number of GPUs to use on the instance
+
+#### quantization
+- **Type**: String
+- **Required**: No (AWS only)
+- **Description**: Quantization method for model optimization
+- **Examples**: `bitsandbytes`, `gptq`
+
+## Model Configuration
+
+### Model Schema
+
+```yaml
+models:
+- !Model
+  id: string                    # Required: Model identifier
+  source: huggingface|sagemaker|custom  # Required: Model source
+  task: string                  # Optional: Model task type
+  version: string               # Optional: Model version
+  location: string              # Optional: S3 URI or local path (custom models only)
+  predict: object               # Optional: Prediction parameters
+```
+
+### Field Descriptions
+
+#### id
+- **Type**: String
+- **Required**: Yes
+- **Description**: Model identifier
+- **Examples**:
+  - Hugging Face (AWS/GCP): `facebook/opt-125m`, `meta-llama/Meta-Llama-3-8B-Instruct`
+  - Hugging Face (Azure): `facebook--opt-125m`, `meta-llama-meta-llama-3-8b-instruct`
+  - SageMaker: `huggingface-tc-bert-large-cased`, `tensorflow-tc-bert-en-uncased-L-12-H-768-A-12-2`
+
+<Note>
+Azure uses different model IDs with double hyphens instead of slashes. Check the Azure Model Catalog for the correct ID.
+</Note>
+
+#### source
+- **Type**: String (enum)
+- **Required**: Yes
+- **Values**: `huggingface`, `sagemaker`, `custom`
+- **Description**: Where the model comes from
+  - `huggingface`: Models from Hugging Face Hub (all cloud providers)
+  - `sagemaker`: AWS SageMaker JumpStart models (AWS only)
+  - `custom`: Your own fine-tuned models (AWS only)
+
+#### task
+- **Type**: String
+- **Required**: No
+- **Description**: Model task type (auto-detected for Hugging Face models)
+- **Examples**: `text-generation`, `text-classification`, `feature-extraction`
+
+#### version
+- **Type**: String
+- **Required**: No
+- **Description**: Specific model version (primarily for SageMaker models)
+
+#### location
+- **Type**: String
+- **Required**: Only for custom models
+- **Description**: S3 URI or local file path to the model artifacts
+- **Examples**: `s3://my-bucket/models/my-model.tar.gz`, `/path/to/local/model`
+
+#### predict
+- **Type**: Object
+- **Required**: No
+- **Description**: Model inference parameters
+- **Example**:
+  ```yaml
+  predict:
+    temperature: 0.9
+    top_p: 0.9
+    top_k: 20
+    max_new_tokens: 250
+  ```
+
+## Training Configuration
+
+<Note>
+Training is currently only available for AWS SageMaker with SageMaker JumpStart models.
+</Note>
+
+### Training Schema
+
+```yaml
+training: !Training
+  destination: aws                      # Required: Must be 'aws'
+  instance_type: string                 # Required: Training instance type
+  instance_count: integer               # Required: Number of training instances
+  training_input_path: string           # Required: S3 path to training data
+  output_path: string                   # Optional: S3 path for model output
+  hyperparameters: !Hyperparameters    # Optional: Training hyperparameters
+    epochs: integer
+    per_device_train_batch_size: integer
+    learning_rate: float
+```
+
+### Field Descriptions
+
+#### destination
+- **Type**: String
+- **Required**: Yes
+- **Values**: `aws` (only)
+- **Description**: Must be AWS for training
+
+#### instance_type
+- **Type**: String
+- **Required**: Yes
+- **Description**: EC2 instance type for training
+- **Examples**: `ml.p3.2xlarge`, `ml.p3.8xlarge`, `ml.p3.16xlarge`
+
+#### instance_count
+- **Type**: Integer
+- **Required**: Yes
+- **Description**: Number of training instances
+
+#### training_input_path
+- **Type**: String
+- **Required**: Yes
+- **Description**: S3 URI to training data
+- **Example**: `s3://my-bucket/training-data/data.csv`
+
+#### output_path
+- **Type**: String
+- **Required**: No
+- **Description**: S3 URI where trained model artifacts will be saved
+- **Example**: `s3://my-bucket/model-output/`
+
+#### hyperparameters
+- **Type**: Object
+- **Required**: No
+- **Description**: Training hyperparameters (overrides model defaults)
+- **Fields**:
+  - `epochs`: Number of training epochs
+  - `per_device_train_batch_size`: Batch size per device
+  - `learning_rate`: Learning rate for optimizer
+
+## Complete Examples
+
+### AWS Deployment
+
+```yaml
+deployment: !Deployment
+  destination: aws
+  endpoint_name: my-bert-model
+  instance_count: 1
+  instance_type: ml.m5.xlarge
+
+models:
+- !Model
+  id: google-bert/bert-base-uncased
+  source: huggingface
+```
+
+### GCP Deployment with GPU
+
+```yaml
+deployment: !Deployment
+  destination: gcp
+  endpoint_name: my-llama-model
+  instance_count: 1
+  instance_type: g2-standard-12
+  accelerator_type: NVIDIA_L4
+  accelerator_count: 1
+  min_replica_count: 1
+  max_replica_count: 3
+
+models:
+- !Model
+  id: meta-llama/Meta-Llama-3-8B-Instruct
+  source: huggingface
+```
+
+### Azure Deployment
+
+```yaml
+deployment: !Deployment
+  destination: azure
+  endpoint_name: my-model-endpoint
+  instance_count: 1
+  instance_type: Standard_DS3_v2
+
+models:
+- !Model
+  id: facebook--opt-125m
+  source: huggingface
+```
+
+### Custom Model Deployment (AWS)
+
+```yaml
+deployment: !Deployment
+  destination: aws
+  instance_type: ml.m5.xlarge
+  instance_count: 1
+
+models:
+- !Model
+  id: google-bert/bert-base-uncased
+  source: custom
+  location: s3://my-bucket/fine-tuned-model.tar.gz
+```
+
+### Training Configuration
+
+```yaml
+training: !Training
+  destination: aws
+  instance_type: ml.p3.2xlarge
+  instance_count: 1
+  training_input_path: s3://my-bucket/training-data.csv
+  output_path: s3://my-bucket/model-output/
+  hyperparameters: !Hyperparameters
+    epochs: 3
+    per_device_train_batch_size: 32
+    learning_rate: 2e-5
+
+models:
+- !Model
+  id: tensorflow-tc-bert-en-uncased-L-12-H-768-A-12-2
+  version: 1.0.0
+  source: sagemaker
+```
