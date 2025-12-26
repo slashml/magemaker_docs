@@ -1,0 +1,12 @@
+name: PR Comment Handler
+
+on:
+  repository_dispatch:
+    types: [pr-comment-command]
+
+jobs:
+  handle-comment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print the Comment
+        run: echo "PR Comment Triggered!"
