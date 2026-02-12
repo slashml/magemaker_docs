@@ -1,0 +1,11 @@
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  check-comment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Comment
+        if: contains(github.event.comment.body, '/run')
+        run: echo "Triggered by a PR comment!"
