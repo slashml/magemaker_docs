@@ -1,0 +1,13 @@
+name: Print PR Comments
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  print-comment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print comment content
+        if: github.event.issue.pull_request
+        run: echo "${{ github.event.comment.body }}"
+        
